@@ -36,20 +36,6 @@ message BidInfo {
     bytes bidder_name = 3;
 }
 
-// Used by about_me
-message BuyNowInfo {
-    bytes on_item_name = 1;
-    bytes seller_username = 2;
-    uint32 quantity = 3;
-}
-
-// User by about_me
-message AboutMeBid {
-    bytes on_item_name = 1;
-    bytes seller_username = 2;
-    uint32 price = 3;
-}
-
 //////////////////////////////////////////////////////////////////////
 
 // Regions
@@ -59,7 +45,10 @@ message PutRegion {
 }
 
 message PutRegionResp {
-    bytes region_id = 1;
+    oneof resp {
+        bytes region_id = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -70,7 +59,10 @@ message PutCategory {
 }
 
 message PutCategoryResp {
-    bytes category_id = 1;
+    oneof resp {
+        bytes category_id = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -109,7 +101,13 @@ message RegisterUserResp {
 
 message BrowseCategories {}
 message BrowseCategoriesResp {
-    repeated bytes category_names = 1;
+    message Wrap {
+        repeated bytes category_names = 1;
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -117,7 +115,13 @@ message BrowseCategoriesResp {
 
 message BrowseRegions {}
 message BrowseRegionsResp {
-    repeated bytes region_names = 1;
+    message Wrap {
+        repeated bytes region_names = 1;
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 // Search By Category
@@ -127,7 +131,13 @@ message SearchByCategory {
 }
 
 message SearchByCategoryResp {
-    repeated Item items = 1;
+    message Wrap {
+        repeated Item items = 1;
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -139,7 +149,14 @@ message SearchByRegion {
 }
 
 message SearchByRegionResp {
-    repeated ItemDetails items = 1;
+    message Wrap {
+        repeated ItemDetails items = 1;
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
+
 }
 
 
@@ -150,7 +167,13 @@ message ViewItem {
 }
 
 message ViewItemResp {
-    ItemDetails item = 1;
+    message Wrap {
+        repeated ItemDetails items = 1;
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -161,9 +184,15 @@ message ViewUser {
 }
 
 message ViewUserResp {
-    bytes username = 1;
-    sfixed32 rating = 2;
-    repeated Comment comments = 3; // With from_username set
+    message Wrap {
+        bytes username = 1;
+        sfixed32 rating = 2;
+        repeated Comment comments = 3; // With from_username set
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 // View Item Bid Hist
@@ -173,8 +202,14 @@ message ViewItemBidHist {
 }
 
 message ViewItemBidHistResp {
-    bytes item_name = 1;
-    repeated BidInfo bids = 2;
+    message Wrap {
+        bytes item_name = 1;
+        repeated BidInfo bids = 2;
+    }
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -187,7 +222,10 @@ message StoreBuyNow {
 }
 
 message StoreBuyNowResp {
-    bytes buy_now_id = 1;
+    oneof resp {
+        bytes buy_now_id = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -200,7 +238,10 @@ message StoreBid {
 }
 
 message StoreBidResp {
-    bytes bid_id = 1;
+    oneof resp {
+        bytes bid_id = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -215,7 +256,10 @@ message StoreComment {
 }
 
 message StoreCommentResp {
-    bytes comment_id = 1;
+    oneof resp {
+        bytes comment_id = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -230,7 +274,10 @@ message StoreItem {
 }
 
 message StoreItemResp {
-    bytes item_id = 1;
+    oneof resp {
+        bytes item_id = 1;
+        uint32 error_reason = 2;
+    }
 }
 
 
@@ -241,10 +288,29 @@ message AboutMe {
 }
 
 message AboutMeResp {
-    bytes username = 1;
-    sfixed32 rating = 2;
-    repeated Item sold_items = 3;
-    repeated BuyNowInfo bought_items = 4;
-    repeated AboutMeBid placed_bids = 5;
-    repeated Comment authored_comments = 6; // With to_id set
+    message BuyNowInfo {
+        bytes on_item_name = 1;
+        bytes seller_username = 2;
+        uint32 quantity = 3;
+    }
+
+    message AboutMeBid {
+        bytes on_item_name = 1;
+        bytes seller_username = 2;
+        uint32 price = 3;
+    }
+
+    message Wrap {
+        bytes username = 1;
+        sfixed32 rating = 2;
+        repeated Item sold_items = 3;
+        repeated BuyNowInfo bought_items = 4;
+        repeated AboutMeBid placed_bids = 5;
+        repeated Comment authored_comments = 6; // With to_id set
+    }
+
+    oneof resp {
+        Wrap content = 1;
+        uint32 error_reason = 2;
+    }
 }

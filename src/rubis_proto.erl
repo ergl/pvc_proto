@@ -24,6 +24,10 @@
 -export([browse_regions_r/0, browse_regions_d/1,
          browse_regions_resp_r/1, browse_regions_resp_d/1]).
 
+%% Search By Category
+-export([search_by_category_r/1, search_by_category_d/1,
+         search_by_category_resp_r/1, search_by_category_resp_d/1]).
+
 %% TODO(borja): Implement the rest
 
 put_region_r(RegionName) when is_binary(RegionName) ->
@@ -33,12 +37,11 @@ put_region_r(RegionName) when is_binary(RegionName) ->
 put_region_d(Msg) ->
     maps:get(region_name, rubis:decode_msg(Msg, 'PutRegion')).
 
-put_region_resp_r(RegionId) when is_binary(RegionId) ->
-    rubis:encode_msg(#{region_id => RegionId}, 'PutRegionResp').
+put_region_resp_r(Resp) ->
+    enc_resp('PutRegionResp', region_id, Resp).
 
 put_region_resp_d(Msg) ->
-    maps:get(region_id, rubis:decode_msg(Msg, 'PutRegionResp')).
-
+    dec_resp('PutRegionResp', region_id, Msg).
 
 
 
@@ -49,11 +52,11 @@ put_category_r(CategoryName) when is_binary(CategoryName) ->
 put_category_d(Msg) ->
     maps:get(category_name, rubis:decode_msg(Msg, 'PutCategory')).
 
-put_category_resp_r(CategoryId) when is_binary(CategoryId) ->
-    rubis:encode_msg(#{category_id => CategoryId}, 'PutCategoryResp').
+put_category_resp_r(Resp) ->
+    enc_resp('PutCategoryResp', category_id, Resp).
 
 put_category_resp_d(Msg) ->
-    maps:get(category_id, rubis:decode_msg(Msg, 'PutCategoryResp')).
+    dec_resp('PutCategoryResp', category_id, Msg).
 
 
 
@@ -65,21 +68,11 @@ auth_user_r(Username, Password) when is_binary(Username) andalso is_binary(Passw
 auth_user_d(Msg) ->
     rubis:decode_msg(Msg, 'AuthUser').
 
-auth_user_resp_r({ok, UserId}) when is_binary(UserId) ->
-    rubis:encode_msg(#{resp => {user_id, UserId}}, 'AuthUserResp');
-
-auth_user_resp_r({error, Reason}) ->
-    rubis:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, 'AuthUserResp').
+auth_user_resp_r(Resp) ->
+    enc_resp('AuthUserResp', user_id, Resp).
 
 auth_user_resp_d(Msg) ->
-    Resp = maps:get(resp, rubis:decode_msg(Msg, 'AuthUserResp')),
-    case Resp of
-        {user_id, Id} ->
-            {ok, Id};
-        {error_reason, Code} ->
-            {error, decode_error(Code)}
-    end.
-
+    dec_resp('AuthUserResp', user_id, Msg).
 
 
 
@@ -90,14 +83,11 @@ browse_categories_r() ->
 browse_categories_d(_) ->
     ok.
 
-browse_categories_resp_r(Names) when is_list(Names) ->
-    rubis:encode_msg(#{category_names => Names}, 'BrowseCategoriesResp');
-
-browse_categories_resp_r(Name) ->
-    browse_categories_resp_r([Name]).
+browse_categories_resp_r(Resp) ->
+    enc_resp('BrowseCategoriesResp', category_names, Resp).
 
 browse_categories_resp_d(Msg) ->
-    maps:get(category_names, rubis:decode_msg(Msg, 'BrowseCategoriesResp')).
+    dec_resp('BrowseCategoriesResp', category_names, Msg).
 
 
 
@@ -109,18 +99,49 @@ browse_regions_r() ->
 browse_regions_d(_) ->
     ok.
 
-browse_regions_resp_r(Names) when is_list(Names) ->
-    true = lists:all(fun is_binary/1, Names),
-    rubis:encode_msg(#{region_names => Names}, 'BrowseRegionsResp');
-
-browse_regions_resp_r(Name) when is_binary(Name) ->
-    browse_regions_resp_r([Name]).
+browse_regions_resp_r(Resp) ->
+    enc_resp('BrowseRegionsResp', region_names, Resp).
 
 browse_regions_resp_d(Msg) ->
-    maps:get(region_names, rubis:decode_msg(Msg, 'BrowseRegionsResp')).
+    dec_resp('BrowseRegionsResp', region_names, Msg).
+
+
+
+
+search_by_category_r(CategoryId) when is_binary(CategoryId) ->
+    Msg = rubis:encode_msg(#{category_id => CategoryId}, 'SearchByCategory'),
+    encode_raw_bits('SearchByCategory', Msg).
+
+search_by_category_d(Msg) ->
+    maps:get(category_id, rubis:decode_msg(Msg, 'SearchByCategory')).
+
+search_by_category_resp_r(Resp) ->
+    enc_resp('SearchByCategoryResp', items, Resp).
+
+search_by_category_resp_d(Msg) ->
+    dec_resp('SearchByCategoryResp', items, Msg).
 
 
 %% Util functions
+
+enc_resp(MsgType, InnerName, {ok, Data}) ->
+    rubis:encode_msg(#{resp => {InnerName, Data}}, MsgType);
+
+enc_resp(MsgType, _, {error, Reason}) ->
+    rubis:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType).
+
+dec_resp(MsgType, InnerName, Msg) ->
+    Resp = maps:get(resp, rubis:decode_msg(Msg, MsgType)),
+    handle_resp(InnerName, Resp).
+
+-spec handle_resp(atom(), any()) -> {ok, any()} | {error, atom()}.
+handle_resp(InnerName, Resp) ->
+    case Resp of
+        {InnerName, Content} ->
+            {ok, Content};
+        {error_reason, Code} ->
+            {error, decode_error(Code)}
+    end.
 
 encode_error(user_not_found) -> 1;
 encode_error(wrong_password) -> 2;
