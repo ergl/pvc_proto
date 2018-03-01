@@ -146,13 +146,21 @@ handle_resp(InnerName, Resp) ->
 encode_error(user_not_found) -> 1;
 encode_error(wrong_password) -> 2;
 encode_error(non_unique_username) -> 3;
-encode_error(_) -> 0.
+encode_error(timeout) -> 4;
+encode_error(pvc_conflict) -> 5;
+encode_error(pvc_stale_vc) -> 6;
+encode_error(pvc_bad_vc) -> 7;
+encode_error(_Other) -> 0.
 
 
 decode_error(0) -> unknown;
 decode_error(1) -> user_not_found;
 decode_error(2) -> wrong_password;
-decode_error(3) -> non_unique_username.
+decode_error(3) -> non_unique_username;
+decode_error(4) -> timeout;
+decode_error(5) -> pvc_conflict;
+decode_error(6) -> pvc_stale_vc;
+decode_error(7) -> pvc_bad_vc.
 
 %% @doc Encode Protobuf msg along with msg info
 -spec encode_raw_bits(atom(), binary()) -> binary().
