@@ -21,6 +21,8 @@
          view_item/1,
          view_user/1,
          %% ...
+         store_bid/3,
+         store_comment/5,
          store_item/5]).
 
 -spec peek_msg_type(binary()) -> atom().
@@ -71,6 +73,12 @@ decode_reply('ViewUser', Msg) ->
 
 %% ...
 
+decode_reply('StoreBid', Msg) ->
+    dec_resp('StoreBidResp', bid_id, Msg);
+
+decode_reply('StoreComment', Resp) ->
+    dec_resp('StoreCommentResp', comment_id, Resp);
+
 decode_reply('StoreItem', Msg) ->
     dec_resp('StoreItemResp', item_id, Msg).
 
@@ -109,6 +117,12 @@ encode_reply('ViewUser', Resp) ->
     enc_wrap_resp('ViewUserResp', user_details, Resp);
 
 %% ...
+
+encode_reply('StoreBid', Resp) ->
+    enc_resp('StoreBidResp', bid_id, Resp);
+
+encode_reply('StoreComment', Resp) ->
+    enc_resp('StoreCommentResp', comment_id, Resp);
 
 encode_reply('StoreItem', Resp) ->
     enc_resp('StoreItemResp', item_id, Resp).
@@ -154,6 +168,20 @@ view_item(ItemId) when is_binary(ItemId) ->
 view_user(UserId) when is_binary(UserId) ->
     Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'ViewUser'),
     encode_raw_bits('ViewUser', Msg).
+
+store_bid(ItemId, BidderId, Value) ->
+    Msg = rubis_pb:encode_msg(#{on_item_id => ItemId,
+                                bidder_id => BidderId,
+                                value => Value}, 'StoreBid'),
+    encode_raw_bits('StoreBid', Msg).
+
+store_comment(ItemId, FromId, ToId, Rating, Body) ->
+    Msg = rubis_pb:encode_msg(#{on_item_id => ItemId,
+                                from_id => FromId,
+                                to_id => ToId,
+                                rating => Rating,
+                                body => Body}, 'StoreComment'),
+    encode_raw_bits('StoreComment', Msg).
 
 store_item(ItemName, ItemDesc, Quantity, CategoryId, SellerId) ->
     Msg = rubis_pb:encode_msg(#{item_name => ItemName,
