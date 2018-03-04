@@ -17,7 +17,9 @@
          browse_categories/0,
          browse_regions/0,
          search_items_by_category/1,
-         search_items_by_region/2]).
+         search_items_by_region/2,
+         view_item/1,
+         view_user/1]).
 
 -spec peek_msg_type(binary()) -> atom().
 peek_msg_type(Bin) ->
@@ -57,7 +59,13 @@ decode_reply('SearchByCategory', Msg) ->
     dec_resp('SearchByCategoryResp', items, Msg);
 
 decode_reply('SearchByRegion', Msg) ->
-    dec_resp('SearchByRegionResp', items, Msg).
+    dec_resp('SearchByRegionResp', items, Msg);
+
+decode_reply('ViewItem', Msg) ->
+    dec_resp('ViewItemResp', items, Msg);
+
+decode_reply('ViewUser', Msg) ->
+    dec_resp('ViewUserResp', user_details, Msg).
 
 %% @doc Generic client side encode
 %%
@@ -85,7 +93,13 @@ encode_reply('SearchByCategory', Resp) ->
     enc_wrap_resp('SearchByCategoryResp', items, Resp);
 
 encode_reply('SearchByRegion', Resp) ->
-    enc_wrap_resp('SearchByRegionResp', items, Resp).
+    enc_wrap_resp('SearchByRegionResp', items, Resp);
+
+encode_reply('ViewItem', Resp) ->
+    enc_wrap_resp('ViewItemResp', items, Resp);
+
+encode_reply('ViewUser', Resp) ->
+    enc_wrap_resp('ViewUserResp', user_details, Resp).
 
 put_region(RegionName) when is_binary(RegionName) ->
     Msg = rubis_pb:encode_msg(#{region_name => RegionName}, 'PutRegion'),
@@ -120,6 +134,14 @@ search_items_by_category(CategoryId) when is_binary(CategoryId) ->
 search_items_by_region(CategoryId, RegionId) when is_binary(RegionId) ->
     Msg = rubis_pb:encode_msg(#{category_id => CategoryId, region_id => RegionId}, 'SearchByRegion'),
     encode_raw_bits('SearchByRegion', Msg).
+
+view_item(ItemId) when is_binary(ItemId) ->
+    Msg = rubis_pb:encode_msg(#{item_id => ItemId}, 'ViewItem'),
+    encode_raw_bits('ViewItem', Msg).
+
+view_user(UserId) when is_binary(UserId) ->
+    Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'ViewUser'),
+    encode_raw_bits('ViewUser', Msg).
 
 
 %% Util functions
