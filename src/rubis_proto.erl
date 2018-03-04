@@ -2,17 +2,22 @@
 
 -export([peek_msg_type/1]).
 
+%% Generic client - server side methods
 -export([decode_request/1,
          encode_reply/2,
          decode_reply/2]).
 
-%% Client side methods
+%% Init DB
 -export([put_region/1,
-         put_category/1,
-         auth_user/2,
+         put_category/1]).
+
+%% Client-side RUBIS Procedures
+-export([auth_user/2,
+         register_user/3,
          browse_categories/0,
          browse_regions/0,
-         search_by_category/1]).
+         search_items_by_category/1,
+         search_items_by_region/2]).
 
 -spec peek_msg_type(binary()) -> atom().
 peek_msg_type(Bin) ->
@@ -39,6 +44,9 @@ decode_reply('PutCategory', Msg) ->
 decode_reply('AuthUser', Msg) ->
     dec_resp('AuthUserResp', user_id, Msg);
 
+decode_reply('RegisterUser', Msg) ->
+    dec_resp('RegisterUserResp', user_id, Msg);
+
 decode_reply('BrowseCategories', Msg) ->
     dec_resp('BrowseCategoriesResp', category_names, Msg);
 
@@ -46,7 +54,10 @@ decode_reply('BrowseRegions', Msg) ->
     dec_resp('BrowseRegionsResp', region_names, Msg);
 
 decode_reply('SearchByCategory', Msg) ->
-    dec_resp('SearchByCategoryResp', items, Msg).
+    dec_resp('SearchByCategoryResp', items, Msg);
+
+decode_reply('SearchByRegion', Msg) ->
+    dec_resp('SearchByRegionResp', items, Msg).
 
 %% @doc Generic client side encode
 %%
@@ -61,14 +72,20 @@ encode_reply('PutCategory', Resp) ->
 encode_reply('AuthUser', Resp) ->
     enc_resp('AuthUserResp', user_id, Resp);
 
+encode_reply('RegisterUser', Resp) ->
+    enc_resp('RegisterUserResp', user_id, Resp);
+
 encode_reply('BrowseCategories', Resp) ->
-    enc_resp('BrowseCategoriesResp', category_names, Resp);
+    enc_wrap_resp('BrowseCategoriesResp', category_names, Resp);
 
 encode_reply('BrowseRegions', Resp) ->
-    enc_resp('BrowseRegionsResp', region_names, Resp);
+    enc_wrap_resp('BrowseRegionsResp', region_names, Resp);
 
 encode_reply('SearchByCategory', Resp) ->
-    enc_resp('SearchByCategoryResp', items, Resp).
+    enc_wrap_resp('SearchByCategoryResp', items, Resp);
+
+encode_reply('SearchByRegion', Resp) ->
+    enc_wrap_resp('SearchByRegionResp', items, Resp).
 
 put_region(RegionName) when is_binary(RegionName) ->
     Msg = rubis_pb:encode_msg(#{region_name => RegionName}, 'PutRegion'),
@@ -82,6 +99,12 @@ auth_user(Username, Password) when is_binary(Username) andalso is_binary(Passwor
     Msg = rubis_pb:encode_msg(#{username => Username, password => Password}, 'AuthUser'),
     encode_raw_bits('AuthUser', Msg).
 
+register_user(Username, Password, RegionName) ->
+    Msg = rubis_pb:encode_msg(#{username => Username,
+                                password => Password,
+                                region_name => RegionName}, 'RegisterUser'),
+    encode_raw_bits('RegisterUser', Msg).
+
 browse_categories() ->
     Msg = rubis_pb:encode_msg(#{}, 'BrowseCategories'),
     encode_raw_bits('BrowseCategories', Msg).
@@ -90,9 +113,13 @@ browse_regions() ->
     Msg = rubis_pb:encode_msg(#{}, 'BrowseRegions'),
     encode_raw_bits('BrowseRegions', Msg).
 
-search_by_category(CategoryId) when is_binary(CategoryId) ->
+search_items_by_category(CategoryId) when is_binary(CategoryId) ->
     Msg = rubis_pb:encode_msg(#{category_id => CategoryId}, 'SearchByCategory'),
     encode_raw_bits('SearchByCategory', Msg).
+
+search_items_by_region(CategoryId, RegionId) when is_binary(RegionId) ->
+    Msg = rubis_pb:encode_msg(#{category_id => CategoryId, region_id => RegionId}, 'SearchByRegion'),
+    encode_raw_bits('SearchByRegion', Msg).
 
 
 %% Util functions
@@ -108,15 +135,26 @@ enc_resp(MsgType, InnerName, {ok, Data}) ->
 enc_resp(MsgType, _, {error, Reason}) ->
     rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType).
 
+-spec enc_wrap_resp(atom(), atom(), {ok, any()} | {error, any()}) -> binary().
+enc_wrap_resp(MsgType, InnerName, {ok, Data}) ->
+    rubis_pb:encode_msg(#{resp => {content, #{InnerName => Data}}}, MsgType);
+
+enc_wrap_resp(MsgType, _, {error, Reason}) ->
+    rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType).
+
 %% @doc Decode a server reply proto message to an erlang result
 -spec dec_resp(atom(), atom(), binary()) -> {ok, any()} | {error, any()}.
 dec_resp(MsgType, InnerName, Msg) ->
     Resp = maps:get(resp, rubis_pb:decode_msg(Msg, MsgType)),
     case Resp of
-        {InnerName, Content} ->
-            {ok, Content};
+        {content, Map} ->
+            {ok, maps:get(InnerName, Map)};
+
         {error_reason, Code} ->
-            {error, decode_error(Code)}
+            {error, decode_error(Code)};
+
+        {InnerName, Content} ->
+            {ok, Content}
     end.
 
 %% @doc Encode Protobuf msg along with msg info
