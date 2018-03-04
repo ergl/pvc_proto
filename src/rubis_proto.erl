@@ -22,9 +22,10 @@ peek_msg_type(Bin) ->
 %% TODO(borja): Implement the rest
 
 %% @doc Generic server side decode
+-spec decode_request(binary()) -> {atom(), #{}}.
 decode_request(Bin) ->
-    {Type, Msg} = decode_raw_bits(Bin),
-    rubis_pb:decode_msg(Msg, Type).
+    {Type, BinMsg} = decode_raw_bits(Bin),
+    {Type, rubis_pb:decode_msg(BinMsg, Type)}.
 
 %% @doc Generic client side decode
 %%
