@@ -185,9 +185,13 @@ message ViewUser {
 
 message ViewUserResp {
     message Wrap {
-        bytes username = 1;
-        sfixed32 rating = 2;
-        repeated Comment comments = 3; // With from_username set
+        message UserInfo {
+            bytes username = 1;
+            sfixed32 rating = 2;
+            repeated Comment comments = 3; // With from_username set
+        }
+
+        UserInfo user_details = 1;
     }
     oneof resp {
         Wrap content = 1;
