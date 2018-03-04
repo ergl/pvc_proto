@@ -86,7 +86,7 @@ message AuthUserResp {
 message RegisterUser {
     bytes username = 1;
     bytes password = 2;
-    bytes region_name = 3;
+    bytes region_id = 3;
 }
 
 message RegisterUserResp {

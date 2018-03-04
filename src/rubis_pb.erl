@@ -174,7 +174,7 @@
 -type 'RegisterUser'() ::
       #{username                => binary(),        % = 1
         password                => binary(),        % = 2
-        region_name             => binary()         % = 3
+        region_id               => binary()         % = 3
        }.
 -type 'BrowseRegions'() ::
       #{
@@ -1317,7 +1317,7 @@ e_msg_RegisterUser(#{} = M, Bin, TrUserData) ->
 	   _ -> B1
 	 end,
     case M of
-      #{region_name := F3} ->
+      #{region_id := F3} ->
 	  begin
 	    TrF3 = id(F3, TrUserData),
 	    case iolist_size(TrF3) of
@@ -7674,8 +7674,8 @@ dfp_read_field_def_RegisterUser(<<18, Rest/binary>>, Z1,
 				  F@_3, TrUserData);
 dfp_read_field_def_RegisterUser(<<26, Rest/binary>>, Z1,
 				Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_RegisterUser_region_name(Rest, Z1, Z2, F@_1,
-				     F@_2, F@_3, TrUserData);
+    d_field_RegisterUser_region_id(Rest, Z1, Z2, F@_1, F@_2,
+				   F@_3, TrUserData);
 dfp_read_field_def_RegisterUser(<<>>, 0, 0, F@_1, F@_2,
 				F@_3, _) ->
     S1 = #{},
@@ -7686,7 +7686,7 @@ dfp_read_field_def_RegisterUser(<<>>, 0, 0, F@_1, F@_2,
 	    true -> S2#{password => F@_2}
 	 end,
     if F@_3 == '$undef' -> S3;
-       true -> S3#{region_name => F@_3}
+       true -> S3#{region_id => F@_3}
     end;
 dfp_read_field_def_RegisterUser(Other, Z1, Z2, F@_1,
 				F@_2, F@_3, TrUserData) ->
@@ -7711,8 +7711,8 @@ dg_read_field_def_RegisterUser(<<0:1, X:7,
 	  d_field_RegisterUser_password(Rest, 0, 0, F@_1, F@_2,
 					F@_3, TrUserData);
       26 ->
-	  d_field_RegisterUser_region_name(Rest, 0, 0, F@_1, F@_2,
-					   F@_3, TrUserData);
+	  d_field_RegisterUser_region_id(Rest, 0, 0, F@_1, F@_2,
+					 F@_3, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
@@ -7742,7 +7742,7 @@ dg_read_field_def_RegisterUser(<<>>, 0, 0, F@_1, F@_2,
 	    true -> S2#{password => F@_2}
 	 end,
     if F@_3 == '$undef' -> S3;
-       true -> S3#{region_name => F@_3}
+       true -> S3#{region_id => F@_3}
     end.
 
 d_field_RegisterUser_username(<<1:1, X:7, Rest/binary>>,
@@ -7775,16 +7775,15 @@ d_field_RegisterUser_password(<<0:1, X:7, Rest/binary>>,
     dfp_read_field_def_RegisterUser(RestF, 0, 0, F@_1,
 				    NewFValue, F@_3, TrUserData).
 
-d_field_RegisterUser_region_name(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, F@_3, TrUserData)
+d_field_RegisterUser_region_id(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
-    d_field_RegisterUser_region_name(Rest, N + 7,
-				     X bsl N + Acc, F@_1, F@_2, F@_3,
-				     TrUserData);
-d_field_RegisterUser_region_name(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, _, TrUserData) ->
+    d_field_RegisterUser_region_id(Rest, N + 7,
+				   X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+d_field_RegisterUser_region_id(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, _, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
@@ -9913,10 +9912,10 @@ merge_msg_RegisterUser(PMsg, NMsg, _) ->
 	   _ -> S2
 	 end,
     case {PMsg, NMsg} of
-      {_, #{region_name := NFregion_name}} ->
-	  S3#{region_name => NFregion_name};
-      {#{region_name := PFregion_name}, _} ->
-	  S3#{region_name => PFregion_name};
+      {_, #{region_id := NFregion_id}} ->
+	  S3#{region_id => NFregion_id};
+      {#{region_id := PFregion_id}, _} ->
+	  S3#{region_id => PFregion_id};
       _ -> S3
     end.
 
@@ -11286,13 +11285,13 @@ v_msg_RegisterUser(#{} = M, Path, _) ->
       _ -> ok
     end,
     case M of
-      #{region_name := F3} ->
-	  v_type_bytes(F3, [region_name | Path]);
+      #{region_id := F3} ->
+	  v_type_bytes(F3, [region_id | Path]);
       _ -> ok
     end,
     lists:foreach(fun (username) -> ok;
 		      (password) -> ok;
-		      (region_name) -> ok;
+		      (region_id) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
@@ -11885,7 +11884,7 @@ get_msg_defs() ->
 	 type => bytes, occurrence => optional, opts => []},
        #{name => password, fnum => 2, rnum => 3, type => bytes,
 	 occurrence => optional, opts => []},
-       #{name => region_name, fnum => 3, rnum => 4,
+       #{name => region_id, fnum => 3, rnum => 4,
 	 type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'BrowseRegions'}, []},
      {{msg, 'AboutMeResp.Wrap'},
@@ -12252,7 +12251,7 @@ find_msg_def('RegisterUser') ->
        type => bytes, occurrence => optional, opts => []},
      #{name => password, fnum => 2, rnum => 3, type => bytes,
        occurrence => optional, opts => []},
-     #{name => region_name, fnum => 3, rnum => 4,
+     #{name => region_id, fnum => 3, rnum => 4,
        type => bytes, occurrence => optional, opts => []}];
 find_msg_def('BrowseRegions') -> [];
 find_msg_def('AboutMeResp.Wrap') ->

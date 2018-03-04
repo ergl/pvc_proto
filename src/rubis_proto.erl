@@ -113,10 +113,10 @@ auth_user(Username, Password) when is_binary(Username) andalso is_binary(Passwor
     Msg = rubis_pb:encode_msg(#{username => Username, password => Password}, 'AuthUser'),
     encode_raw_bits('AuthUser', Msg).
 
-register_user(Username, Password, RegionName) ->
+register_user(Username, Password, RegionId) ->
     Msg = rubis_pb:encode_msg(#{username => Username,
                                 password => Password,
-                                region_name => RegionName}, 'RegisterUser'),
+                                region_id => RegionId}, 'RegisterUser'),
     encode_raw_bits('RegisterUser', Msg).
 
 browse_categories() ->
