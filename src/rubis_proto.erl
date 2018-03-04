@@ -19,7 +19,9 @@
          search_items_by_category/1,
          search_items_by_region/2,
          view_item/1,
-         view_user/1]).
+         view_user/1,
+         %% ...
+         store_item/5]).
 
 -spec peek_msg_type(binary()) -> atom().
 peek_msg_type(Bin) ->
@@ -65,7 +67,12 @@ decode_reply('ViewItem', Msg) ->
     dec_resp('ViewItemResp', items, Msg);
 
 decode_reply('ViewUser', Msg) ->
-    dec_resp('ViewUserResp', user_details, Msg).
+    dec_resp('ViewUserResp', user_details, Msg);
+
+%% ...
+
+decode_reply('StoreItem', Msg) ->
+    dec_resp('StoreItemResp', item_id, Msg).
 
 %% @doc Generic client side encode
 %%
@@ -99,7 +106,12 @@ encode_reply('ViewItem', Resp) ->
     enc_wrap_resp('ViewItemResp', items, Resp);
 
 encode_reply('ViewUser', Resp) ->
-    enc_wrap_resp('ViewUserResp', user_details, Resp).
+    enc_wrap_resp('ViewUserResp', user_details, Resp);
+
+%% ...
+
+encode_reply('StoreItem', Resp) ->
+    enc_resp('StoreItemResp', item_id, Resp).
 
 put_region(RegionName) when is_binary(RegionName) ->
     Msg = rubis_pb:encode_msg(#{region_name => RegionName}, 'PutRegion'),
@@ -142,6 +154,14 @@ view_item(ItemId) when is_binary(ItemId) ->
 view_user(UserId) when is_binary(UserId) ->
     Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'ViewUser'),
     encode_raw_bits('ViewUser', Msg).
+
+store_item(ItemName, ItemDesc, Quantity, CategoryId, SellerId) ->
+    Msg = rubis_pb:encode_msg(#{item_name => ItemName,
+                                description => ItemDesc,
+                                quantity => Quantity,
+                                category_id => CategoryId,
+                                seller_id => SellerId}, 'StoreItem'),
+    encode_raw_bits('StoreItem', Msg).
 
 
 %% Util functions
