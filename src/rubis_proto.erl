@@ -11,20 +11,23 @@
 -export([put_region/1,
          put_category/1]).
 
-%% Client-side RUBIS Procedures
+%% Read-write RUBIS Procedures
 -export([auth_user/2,
          register_user/3,
-         browse_categories/0,
+         store_buy_now/3,
+         store_bid/3,
+         store_comment/5,
+         store_item/5]).
+
+%% Read-only RUBIS Procedures
+-export([browse_categories/0,
          browse_regions/0,
          search_items_by_category/1,
          search_items_by_region/2,
          view_item/1,
          view_user/1,
-         %% ...
-         store_buy_now/3,
-         store_bid/3,
-         store_comment/5,
-         store_item/5]).
+         view_bid_history/1,
+         about_me/1]).
 
 -spec peek_msg_type(binary()) -> atom().
 peek_msg_type(Bin) ->
@@ -72,7 +75,8 @@ decode_reply('ViewItem', Msg) ->
 decode_reply('ViewUser', Msg) ->
     dec_resp('ViewUserResp', success, Msg);
 
-%% ...
+decode_reply('ViewItemBidHist', Msg) ->
+    dec_resp('ViewItemBidHistResp', success, Msg);
 
 decode_reply('StoreBuyNow', Resp) ->
     dec_resp('StoreBuyNowResp', buy_now_id, Resp);
@@ -84,7 +88,10 @@ decode_reply('StoreComment', Resp) ->
     dec_resp('StoreCommentResp', comment_id, Resp);
 
 decode_reply('StoreItem', Msg) ->
-    dec_resp('StoreItemResp', item_id, Msg).
+    dec_resp('StoreItemResp', item_id, Msg);
+
+decode_reply('AboutMe', Msg) ->
+    dec_resp('AboutMeResp', success, Msg).
 
 %% @doc Generic client side encode
 %%
@@ -120,7 +127,8 @@ encode_reply('ViewItem', Resp) ->
 encode_reply('ViewUser', Resp) ->
     enc_resp('ViewUserResp', success, Resp);
 
-%% ...
+encode_reply('ViewItemBidHist', Resp) ->
+    enc_resp('ViewItemBidHistResp', success, Resp);
 
 encode_reply('StoreBuyNow', Resp) ->
     enc_resp('StoreBuyNowResp', buy_now_id, Resp);
@@ -132,7 +140,10 @@ encode_reply('StoreComment', Resp) ->
     enc_resp('StoreCommentResp', comment_id, Resp);
 
 encode_reply('StoreItem', Resp) ->
-    enc_resp('StoreItemResp', item_id, Resp).
+    enc_resp('StoreItemResp', item_id, Resp);
+
+encode_reply('AboutMe', Resp) ->
+    enc_resp('AboutMeResp', success, Resp).
 
 put_region(RegionName) when is_binary(RegionName) ->
     Msg = rubis_pb:encode_msg(#{region_name => RegionName}, 'PutRegion'),
@@ -175,6 +186,14 @@ view_item(ItemId) when is_binary(ItemId) ->
 view_user(UserId) when is_binary(UserId) ->
     Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'ViewUser'),
     encode_raw_bits('ViewUser', Msg).
+
+view_bid_history(ItemId) when is_binary(ItemId) ->
+    Msg = rubis_pb:encode_msg(#{item_id => ItemId}, 'ViewItemBidHist'),
+    encode_raw_bits('ViewItemBidHist', Msg).
+
+about_me(UserId) when is_binary(UserId) ->
+    Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'AboutMe'),
+    encode_raw_bits('AboutMe', Msg).
 
 store_buy_now(ItemId, BuyerId, Value) ->
     Msg = rubis_pb:encode_msg(#{on_item_id => ItemId,
