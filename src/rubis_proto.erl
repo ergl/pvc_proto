@@ -34,8 +34,6 @@ peek_msg_type(Bin) ->
     {Type, _} = decode_raw_bits(Bin),
     Type.
 
-%% TODO(borja): Implement the rest
-
 %% @doc Generic server side decode
 -spec decode_request(binary()) -> {atom(), #{}}.
 decode_request(Bin) ->
@@ -176,7 +174,8 @@ search_items_by_category(CategoryId) when is_binary(CategoryId) ->
     encode_raw_bits('SearchByCategory', Msg).
 
 search_items_by_region(CategoryId, RegionId) when is_binary(RegionId) ->
-    Msg = rubis_pb:encode_msg(#{category_id => CategoryId, region_id => RegionId}, 'SearchByRegion'),
+    Msg = rubis_pb:encode_msg(#{category_id => CategoryId,
+                                region_id => RegionId}, 'SearchByRegion'),
     encode_raw_bits('SearchByRegion', Msg).
 
 view_item(ItemId) when is_binary(ItemId) ->
