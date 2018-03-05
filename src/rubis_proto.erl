@@ -55,22 +55,22 @@ decode_reply('RegisterUser', Msg) ->
     dec_resp('RegisterUserResp', user_id, Msg);
 
 decode_reply('BrowseCategories', Msg) ->
-    dec_resp('BrowseCategoriesResp', category_names, Msg);
+    dec_resp('BrowseCategoriesResp', success, Msg);
 
 decode_reply('BrowseRegions', Msg) ->
-    dec_resp('BrowseRegionsResp', region_names, Msg);
+    dec_resp('BrowseRegionsResp', success, Msg);
 
 decode_reply('SearchByCategory', Msg) ->
-    dec_resp('SearchByCategoryResp', items, Msg);
+    dec_resp('SearchByCategoryResp', success, Msg);
 
 decode_reply('SearchByRegion', Msg) ->
-    dec_resp('SearchByRegionResp', items, Msg);
+    dec_resp('SearchByRegionResp', success, Msg);
 
 decode_reply('ViewItem', Msg) ->
-    dec_resp('ViewItemResp', items, Msg);
+    dec_resp('ViewItemResp', success, Msg);
 
 decode_reply('ViewUser', Msg) ->
-    dec_resp('ViewUserResp', user_details, Msg);
+    dec_resp('ViewUserResp', success, Msg);
 
 %% ...
 
@@ -103,22 +103,22 @@ encode_reply('RegisterUser', Resp) ->
     enc_resp('RegisterUserResp', user_id, Resp);
 
 encode_reply('BrowseCategories', Resp) ->
-    enc_wrap_resp('BrowseCategoriesResp', category_names, Resp);
+    enc_resp('BrowseCategoriesResp', success, Resp);
 
 encode_reply('BrowseRegions', Resp) ->
-    enc_wrap_resp('BrowseRegionsResp', region_names, Resp);
+    enc_resp('BrowseRegionsResp', success, Resp);
 
 encode_reply('SearchByCategory', Resp) ->
-    enc_wrap_resp('SearchByCategoryResp', items, Resp);
+    enc_resp('SearchByCategoryResp', success, Resp);
 
 encode_reply('SearchByRegion', Resp) ->
-    enc_wrap_resp('SearchByRegionResp', items, Resp);
+    enc_resp('SearchByRegionResp', success, Resp);
 
 encode_reply('ViewItem', Resp) ->
-    enc_wrap_resp('ViewItemResp', items, Resp);
+    enc_resp('ViewItemResp', success, Resp);
 
 encode_reply('ViewUser', Resp) ->
-    enc_wrap_resp('ViewUserResp', user_details, Resp);
+    enc_resp('ViewUserResp', success, Resp);
 
 %% ...
 
@@ -211,18 +211,14 @@ store_item(ItemName, ItemDesc, Quantity, CategoryId, SellerId) ->
 %%
 %%      Replies can be either {ok, _} or {error, _}. This encodes
 %%      error types as well
--spec enc_resp(atom(), atom(), {ok, any()} | {error, any()}) -> binary().
+-spec enc_resp(atom(), atom(), ok | {ok, any()} | {error, any()}) -> binary().
+enc_resp(MsgType, success, ok) ->
+    rubis_pb:encode_msg(#{resp => {success, encode_success(ok)}}, MsgType);
+
 enc_resp(MsgType, InnerName, {ok, Data}) ->
     rubis_pb:encode_msg(#{resp => {InnerName, Data}}, MsgType);
 
 enc_resp(MsgType, _, {error, Reason}) ->
-    rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType).
-
--spec enc_wrap_resp(atom(), atom(), {ok, any()} | {error, any()}) -> binary().
-enc_wrap_resp(MsgType, InnerName, {ok, Data}) ->
-    rubis_pb:encode_msg(#{resp => {content, #{InnerName => Data}}}, MsgType);
-
-enc_wrap_resp(MsgType, _, {error, Reason}) ->
     rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType).
 
 %% @doc Decode a server reply proto message to an erlang result
@@ -230,8 +226,8 @@ enc_wrap_resp(MsgType, _, {error, Reason}) ->
 dec_resp(MsgType, InnerName, Msg) ->
     Resp = maps:get(resp, rubis_pb:decode_msg(Msg, MsgType)),
     case Resp of
-        {content, Map} ->
-            {ok, maps:get(InnerName, Map)};
+        {success, Code} ->
+            decode_success(Code);
 
         {error_reason, Code} ->
             {error, decode_error(Code)};
@@ -290,6 +286,11 @@ decode_type_num(14) -> 'StoreComment';
 decode_type_num(15) -> 'StoreItem';
 decode_type_num(16) -> 'AboutMe';
 decode_type_num(_) -> unknown.
+
+-spec encode_success(atom()) -> non_neg_integer().
+-spec decode_success(non_neg_integer()) -> atom().
+encode_success(_) -> 1.
+decode_success(_) -> ok.
 
 %% @doc Encode server errors as ints
 -spec encode_error(atom()) -> non_neg_integer().

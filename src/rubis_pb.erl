@@ -28,141 +28,8 @@
 -export_type([]).
 
 %% message types
--type 'AboutMeResp.BuyNowInfo'() ::
-      #{on_item_name            => binary(),        % = 1
-        seller_username         => binary(),        % = 2
-        quantity                => non_neg_integer() % = 3, 32 bits
-       }.
--type 'StoreBidResp'() ::
-      #{resp                    => {bid_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'AboutMe'() ::
-      #{user_id                 => binary()         % = 1
-       }.
--type 'Item'() ::
-      #{item_name               => binary(),        % = 1
-        description             => binary(),        % = 2
-        num_bids                => non_neg_integer(), % = 3, 32 bits
-        quantity                => non_neg_integer(), % = 4, 32 bits
-        end_date                => integer(),       % = 5, 32 bits
-        category_id             => binary()         % = 6
-       }.
--type 'ItemDetails'() ::
-      #{item                    => 'Item'(),        % = 1
-        seller_name             => binary()         % = 2
-       }.
--type 'ViewItemResp.Wrap'() ::
-      #{items                   => ['ItemDetails'()] % = 1
-       }.
--type 'Comment'() ::
-      #{on_item_id              => binary(),        % = 1
-        rating                  => integer(),       % = 2, 32 bits
-        body                    => binary(),        % = 3
-        from_to                 => {from_username, binary()} | {to_id, binary()} % oneof
-       }.
--type 'ViewUserResp.Wrap.UserInfo'() ::
-      #{username                => binary(),        % = 1
-        rating                  => integer(),       % = 2, 32 bits
-        comments                => ['Comment'()]    % = 3
-       }.
--type 'BrowseCategoriesResp.Wrap'() ::
-      #{category_names          => [binary()]       % = 1
-       }.
--type 'BidInfo'() ::
-      #{on_item_id              => binary(),        % = 1
-        price                   => non_neg_integer(), % = 2, 32 bits
-        bidder_name             => binary()         % = 3
-       }.
--type 'ViewItemBidHistResp.Wrap'() ::
-      #{item_name               => binary(),        % = 1
-        bids                    => ['BidInfo'()]    % = 2
-       }.
--type 'ViewItemBidHistResp'() ::
-      #{resp                    => {content, 'ViewItemBidHistResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'PutCategoryResp'() ::
-      #{resp                    => {category_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'ViewItem'() ::
-      #{item_id                 => binary()         % = 1
-       }.
--type 'SearchByRegionResp.Wrap'() ::
-      #{items                   => ['ItemDetails'()] % = 1
-       }.
--type 'SearchByRegionResp'() ::
-      #{resp                    => {content, 'SearchByRegionResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'PutRegionResp'() ::
-      #{resp                    => {region_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'PutRegion'() ::
-      #{region_name             => binary()         % = 1
-       }.
 -type 'AuthUserResp'() ::
       #{resp                    => {user_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'StoreBid'() ::
-      #{on_item_id              => binary(),        % = 1
-        bidder_id               => binary(),        % = 2
-        value                   => non_neg_integer() % = 3, 32 bits
-       }.
--type 'BrowseRegionsResp.Wrap'() ::
-      #{region_names            => [binary()]       % = 1
-       }.
--type 'AboutMeResp.AboutMeBid'() ::
-      #{on_item_name            => binary(),        % = 1
-        seller_username         => binary(),        % = 2
-        price                   => non_neg_integer() % = 3, 32 bits
-       }.
--type 'StoreItemResp'() ::
-      #{resp                    => {item_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'AuthUser'() ::
-      #{username                => binary(),        % = 1
-        password                => binary()         % = 2
-       }.
--type 'BrowseCategories'() ::
-      #{
-       }.
--type 'PutCategory'() ::
-      #{category_name           => binary()         % = 1
-       }.
--type 'StoreItem'() ::
-      #{item_name               => binary(),        % = 1
-        description             => binary(),        % = 2
-        quantity                => non_neg_integer(), % = 3, 32 bits
-        category_id             => binary(),        % = 4
-        seller_id               => binary()         % = 5
-       }.
--type 'BrowseCategoriesResp'() ::
-      #{resp                    => {content, 'BrowseCategoriesResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'ViewUserResp.Wrap'() ::
-      #{user_details            => 'ViewUserResp.Wrap.UserInfo'() % = 1
-       }.
--type 'ViewUserResp'() ::
-      #{resp                    => {content, 'ViewUserResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'ViewItemResp'() ::
-      #{resp                    => {content, 'ViewItemResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'SearchByCategory'() ::
-      #{category_id             => binary()         % = 1
-       }.
--type 'SearchByRegion'() ::
-      #{category_id             => binary(),        % = 1
-        region_id               => binary()         % = 2
-       }.
--type 'StoreCommentResp'() ::
-      #{resp                    => {comment_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'StoreBuyNow'() ::
-      #{on_item_id              => binary(),        % = 1
-        buyer_id                => binary(),        % = 2
-        quantity                => non_neg_integer() % = 3, 32 bits
-       }.
--type 'SearchByCategoryResp.Wrap'() ::
-      #{items                   => ['Item'()]       % = 1
        }.
 -type 'StoreComment'() ::
       #{on_item_id              => binary(),        % = 1
@@ -170,6 +37,65 @@
         to_id                   => binary(),        % = 3
         rating                  => integer(),       % = 4, 32 bits
         body                    => binary()         % = 5
+       }.
+-type 'StoreBuyNow'() ::
+      #{on_item_id              => binary(),        % = 1
+        buyer_id                => binary(),        % = 2
+        quantity                => non_neg_integer() % = 3, 32 bits
+       }.
+-type 'AboutMeResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'SearchByCategoryResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'BrowseCategoriesResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'ViewItemBidHist'() ::
+      #{item_id                 => binary()         % = 1
+       }.
+-type 'SearchByCategory'() ::
+      #{category_id             => binary()         % = 1
+       }.
+-type 'RegisterUserResp'() ::
+      #{resp                    => {user_id, binary()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'BrowseRegionsResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'ViewUser'() ::
+      #{user_id                 => binary()         % = 1
+       }.
+-type 'ViewUserResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'BrowseCategories'() ::
+      #{
+       }.
+-type 'SearchByRegionResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'StoreBuyNowResp'() ::
+      #{resp                    => {buy_now_id, binary()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'StoreItemResp'() ::
+      #{resp                    => {item_id, binary()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'StoreBidResp'() ::
+      #{resp                    => {bid_id, binary()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'ViewItemResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'PutRegionResp'() ::
+      #{resp                    => {region_id, binary()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'ViewItem'() ::
+      #{item_id                 => binary()         % = 1
+       }.
+-type 'ViewItemBidHistResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
        }.
 -type 'RegisterUser'() ::
       #{username                => binary(),        % = 1
@@ -179,43 +105,49 @@
 -type 'BrowseRegions'() ::
       #{
        }.
--type 'AboutMeResp.Wrap'() ::
-      #{username                => binary(),        % = 1
-        rating                  => integer(),       % = 2, 32 bits
-        sold_items              => ['Item'()],      % = 3
-        bought_items            => ['AboutMeResp.BuyNowInfo'()], % = 4
-        placed_bids             => ['AboutMeResp.AboutMeBid'()], % = 5
-        authored_comments       => ['Comment'()]    % = 6
+-type 'PutCategoryResp'() ::
+      #{resp                    => {category_id, binary()} | {error_reason, non_neg_integer()} % oneof
        }.
--type 'AboutMeResp'() ::
-      #{resp                    => {content, 'AboutMeResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'ViewItemBidHist'() ::
-      #{item_id                 => binary()         % = 1
-       }.
--type 'RegisterUserResp'() ::
-      #{resp                    => {user_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'StoreBuyNowResp'() ::
-      #{resp                    => {buy_now_id, binary()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'SearchByCategoryResp'() ::
-      #{resp                    => {content, 'SearchByCategoryResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
-       }.
--type 'ViewUser'() ::
+-type 'AboutMe'() ::
       #{user_id                 => binary()         % = 1
        }.
--type 'BrowseRegionsResp'() ::
-      #{resp                    => {content, 'BrowseRegionsResp.Wrap'()} | {error_reason, non_neg_integer()} % oneof
+-type 'PutRegion'() ::
+      #{region_name             => binary()         % = 1
        }.
--export_type(['AboutMeResp.BuyNowInfo'/0, 'StoreBidResp'/0, 'AboutMe'/0, 'Item'/0, 'ItemDetails'/0, 'ViewItemResp.Wrap'/0, 'Comment'/0, 'ViewUserResp.Wrap.UserInfo'/0, 'BrowseCategoriesResp.Wrap'/0, 'BidInfo'/0, 'ViewItemBidHistResp.Wrap'/0, 'ViewItemBidHistResp'/0, 'PutCategoryResp'/0, 'ViewItem'/0, 'SearchByRegionResp.Wrap'/0, 'SearchByRegionResp'/0, 'PutRegionResp'/0, 'PutRegion'/0, 'AuthUserResp'/0, 'StoreBid'/0, 'BrowseRegionsResp.Wrap'/0, 'AboutMeResp.AboutMeBid'/0, 'StoreItemResp'/0, 'AuthUser'/0, 'BrowseCategories'/0, 'PutCategory'/0, 'StoreItem'/0, 'BrowseCategoriesResp'/0, 'ViewUserResp.Wrap'/0, 'ViewUserResp'/0, 'ViewItemResp'/0, 'SearchByCategory'/0, 'SearchByRegion'/0, 'StoreCommentResp'/0, 'StoreBuyNow'/0, 'SearchByCategoryResp.Wrap'/0, 'StoreComment'/0, 'RegisterUser'/0, 'BrowseRegions'/0, 'AboutMeResp.Wrap'/0, 'AboutMeResp'/0, 'ViewItemBidHist'/0, 'RegisterUserResp'/0, 'StoreBuyNowResp'/0, 'SearchByCategoryResp'/0, 'ViewUser'/0, 'BrowseRegionsResp'/0]).
+-type 'StoreBid'() ::
+      #{on_item_id              => binary(),        % = 1
+        bidder_id               => binary(),        % = 2
+        value                   => non_neg_integer() % = 3, 32 bits
+       }.
+-type 'StoreCommentResp'() ::
+      #{resp                    => {comment_id, binary()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'StoreItem'() ::
+      #{item_name               => binary(),        % = 1
+        description             => binary(),        % = 2
+        quantity                => non_neg_integer(), % = 3, 32 bits
+        category_id             => binary(),        % = 4
+        seller_id               => binary()         % = 5
+       }.
+-type 'PutCategory'() ::
+      #{category_name           => binary()         % = 1
+       }.
+-type 'AuthUser'() ::
+      #{username                => binary(),        % = 1
+        password                => binary()         % = 2
+       }.
+-type 'SearchByRegion'() ::
+      #{category_id             => binary(),        % = 1
+        region_id               => binary()         % = 2
+       }.
+-export_type(['AuthUserResp'/0, 'StoreComment'/0, 'StoreBuyNow'/0, 'AboutMeResp'/0, 'SearchByCategoryResp'/0, 'BrowseCategoriesResp'/0, 'ViewItemBidHist'/0, 'SearchByCategory'/0, 'RegisterUserResp'/0, 'BrowseRegionsResp'/0, 'ViewUser'/0, 'ViewUserResp'/0, 'BrowseCategories'/0, 'SearchByRegionResp'/0, 'StoreBuyNowResp'/0, 'StoreItemResp'/0, 'StoreBidResp'/0, 'ViewItemResp'/0, 'PutRegionResp'/0, 'ViewItem'/0, 'ViewItemBidHistResp'/0, 'RegisterUser'/0, 'BrowseRegions'/0, 'PutCategoryResp'/0, 'AboutMe'/0, 'PutRegion'/0, 'StoreBid'/0, 'StoreCommentResp'/0, 'StoreItem'/0, 'PutCategory'/0, 'AuthUser'/0, 'SearchByRegion'/0]).
 
--spec encode_msg('AboutMeResp.BuyNowInfo'() | 'StoreBidResp'() | 'AboutMe'() | 'Item'() | 'ItemDetails'() | 'ViewItemResp.Wrap'() | 'Comment'() | 'ViewUserResp.Wrap.UserInfo'() | 'BrowseCategoriesResp.Wrap'() | 'BidInfo'() | 'ViewItemBidHistResp.Wrap'() | 'ViewItemBidHistResp'() | 'PutCategoryResp'() | 'ViewItem'() | 'SearchByRegionResp.Wrap'() | 'SearchByRegionResp'() | 'PutRegionResp'() | 'PutRegion'() | 'AuthUserResp'() | 'StoreBid'() | 'BrowseRegionsResp.Wrap'() | 'AboutMeResp.AboutMeBid'() | 'StoreItemResp'() | 'AuthUser'() | 'BrowseCategories'() | 'PutCategory'() | 'StoreItem'() | 'BrowseCategoriesResp'() | 'ViewUserResp.Wrap'() | 'ViewUserResp'() | 'ViewItemResp'() | 'SearchByCategory'() | 'SearchByRegion'() | 'StoreCommentResp'() | 'StoreBuyNow'() | 'SearchByCategoryResp.Wrap'() | 'StoreComment'() | 'RegisterUser'() | 'BrowseRegions'() | 'AboutMeResp.Wrap'() | 'AboutMeResp'() | 'ViewItemBidHist'() | 'RegisterUserResp'() | 'StoreBuyNowResp'() | 'SearchByCategoryResp'() | 'ViewUser'() | 'BrowseRegionsResp'(),'AboutMeResp.BuyNowInfo' | 'StoreBidResp' | 'AboutMe' | 'Item' | 'ItemDetails' | 'ViewItemResp.Wrap' | 'Comment' | 'ViewUserResp.Wrap.UserInfo' | 'BrowseCategoriesResp.Wrap' | 'BidInfo' | 'ViewItemBidHistResp.Wrap' | 'ViewItemBidHistResp' | 'PutCategoryResp' | 'ViewItem' | 'SearchByRegionResp.Wrap' | 'SearchByRegionResp' | 'PutRegionResp' | 'PutRegion' | 'AuthUserResp' | 'StoreBid' | 'BrowseRegionsResp.Wrap' | 'AboutMeResp.AboutMeBid' | 'StoreItemResp' | 'AuthUser' | 'BrowseCategories' | 'PutCategory' | 'StoreItem' | 'BrowseCategoriesResp' | 'ViewUserResp.Wrap' | 'ViewUserResp' | 'ViewItemResp' | 'SearchByCategory' | 'SearchByRegion' | 'StoreCommentResp' | 'StoreBuyNow' | 'SearchByCategoryResp.Wrap' | 'StoreComment' | 'RegisterUser' | 'BrowseRegions' | 'AboutMeResp.Wrap' | 'AboutMeResp' | 'ViewItemBidHist' | 'RegisterUserResp' | 'StoreBuyNowResp' | 'SearchByCategoryResp' | 'ViewUser' | 'BrowseRegionsResp') -> binary().
+-spec encode_msg('AuthUserResp'() | 'StoreComment'() | 'StoreBuyNow'() | 'AboutMeResp'() | 'SearchByCategoryResp'() | 'BrowseCategoriesResp'() | 'ViewItemBidHist'() | 'SearchByCategory'() | 'RegisterUserResp'() | 'BrowseRegionsResp'() | 'ViewUser'() | 'ViewUserResp'() | 'BrowseCategories'() | 'SearchByRegionResp'() | 'StoreBuyNowResp'() | 'StoreItemResp'() | 'StoreBidResp'() | 'ViewItemResp'() | 'PutRegionResp'() | 'ViewItem'() | 'ViewItemBidHistResp'() | 'RegisterUser'() | 'BrowseRegions'() | 'PutCategoryResp'() | 'AboutMe'() | 'PutRegion'() | 'StoreBid'() | 'StoreCommentResp'() | 'StoreItem'() | 'PutCategory'() | 'AuthUser'() | 'SearchByRegion'(),'AuthUserResp' | 'StoreComment' | 'StoreBuyNow' | 'AboutMeResp' | 'SearchByCategoryResp' | 'BrowseCategoriesResp' | 'ViewItemBidHist' | 'SearchByCategory' | 'RegisterUserResp' | 'BrowseRegionsResp' | 'ViewUser' | 'ViewUserResp' | 'BrowseCategories' | 'SearchByRegionResp' | 'StoreBuyNowResp' | 'StoreItemResp' | 'StoreBidResp' | 'ViewItemResp' | 'PutRegionResp' | 'ViewItem' | 'ViewItemBidHistResp' | 'RegisterUser' | 'BrowseRegions' | 'PutCategoryResp' | 'AboutMe' | 'PutRegion' | 'StoreBid' | 'StoreCommentResp' | 'StoreItem' | 'PutCategory' | 'AuthUser' | 'SearchByRegion') -> binary().
 encode_msg(Msg, MsgName) ->
     encode_msg(Msg, MsgName, []).
 
 
--spec encode_msg('AboutMeResp.BuyNowInfo'() | 'StoreBidResp'() | 'AboutMe'() | 'Item'() | 'ItemDetails'() | 'ViewItemResp.Wrap'() | 'Comment'() | 'ViewUserResp.Wrap.UserInfo'() | 'BrowseCategoriesResp.Wrap'() | 'BidInfo'() | 'ViewItemBidHistResp.Wrap'() | 'ViewItemBidHistResp'() | 'PutCategoryResp'() | 'ViewItem'() | 'SearchByRegionResp.Wrap'() | 'SearchByRegionResp'() | 'PutRegionResp'() | 'PutRegion'() | 'AuthUserResp'() | 'StoreBid'() | 'BrowseRegionsResp.Wrap'() | 'AboutMeResp.AboutMeBid'() | 'StoreItemResp'() | 'AuthUser'() | 'BrowseCategories'() | 'PutCategory'() | 'StoreItem'() | 'BrowseCategoriesResp'() | 'ViewUserResp.Wrap'() | 'ViewUserResp'() | 'ViewItemResp'() | 'SearchByCategory'() | 'SearchByRegion'() | 'StoreCommentResp'() | 'StoreBuyNow'() | 'SearchByCategoryResp.Wrap'() | 'StoreComment'() | 'RegisterUser'() | 'BrowseRegions'() | 'AboutMeResp.Wrap'() | 'AboutMeResp'() | 'ViewItemBidHist'() | 'RegisterUserResp'() | 'StoreBuyNowResp'() | 'SearchByCategoryResp'() | 'ViewUser'() | 'BrowseRegionsResp'(),'AboutMeResp.BuyNowInfo' | 'StoreBidResp' | 'AboutMe' | 'Item' | 'ItemDetails' | 'ViewItemResp.Wrap' | 'Comment' | 'ViewUserResp.Wrap.UserInfo' | 'BrowseCategoriesResp.Wrap' | 'BidInfo' | 'ViewItemBidHistResp.Wrap' | 'ViewItemBidHistResp' | 'PutCategoryResp' | 'ViewItem' | 'SearchByRegionResp.Wrap' | 'SearchByRegionResp' | 'PutRegionResp' | 'PutRegion' | 'AuthUserResp' | 'StoreBid' | 'BrowseRegionsResp.Wrap' | 'AboutMeResp.AboutMeBid' | 'StoreItemResp' | 'AuthUser' | 'BrowseCategories' | 'PutCategory' | 'StoreItem' | 'BrowseCategoriesResp' | 'ViewUserResp.Wrap' | 'ViewUserResp' | 'ViewItemResp' | 'SearchByCategory' | 'SearchByRegion' | 'StoreCommentResp' | 'StoreBuyNow' | 'SearchByCategoryResp.Wrap' | 'StoreComment' | 'RegisterUser' | 'BrowseRegions' | 'AboutMeResp.Wrap' | 'AboutMeResp' | 'ViewItemBidHist' | 'RegisterUserResp' | 'StoreBuyNowResp' | 'SearchByCategoryResp' | 'ViewUser' | 'BrowseRegionsResp', list()) -> binary().
+-spec encode_msg('AuthUserResp'() | 'StoreComment'() | 'StoreBuyNow'() | 'AboutMeResp'() | 'SearchByCategoryResp'() | 'BrowseCategoriesResp'() | 'ViewItemBidHist'() | 'SearchByCategory'() | 'RegisterUserResp'() | 'BrowseRegionsResp'() | 'ViewUser'() | 'ViewUserResp'() | 'BrowseCategories'() | 'SearchByRegionResp'() | 'StoreBuyNowResp'() | 'StoreItemResp'() | 'StoreBidResp'() | 'ViewItemResp'() | 'PutRegionResp'() | 'ViewItem'() | 'ViewItemBidHistResp'() | 'RegisterUser'() | 'BrowseRegions'() | 'PutCategoryResp'() | 'AboutMe'() | 'PutRegion'() | 'StoreBid'() | 'StoreCommentResp'() | 'StoreItem'() | 'PutCategory'() | 'AuthUser'() | 'SearchByRegion'(),'AuthUserResp' | 'StoreComment' | 'StoreBuyNow' | 'AboutMeResp' | 'SearchByCategoryResp' | 'BrowseCategoriesResp' | 'ViewItemBidHist' | 'SearchByCategory' | 'RegisterUserResp' | 'BrowseRegionsResp' | 'ViewUser' | 'ViewUserResp' | 'BrowseCategories' | 'SearchByRegionResp' | 'StoreBuyNowResp' | 'StoreItemResp' | 'StoreBidResp' | 'ViewItemResp' | 'PutRegionResp' | 'ViewItem' | 'ViewItemBidHistResp' | 'RegisterUser' | 'BrowseRegions' | 'PutCategoryResp' | 'AboutMe' | 'PutRegion' | 'StoreBid' | 'StoreCommentResp' | 'StoreItem' | 'PutCategory' | 'AuthUser' | 'SearchByRegion', list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -223,572 +155,54 @@ encode_msg(Msg, MsgName, Opts) ->
     end,
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-      'AboutMeResp.BuyNowInfo' ->
-	  'e_msg_AboutMeResp.BuyNowInfo'(Msg, TrUserData);
-      'StoreBidResp' -> e_msg_StoreBidResp(Msg, TrUserData);
-      'AboutMe' -> e_msg_AboutMe(Msg, TrUserData);
-      'Item' -> e_msg_Item(Msg, TrUserData);
-      'ItemDetails' -> e_msg_ItemDetails(Msg, TrUserData);
-      'ViewItemResp.Wrap' ->
-	  'e_msg_ViewItemResp.Wrap'(Msg, TrUserData);
-      'Comment' -> e_msg_Comment(Msg, TrUserData);
-      'ViewUserResp.Wrap.UserInfo' ->
-	  'e_msg_ViewUserResp.Wrap.UserInfo'(Msg, TrUserData);
-      'BrowseCategoriesResp.Wrap' ->
-	  'e_msg_BrowseCategoriesResp.Wrap'(Msg, TrUserData);
-      'BidInfo' -> e_msg_BidInfo(Msg, TrUserData);
-      'ViewItemBidHistResp.Wrap' ->
-	  'e_msg_ViewItemBidHistResp.Wrap'(Msg, TrUserData);
-      'ViewItemBidHistResp' ->
-	  e_msg_ViewItemBidHistResp(Msg, TrUserData);
-      'PutCategoryResp' ->
-	  e_msg_PutCategoryResp(Msg, TrUserData);
-      'ViewItem' -> e_msg_ViewItem(Msg, TrUserData);
-      'SearchByRegionResp.Wrap' ->
-	  'e_msg_SearchByRegionResp.Wrap'(Msg, TrUserData);
-      'SearchByRegionResp' ->
-	  e_msg_SearchByRegionResp(Msg, TrUserData);
-      'PutRegionResp' -> e_msg_PutRegionResp(Msg, TrUserData);
-      'PutRegion' -> e_msg_PutRegion(Msg, TrUserData);
       'AuthUserResp' -> e_msg_AuthUserResp(Msg, TrUserData);
-      'StoreBid' -> e_msg_StoreBid(Msg, TrUserData);
-      'BrowseRegionsResp.Wrap' ->
-	  'e_msg_BrowseRegionsResp.Wrap'(Msg, TrUserData);
-      'AboutMeResp.AboutMeBid' ->
-	  'e_msg_AboutMeResp.AboutMeBid'(Msg, TrUserData);
-      'StoreItemResp' -> e_msg_StoreItemResp(Msg, TrUserData);
-      'AuthUser' -> e_msg_AuthUser(Msg, TrUserData);
-      'BrowseCategories' ->
-	  e_msg_BrowseCategories(Msg, TrUserData);
-      'PutCategory' -> e_msg_PutCategory(Msg, TrUserData);
-      'StoreItem' -> e_msg_StoreItem(Msg, TrUserData);
-      'BrowseCategoriesResp' ->
-	  e_msg_BrowseCategoriesResp(Msg, TrUserData);
-      'ViewUserResp.Wrap' ->
-	  'e_msg_ViewUserResp.Wrap'(Msg, TrUserData);
-      'ViewUserResp' -> e_msg_ViewUserResp(Msg, TrUserData);
-      'ViewItemResp' -> e_msg_ViewItemResp(Msg, TrUserData);
-      'SearchByCategory' ->
-	  e_msg_SearchByCategory(Msg, TrUserData);
-      'SearchByRegion' ->
-	  e_msg_SearchByRegion(Msg, TrUserData);
-      'StoreCommentResp' ->
-	  e_msg_StoreCommentResp(Msg, TrUserData);
-      'StoreBuyNow' -> e_msg_StoreBuyNow(Msg, TrUserData);
-      'SearchByCategoryResp.Wrap' ->
-	  'e_msg_SearchByCategoryResp.Wrap'(Msg, TrUserData);
       'StoreComment' -> e_msg_StoreComment(Msg, TrUserData);
-      'RegisterUser' -> e_msg_RegisterUser(Msg, TrUserData);
-      'BrowseRegions' -> e_msg_BrowseRegions(Msg, TrUserData);
-      'AboutMeResp.Wrap' ->
-	  'e_msg_AboutMeResp.Wrap'(Msg, TrUserData);
+      'StoreBuyNow' -> e_msg_StoreBuyNow(Msg, TrUserData);
       'AboutMeResp' -> e_msg_AboutMeResp(Msg, TrUserData);
-      'ViewItemBidHist' ->
-	  e_msg_ViewItemBidHist(Msg, TrUserData);
-      'RegisterUserResp' ->
-	  e_msg_RegisterUserResp(Msg, TrUserData);
-      'StoreBuyNowResp' ->
-	  e_msg_StoreBuyNowResp(Msg, TrUserData);
       'SearchByCategoryResp' ->
 	  e_msg_SearchByCategoryResp(Msg, TrUserData);
-      'ViewUser' -> e_msg_ViewUser(Msg, TrUserData);
+      'BrowseCategoriesResp' ->
+	  e_msg_BrowseCategoriesResp(Msg, TrUserData);
+      'ViewItemBidHist' ->
+	  e_msg_ViewItemBidHist(Msg, TrUserData);
+      'SearchByCategory' ->
+	  e_msg_SearchByCategory(Msg, TrUserData);
+      'RegisterUserResp' ->
+	  e_msg_RegisterUserResp(Msg, TrUserData);
       'BrowseRegionsResp' ->
-	  e_msg_BrowseRegionsResp(Msg, TrUserData)
+	  e_msg_BrowseRegionsResp(Msg, TrUserData);
+      'ViewUser' -> e_msg_ViewUser(Msg, TrUserData);
+      'ViewUserResp' -> e_msg_ViewUserResp(Msg, TrUserData);
+      'BrowseCategories' ->
+	  e_msg_BrowseCategories(Msg, TrUserData);
+      'SearchByRegionResp' ->
+	  e_msg_SearchByRegionResp(Msg, TrUserData);
+      'StoreBuyNowResp' ->
+	  e_msg_StoreBuyNowResp(Msg, TrUserData);
+      'StoreItemResp' -> e_msg_StoreItemResp(Msg, TrUserData);
+      'StoreBidResp' -> e_msg_StoreBidResp(Msg, TrUserData);
+      'ViewItemResp' -> e_msg_ViewItemResp(Msg, TrUserData);
+      'PutRegionResp' -> e_msg_PutRegionResp(Msg, TrUserData);
+      'ViewItem' -> e_msg_ViewItem(Msg, TrUserData);
+      'ViewItemBidHistResp' ->
+	  e_msg_ViewItemBidHistResp(Msg, TrUserData);
+      'RegisterUser' -> e_msg_RegisterUser(Msg, TrUserData);
+      'BrowseRegions' -> e_msg_BrowseRegions(Msg, TrUserData);
+      'PutCategoryResp' ->
+	  e_msg_PutCategoryResp(Msg, TrUserData);
+      'AboutMe' -> e_msg_AboutMe(Msg, TrUserData);
+      'PutRegion' -> e_msg_PutRegion(Msg, TrUserData);
+      'StoreBid' -> e_msg_StoreBid(Msg, TrUserData);
+      'StoreCommentResp' ->
+	  e_msg_StoreCommentResp(Msg, TrUserData);
+      'StoreItem' -> e_msg_StoreItem(Msg, TrUserData);
+      'PutCategory' -> e_msg_PutCategory(Msg, TrUserData);
+      'AuthUser' -> e_msg_AuthUser(Msg, TrUserData);
+      'SearchByRegion' ->
+	  e_msg_SearchByRegion(Msg, TrUserData)
     end.
 
 
-
-'e_msg_AboutMeResp.BuyNowInfo'(Msg, TrUserData) ->
-    'e_msg_AboutMeResp.BuyNowInfo'(Msg, <<>>, TrUserData).
-
-
-'e_msg_AboutMeResp.BuyNowInfo'(#{} = M, Bin,
-			       TrUserData) ->
-    B1 = case M of
-	   #{on_item_name := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{seller_username := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    case M of
-      #{quantity := F3} ->
-	  begin
-	    TrF3 = id(F3, TrUserData),
-	    if TrF3 =:= 0 -> B2;
-	       true -> e_varint(TrF3, <<B2/binary, 24>>)
-	    end
-	  end;
-      _ -> B2
-    end.
-
-e_msg_StoreBidResp(Msg, TrUserData) ->
-    e_msg_StoreBidResp(Msg, <<>>, TrUserData).
-
-
-e_msg_StoreBidResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {bid_id, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_AboutMe(Msg, TrUserData) ->
-    e_msg_AboutMe(Msg, <<>>, TrUserData).
-
-
-e_msg_AboutMe(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{user_id := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    case iolist_size(TrF1) of
-	      0 -> Bin;
-	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-	    end
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_Item(Msg, TrUserData) ->
-    e_msg_Item(Msg, <<>>, TrUserData).
-
-
-e_msg_Item(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{item_name := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{description := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    B3 = case M of
-	   #{num_bids := F3} ->
-	       begin
-		 TrF3 = id(F3, TrUserData),
-		 if TrF3 =:= 0 -> B2;
-		    true -> e_varint(TrF3, <<B2/binary, 24>>)
-		 end
-	       end;
-	   _ -> B2
-	 end,
-    B4 = case M of
-	   #{quantity := F4} ->
-	       begin
-		 TrF4 = id(F4, TrUserData),
-		 if TrF4 =:= 0 -> B3;
-		    true -> e_varint(TrF4, <<B3/binary, 32>>)
-		 end
-	       end;
-	   _ -> B3
-	 end,
-    B5 = case M of
-	   #{end_date := F5} ->
-	       begin
-		 TrF5 = id(F5, TrUserData),
-		 if TrF5 =:= 0 -> B4;
-		    true -> e_type_int64(TrF5, <<B4/binary, 40>>)
-		 end
-	       end;
-	   _ -> B4
-	 end,
-    case M of
-      #{category_id := F6} ->
-	  begin
-	    TrF6 = id(F6, TrUserData),
-	    case iolist_size(TrF6) of
-	      0 -> B5;
-	      _ -> e_type_bytes(TrF6, <<B5/binary, 50>>)
-	    end
-	  end;
-      _ -> B5
-    end.
-
-e_msg_ItemDetails(Msg, TrUserData) ->
-    e_msg_ItemDetails(Msg, <<>>, TrUserData).
-
-
-e_msg_ItemDetails(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{item := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 if TrF1 =:= undefined -> Bin;
-		    true ->
-			e_mfield_ItemDetails_item(TrF1, <<Bin/binary, 10>>,
-						  TrUserData)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    case M of
-      #{seller_name := F2} ->
-	  begin
-	    TrF2 = id(F2, TrUserData),
-	    case iolist_size(TrF2) of
-	      0 -> B1;
-	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-	    end
-	  end;
-      _ -> B1
-    end.
-
-'e_msg_ViewItemResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_ViewItemResp.Wrap'(Msg, <<>>, TrUserData).
-
-
-'e_msg_ViewItemResp.Wrap'(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{items := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true ->
-		 'e_field_ViewItemResp.Wrap_items'(TrF1, Bin, TrUserData)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_Comment(Msg, TrUserData) ->
-    e_msg_Comment(Msg, <<>>, TrUserData).
-
-
-e_msg_Comment(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{on_item_id := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{rating := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 if TrF2 =:= 0 -> B1;
-		    true -> e_type_sfixed32(TrF2, <<B1/binary, 21>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    B3 = case M of
-	   #{body := F3} ->
-	       begin
-		 TrF3 = id(F3, TrUserData),
-		 case iolist_size(TrF3) of
-		   0 -> B2;
-		   _ -> e_type_bytes(TrF3, <<B2/binary, 26>>)
-		 end
-	       end;
-	   _ -> B2
-	 end,
-    case M of
-      #{from_to := {from_username, OF4}} ->
-	  begin
-	    TrOF4 = id(OF4, TrUserData),
-	    e_type_bytes(TrOF4, <<B3/binary, 34>>)
-	  end;
-      #{from_to := {to_id, OF4}} ->
-	  begin
-	    TrOF4 = id(OF4, TrUserData),
-	    e_type_bytes(TrOF4, <<B3/binary, 42>>)
-	  end;
-      _ -> B3
-    end.
-
-'e_msg_ViewUserResp.Wrap.UserInfo'(Msg, TrUserData) ->
-    'e_msg_ViewUserResp.Wrap.UserInfo'(Msg, <<>>,
-				       TrUserData).
-
-
-'e_msg_ViewUserResp.Wrap.UserInfo'(#{} = M, Bin,
-				   TrUserData) ->
-    B1 = case M of
-	   #{username := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{rating := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 if TrF2 =:= 0 -> B1;
-		    true -> e_type_sfixed32(TrF2, <<B1/binary, 21>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    case M of
-      #{comments := F3} ->
-	  TrF3 = id(F3, TrUserData),
-	  if TrF3 == [] -> B2;
-	     true ->
-		 'e_field_ViewUserResp.Wrap.UserInfo_comments'(TrF3, B2,
-							       TrUserData)
-	  end;
-      _ -> B2
-    end.
-
-'e_msg_BrowseCategoriesResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_BrowseCategoriesResp.Wrap'(Msg, <<>>,
-				      TrUserData).
-
-
-'e_msg_BrowseCategoriesResp.Wrap'(#{} = M, Bin,
-				  TrUserData) ->
-    case M of
-      #{category_names := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true ->
-		 'e_field_BrowseCategoriesResp.Wrap_category_names'(TrF1,
-								    Bin,
-								    TrUserData)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_BidInfo(Msg, TrUserData) ->
-    e_msg_BidInfo(Msg, <<>>, TrUserData).
-
-
-e_msg_BidInfo(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{on_item_id := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{price := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 if TrF2 =:= 0 -> B1;
-		    true -> e_varint(TrF2, <<B1/binary, 16>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    case M of
-      #{bidder_name := F3} ->
-	  begin
-	    TrF3 = id(F3, TrUserData),
-	    case iolist_size(TrF3) of
-	      0 -> B2;
-	      _ -> e_type_bytes(TrF3, <<B2/binary, 26>>)
-	    end
-	  end;
-      _ -> B2
-    end.
-
-'e_msg_ViewItemBidHistResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_ViewItemBidHistResp.Wrap'(Msg, <<>>, TrUserData).
-
-
-'e_msg_ViewItemBidHistResp.Wrap'(#{} = M, Bin,
-				 TrUserData) ->
-    B1 = case M of
-	   #{item_name := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    case M of
-      #{bids := F2} ->
-	  TrF2 = id(F2, TrUserData),
-	  if TrF2 == [] -> B1;
-	     true ->
-		 'e_field_ViewItemBidHistResp.Wrap_bids'(TrF2, B1,
-							 TrUserData)
-	  end;
-      _ -> B1
-    end.
-
-e_msg_ViewItemBidHistResp(Msg, TrUserData) ->
-    e_msg_ViewItemBidHistResp(Msg, <<>>, TrUserData).
-
-
-e_msg_ViewItemBidHistResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_ViewItemBidHistResp_content(TrOF1,
-						 <<Bin/binary, 10>>, TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_PutCategoryResp(Msg, TrUserData) ->
-    e_msg_PutCategoryResp(Msg, <<>>, TrUserData).
-
-
-e_msg_PutCategoryResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {category_id, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_ViewItem(Msg, TrUserData) ->
-    e_msg_ViewItem(Msg, <<>>, TrUserData).
-
-
-e_msg_ViewItem(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{item_id := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    case iolist_size(TrF1) of
-	      0 -> Bin;
-	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-	    end
-	  end;
-      _ -> Bin
-    end.
-
-'e_msg_SearchByRegionResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_SearchByRegionResp.Wrap'(Msg, <<>>, TrUserData).
-
-
-'e_msg_SearchByRegionResp.Wrap'(#{} = M, Bin,
-				TrUserData) ->
-    case M of
-      #{items := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true ->
-		 'e_field_SearchByRegionResp.Wrap_items'(TrF1, Bin,
-							 TrUserData)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_SearchByRegionResp(Msg, TrUserData) ->
-    e_msg_SearchByRegionResp(Msg, <<>>, TrUserData).
-
-
-e_msg_SearchByRegionResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_SearchByRegionResp_content(TrOF1,
-						<<Bin/binary, 10>>, TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_PutRegionResp(Msg, TrUserData) ->
-    e_msg_PutRegionResp(Msg, <<>>, TrUserData).
-
-
-e_msg_PutRegionResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {region_id, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_PutRegion(Msg, TrUserData) ->
-    e_msg_PutRegion(Msg, <<>>, TrUserData).
-
-
-e_msg_PutRegion(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{region_name := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    case iolist_size(TrF1) of
-	      0 -> Bin;
-	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-	    end
-	  end;
-      _ -> Bin
-    end.
 
 e_msg_AuthUserResp(Msg, TrUserData) ->
     e_msg_AuthUserResp(Msg, <<>>, TrUserData).
@@ -805,426 +219,6 @@ e_msg_AuthUserResp(#{} = M, Bin, TrUserData) ->
 	  begin
 	    TrOF1 = id(OF1, TrUserData),
 	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_StoreBid(Msg, TrUserData) ->
-    e_msg_StoreBid(Msg, <<>>, TrUserData).
-
-
-e_msg_StoreBid(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{on_item_id := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{bidder_id := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    case M of
-      #{value := F3} ->
-	  begin
-	    TrF3 = id(F3, TrUserData),
-	    if TrF3 =:= 0 -> B2;
-	       true -> e_varint(TrF3, <<B2/binary, 24>>)
-	    end
-	  end;
-      _ -> B2
-    end.
-
-'e_msg_BrowseRegionsResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_BrowseRegionsResp.Wrap'(Msg, <<>>, TrUserData).
-
-
-'e_msg_BrowseRegionsResp.Wrap'(#{} = M, Bin,
-			       TrUserData) ->
-    case M of
-      #{region_names := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true ->
-		 'e_field_BrowseRegionsResp.Wrap_region_names'(TrF1, Bin,
-							       TrUserData)
-	  end;
-      _ -> Bin
-    end.
-
-'e_msg_AboutMeResp.AboutMeBid'(Msg, TrUserData) ->
-    'e_msg_AboutMeResp.AboutMeBid'(Msg, <<>>, TrUserData).
-
-
-'e_msg_AboutMeResp.AboutMeBid'(#{} = M, Bin,
-			       TrUserData) ->
-    B1 = case M of
-	   #{on_item_name := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{seller_username := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    case M of
-      #{price := F3} ->
-	  begin
-	    TrF3 = id(F3, TrUserData),
-	    if TrF3 =:= 0 -> B2;
-	       true -> e_varint(TrF3, <<B2/binary, 24>>)
-	    end
-	  end;
-      _ -> B2
-    end.
-
-e_msg_StoreItemResp(Msg, TrUserData) ->
-    e_msg_StoreItemResp(Msg, <<>>, TrUserData).
-
-
-e_msg_StoreItemResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {item_id, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_AuthUser(Msg, TrUserData) ->
-    e_msg_AuthUser(Msg, <<>>, TrUserData).
-
-
-e_msg_AuthUser(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{username := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    case M of
-      #{password := F2} ->
-	  begin
-	    TrF2 = id(F2, TrUserData),
-	    case iolist_size(TrF2) of
-	      0 -> B1;
-	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-	    end
-	  end;
-      _ -> B1
-    end.
-
-e_msg_BrowseCategories(_Msg, _TrUserData) -> <<>>.
-
-e_msg_PutCategory(Msg, TrUserData) ->
-    e_msg_PutCategory(Msg, <<>>, TrUserData).
-
-
-e_msg_PutCategory(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{category_name := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    case iolist_size(TrF1) of
-	      0 -> Bin;
-	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-	    end
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_StoreItem(Msg, TrUserData) ->
-    e_msg_StoreItem(Msg, <<>>, TrUserData).
-
-
-e_msg_StoreItem(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{item_name := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{description := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    B3 = case M of
-	   #{quantity := F3} ->
-	       begin
-		 TrF3 = id(F3, TrUserData),
-		 if TrF3 =:= 0 -> B2;
-		    true -> e_varint(TrF3, <<B2/binary, 24>>)
-		 end
-	       end;
-	   _ -> B2
-	 end,
-    B4 = case M of
-	   #{category_id := F4} ->
-	       begin
-		 TrF4 = id(F4, TrUserData),
-		 case iolist_size(TrF4) of
-		   0 -> B3;
-		   _ -> e_type_bytes(TrF4, <<B3/binary, 34>>)
-		 end
-	       end;
-	   _ -> B3
-	 end,
-    case M of
-      #{seller_id := F5} ->
-	  begin
-	    TrF5 = id(F5, TrUserData),
-	    case iolist_size(TrF5) of
-	      0 -> B4;
-	      _ -> e_type_bytes(TrF5, <<B4/binary, 42>>)
-	    end
-	  end;
-      _ -> B4
-    end.
-
-e_msg_BrowseCategoriesResp(Msg, TrUserData) ->
-    e_msg_BrowseCategoriesResp(Msg, <<>>, TrUserData).
-
-
-e_msg_BrowseCategoriesResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_BrowseCategoriesResp_content(TrOF1,
-						  <<Bin/binary, 10>>,
-						  TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-'e_msg_ViewUserResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_ViewUserResp.Wrap'(Msg, <<>>, TrUserData).
-
-
-'e_msg_ViewUserResp.Wrap'(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{user_details := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    if TrF1 =:= undefined -> Bin;
-	       true ->
-		   'e_mfield_ViewUserResp.Wrap_user_details'(TrF1,
-							     <<Bin/binary, 10>>,
-							     TrUserData)
-	    end
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_ViewUserResp(Msg, TrUserData) ->
-    e_msg_ViewUserResp(Msg, <<>>, TrUserData).
-
-
-e_msg_ViewUserResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_ViewUserResp_content(TrOF1, <<Bin/binary, 10>>,
-					  TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_ViewItemResp(Msg, TrUserData) ->
-    e_msg_ViewItemResp(Msg, <<>>, TrUserData).
-
-
-e_msg_ViewItemResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_ViewItemResp_content(TrOF1, <<Bin/binary, 10>>,
-					  TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_SearchByCategory(Msg, TrUserData) ->
-    e_msg_SearchByCategory(Msg, <<>>, TrUserData).
-
-
-e_msg_SearchByCategory(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{category_id := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    case iolist_size(TrF1) of
-	      0 -> Bin;
-	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-	    end
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_SearchByRegion(Msg, TrUserData) ->
-    e_msg_SearchByRegion(Msg, <<>>, TrUserData).
-
-
-e_msg_SearchByRegion(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{category_id := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    case M of
-      #{region_id := F2} ->
-	  begin
-	    TrF2 = id(F2, TrUserData),
-	    case iolist_size(TrF2) of
-	      0 -> B1;
-	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-	    end
-	  end;
-      _ -> B1
-    end.
-
-e_msg_StoreCommentResp(Msg, TrUserData) ->
-    e_msg_StoreCommentResp(Msg, <<>>, TrUserData).
-
-
-e_msg_StoreCommentResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {comment_id, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_StoreBuyNow(Msg, TrUserData) ->
-    e_msg_StoreBuyNow(Msg, <<>>, TrUserData).
-
-
-e_msg_StoreBuyNow(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{on_item_id := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{buyer_id := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    case M of
-      #{quantity := F3} ->
-	  begin
-	    TrF3 = id(F3, TrUserData),
-	    if TrF3 =:= 0 -> B2;
-	       true -> e_varint(TrF3, <<B2/binary, 24>>)
-	    end
-	  end;
-      _ -> B2
-    end.
-
-'e_msg_SearchByCategoryResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_SearchByCategoryResp.Wrap'(Msg, <<>>,
-				      TrUserData).
-
-
-'e_msg_SearchByCategoryResp.Wrap'(#{} = M, Bin,
-				  TrUserData) ->
-    case M of
-      #{items := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true ->
-		 'e_field_SearchByCategoryResp.Wrap_items'(TrF1, Bin,
-							   TrUserData)
 	  end;
       _ -> Bin
     end.
@@ -1289,6 +283,361 @@ e_msg_StoreComment(#{} = M, Bin, TrUserData) ->
       _ -> B4
     end.
 
+e_msg_StoreBuyNow(Msg, TrUserData) ->
+    e_msg_StoreBuyNow(Msg, <<>>, TrUserData).
+
+
+e_msg_StoreBuyNow(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{on_item_id := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    B2 = case M of
+	   #{buyer_id := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
+		 end
+	       end;
+	   _ -> B1
+	 end,
+    case M of
+      #{quantity := F3} ->
+	  begin
+	    TrF3 = id(F3, TrUserData),
+	    if TrF3 =:= 0 -> B2;
+	       true -> e_varint(TrF3, <<B2/binary, 24>>)
+	    end
+	  end;
+      _ -> B2
+    end.
+
+e_msg_AboutMeResp(Msg, TrUserData) ->
+    e_msg_AboutMeResp(Msg, <<>>, TrUserData).
+
+
+e_msg_AboutMeResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_SearchByCategoryResp(Msg, TrUserData) ->
+    e_msg_SearchByCategoryResp(Msg, <<>>, TrUserData).
+
+
+e_msg_SearchByCategoryResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_BrowseCategoriesResp(Msg, TrUserData) ->
+    e_msg_BrowseCategoriesResp(Msg, <<>>, TrUserData).
+
+
+e_msg_BrowseCategoriesResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ViewItemBidHist(Msg, TrUserData) ->
+    e_msg_ViewItemBidHist(Msg, <<>>, TrUserData).
+
+
+e_msg_ViewItemBidHist(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{item_id := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+	    end
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_SearchByCategory(Msg, TrUserData) ->
+    e_msg_SearchByCategory(Msg, <<>>, TrUserData).
+
+
+e_msg_SearchByCategory(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{category_id := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+	    end
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_RegisterUserResp(Msg, TrUserData) ->
+    e_msg_RegisterUserResp(Msg, <<>>, TrUserData).
+
+
+e_msg_RegisterUserResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {user_id, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_BrowseRegionsResp(Msg, TrUserData) ->
+    e_msg_BrowseRegionsResp(Msg, <<>>, TrUserData).
+
+
+e_msg_BrowseRegionsResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ViewUser(Msg, TrUserData) ->
+    e_msg_ViewUser(Msg, <<>>, TrUserData).
+
+
+e_msg_ViewUser(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{user_id := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+	    end
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ViewUserResp(Msg, TrUserData) ->
+    e_msg_ViewUserResp(Msg, <<>>, TrUserData).
+
+
+e_msg_ViewUserResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_BrowseCategories(_Msg, _TrUserData) -> <<>>.
+
+e_msg_SearchByRegionResp(Msg, TrUserData) ->
+    e_msg_SearchByRegionResp(Msg, <<>>, TrUserData).
+
+
+e_msg_SearchByRegionResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_StoreBuyNowResp(Msg, TrUserData) ->
+    e_msg_StoreBuyNowResp(Msg, <<>>, TrUserData).
+
+
+e_msg_StoreBuyNowResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {buy_now_id, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_StoreItemResp(Msg, TrUserData) ->
+    e_msg_StoreItemResp(Msg, <<>>, TrUserData).
+
+
+e_msg_StoreItemResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {item_id, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_StoreBidResp(Msg, TrUserData) ->
+    e_msg_StoreBidResp(Msg, <<>>, TrUserData).
+
+
+e_msg_StoreBidResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {bid_id, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ViewItemResp(Msg, TrUserData) ->
+    e_msg_ViewItemResp(Msg, <<>>, TrUserData).
+
+
+e_msg_ViewItemResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_PutRegionResp(Msg, TrUserData) ->
+    e_msg_PutRegionResp(Msg, <<>>, TrUserData).
+
+
+e_msg_PutRegionResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {region_id, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ViewItem(Msg, TrUserData) ->
+    e_msg_ViewItem(Msg, <<>>, TrUserData).
+
+
+e_msg_ViewItem(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{item_id := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+	    end
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ViewItemBidHistResp(Msg, TrUserData) ->
+    e_msg_ViewItemBidHistResp(Msg, <<>>, TrUserData).
+
+
+e_msg_ViewItemBidHistResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
 e_msg_RegisterUser(Msg, TrUserData) ->
     e_msg_RegisterUser(Msg, <<>>, TrUserData).
 
@@ -1330,117 +679,13 @@ e_msg_RegisterUser(#{} = M, Bin, TrUserData) ->
 
 e_msg_BrowseRegions(_Msg, _TrUserData) -> <<>>.
 
-'e_msg_AboutMeResp.Wrap'(Msg, TrUserData) ->
-    'e_msg_AboutMeResp.Wrap'(Msg, <<>>, TrUserData).
+e_msg_PutCategoryResp(Msg, TrUserData) ->
+    e_msg_PutCategoryResp(Msg, <<>>, TrUserData).
 
 
-'e_msg_AboutMeResp.Wrap'(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{username := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    B2 = case M of
-	   #{rating := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 if TrF2 =:= 0 -> B1;
-		    true -> e_type_sfixed32(TrF2, <<B1/binary, 21>>)
-		 end
-	       end;
-	   _ -> B1
-	 end,
-    B3 = case M of
-	   #{sold_items := F3} ->
-	       TrF3 = id(F3, TrUserData),
-	       if TrF3 == [] -> B2;
-		  true ->
-		      'e_field_AboutMeResp.Wrap_sold_items'(TrF3, B2,
-							    TrUserData)
-	       end;
-	   _ -> B2
-	 end,
-    B4 = case M of
-	   #{bought_items := F4} ->
-	       TrF4 = id(F4, TrUserData),
-	       if TrF4 == [] -> B3;
-		  true ->
-		      'e_field_AboutMeResp.Wrap_bought_items'(TrF4, B3,
-							      TrUserData)
-	       end;
-	   _ -> B3
-	 end,
-    B5 = case M of
-	   #{placed_bids := F5} ->
-	       TrF5 = id(F5, TrUserData),
-	       if TrF5 == [] -> B4;
-		  true ->
-		      'e_field_AboutMeResp.Wrap_placed_bids'(TrF5, B4,
-							     TrUserData)
-	       end;
-	   _ -> B4
-	 end,
+e_msg_PutCategoryResp(#{} = M, Bin, TrUserData) ->
     case M of
-      #{authored_comments := F6} ->
-	  TrF6 = id(F6, TrUserData),
-	  if TrF6 == [] -> B5;
-	     true ->
-		 'e_field_AboutMeResp.Wrap_authored_comments'(TrF6, B5,
-							      TrUserData)
-	  end;
-      _ -> B5
-    end.
-
-e_msg_AboutMeResp(Msg, TrUserData) ->
-    e_msg_AboutMeResp(Msg, <<>>, TrUserData).
-
-
-e_msg_AboutMeResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_AboutMeResp_content(TrOF1, <<Bin/binary, 10>>,
-					 TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_ViewItemBidHist(Msg, TrUserData) ->
-    e_msg_ViewItemBidHist(Msg, <<>>, TrUserData).
-
-
-e_msg_ViewItemBidHist(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{item_id := F1} ->
-	  begin
-	    TrF1 = id(F1, TrUserData),
-	    case iolist_size(TrF1) of
-	      0 -> Bin;
-	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
-	    end
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_RegisterUserResp(Msg, TrUserData) ->
-    e_msg_RegisterUserResp(Msg, <<>>, TrUserData).
-
-
-e_msg_RegisterUserResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {user_id, OF1}} ->
+      #{resp := {category_id, OF1}} ->
 	  begin
 	    TrOF1 = id(OF1, TrUserData),
 	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
@@ -1453,51 +698,11 @@ e_msg_RegisterUserResp(#{} = M, Bin, TrUserData) ->
       _ -> Bin
     end.
 
-e_msg_StoreBuyNowResp(Msg, TrUserData) ->
-    e_msg_StoreBuyNowResp(Msg, <<>>, TrUserData).
+e_msg_AboutMe(Msg, TrUserData) ->
+    e_msg_AboutMe(Msg, <<>>, TrUserData).
 
 
-e_msg_StoreBuyNowResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {buy_now_id, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_SearchByCategoryResp(Msg, TrUserData) ->
-    e_msg_SearchByCategoryResp(Msg, <<>>, TrUserData).
-
-
-e_msg_SearchByCategoryResp(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_SearchByCategoryResp_content(TrOF1,
-						  <<Bin/binary, 10>>,
-						  TrUserData)
-	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
-    end.
-
-e_msg_ViewUser(Msg, TrUserData) ->
-    e_msg_ViewUser(Msg, <<>>, TrUserData).
-
-
-e_msg_ViewUser(#{} = M, Bin, TrUserData) ->
+e_msg_AboutMe(#{} = M, Bin, TrUserData) ->
     case M of
       #{user_id := F1} ->
 	  begin
@@ -1510,17 +715,71 @@ e_msg_ViewUser(#{} = M, Bin, TrUserData) ->
       _ -> Bin
     end.
 
-e_msg_BrowseRegionsResp(Msg, TrUserData) ->
-    e_msg_BrowseRegionsResp(Msg, <<>>, TrUserData).
+e_msg_PutRegion(Msg, TrUserData) ->
+    e_msg_PutRegion(Msg, <<>>, TrUserData).
 
 
-e_msg_BrowseRegionsResp(#{} = M, Bin, TrUserData) ->
+e_msg_PutRegion(#{} = M, Bin, TrUserData) ->
     case M of
-      #{resp := {content, OF1}} ->
+      #{region_name := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+	    end
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_StoreBid(Msg, TrUserData) ->
+    e_msg_StoreBid(Msg, <<>>, TrUserData).
+
+
+e_msg_StoreBid(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{on_item_id := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    B2 = case M of
+	   #{bidder_id := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
+		 end
+	       end;
+	   _ -> B1
+	 end,
+    case M of
+      #{value := F3} ->
+	  begin
+	    TrF3 = id(F3, TrUserData),
+	    if TrF3 =:= 0 -> B2;
+	       true -> e_varint(TrF3, <<B2/binary, 24>>)
+	    end
+	  end;
+      _ -> B2
+    end.
+
+e_msg_StoreCommentResp(Msg, TrUserData) ->
+    e_msg_StoreCommentResp(Msg, <<>>, TrUserData).
+
+
+e_msg_StoreCommentResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {comment_id, OF1}} ->
 	  begin
 	    TrOF1 = id(OF1, TrUserData),
-	    e_mfield_BrowseRegionsResp_content(TrOF1,
-					       <<Bin/binary, 10>>, TrUserData)
+	    e_type_bytes(TrOF1, <<Bin/binary, 10>>)
 	  end;
       #{resp := {error_reason, OF1}} ->
 	  begin
@@ -1530,268 +789,138 @@ e_msg_BrowseRegionsResp(#{} = M, Bin, TrUserData) ->
       _ -> Bin
     end.
 
-e_mfield_ItemDetails_item(Msg, Bin, TrUserData) ->
-    SubBin = e_msg_Item(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
+e_msg_StoreItem(Msg, TrUserData) ->
+    e_msg_StoreItem(Msg, <<>>, TrUserData).
 
-'e_mfield_ViewItemResp.Wrap_items'(Msg, Bin,
-				   TrUserData) ->
-    SubBin = e_msg_ItemDetails(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
 
-'e_field_ViewItemResp.Wrap_items'([Elem | Rest], Bin,
-				  TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
-    Bin3 = 'e_mfield_ViewItemResp.Wrap_items'(id(Elem,
-						 TrUserData),
-					      Bin2, TrUserData),
-    'e_field_ViewItemResp.Wrap_items'(Rest, Bin3,
-				      TrUserData);
-'e_field_ViewItemResp.Wrap_items'([], Bin,
-				  _TrUserData) ->
-    Bin.
+e_msg_StoreItem(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{item_name := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    B2 = case M of
+	   #{description := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
+		 end
+	       end;
+	   _ -> B1
+	 end,
+    B3 = case M of
+	   #{quantity := F3} ->
+	       begin
+		 TrF3 = id(F3, TrUserData),
+		 if TrF3 =:= 0 -> B2;
+		    true -> e_varint(TrF3, <<B2/binary, 24>>)
+		 end
+	       end;
+	   _ -> B2
+	 end,
+    B4 = case M of
+	   #{category_id := F4} ->
+	       begin
+		 TrF4 = id(F4, TrUserData),
+		 case iolist_size(TrF4) of
+		   0 -> B3;
+		   _ -> e_type_bytes(TrF4, <<B3/binary, 34>>)
+		 end
+	       end;
+	   _ -> B3
+	 end,
+    case M of
+      #{seller_id := F5} ->
+	  begin
+	    TrF5 = id(F5, TrUserData),
+	    case iolist_size(TrF5) of
+	      0 -> B4;
+	      _ -> e_type_bytes(TrF5, <<B4/binary, 42>>)
+	    end
+	  end;
+      _ -> B4
+    end.
 
-'e_mfield_ViewUserResp.Wrap.UserInfo_comments'(Msg, Bin,
-					       TrUserData) ->
-    SubBin = e_msg_Comment(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
+e_msg_PutCategory(Msg, TrUserData) ->
+    e_msg_PutCategory(Msg, <<>>, TrUserData).
 
-'e_field_ViewUserResp.Wrap.UserInfo_comments'([Elem
-					       | Rest],
-					      Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 26>>,
-    Bin3 =
-	'e_mfield_ViewUserResp.Wrap.UserInfo_comments'(id(Elem,
-							  TrUserData),
-						       Bin2, TrUserData),
-    'e_field_ViewUserResp.Wrap.UserInfo_comments'(Rest,
-						  Bin3, TrUserData);
-'e_field_ViewUserResp.Wrap.UserInfo_comments'([], Bin,
-					      _TrUserData) ->
-    Bin.
 
-'e_field_BrowseCategoriesResp.Wrap_category_names'([Elem
-						    | Rest],
-						   Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
-    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2),
-    'e_field_BrowseCategoriesResp.Wrap_category_names'(Rest,
-						       Bin3, TrUserData);
-'e_field_BrowseCategoriesResp.Wrap_category_names'([],
-						   Bin, _TrUserData) ->
-    Bin.
+e_msg_PutCategory(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{category_name := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+	    end
+	  end;
+      _ -> Bin
+    end.
 
-'e_mfield_ViewItemBidHistResp.Wrap_bids'(Msg, Bin,
-					 TrUserData) ->
-    SubBin = e_msg_BidInfo(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
+e_msg_AuthUser(Msg, TrUserData) ->
+    e_msg_AuthUser(Msg, <<>>, TrUserData).
 
-'e_field_ViewItemBidHistResp.Wrap_bids'([Elem | Rest],
-					Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 18>>,
-    Bin3 = 'e_mfield_ViewItemBidHistResp.Wrap_bids'(id(Elem,
-						       TrUserData),
-						    Bin2, TrUserData),
-    'e_field_ViewItemBidHistResp.Wrap_bids'(Rest, Bin3,
-					    TrUserData);
-'e_field_ViewItemBidHistResp.Wrap_bids'([], Bin,
-					_TrUserData) ->
-    Bin.
 
-e_mfield_ViewItemBidHistResp_content(Msg, Bin,
-				     TrUserData) ->
-    SubBin = 'e_msg_ViewItemBidHistResp.Wrap'(Msg, <<>>,
-					      TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
+e_msg_AuthUser(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{username := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    case M of
+      #{password := F2} ->
+	  begin
+	    TrF2 = id(F2, TrUserData),
+	    case iolist_size(TrF2) of
+	      0 -> B1;
+	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
+	    end
+	  end;
+      _ -> B1
+    end.
 
-'e_mfield_SearchByRegionResp.Wrap_items'(Msg, Bin,
-					 TrUserData) ->
-    SubBin = e_msg_ItemDetails(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
+e_msg_SearchByRegion(Msg, TrUserData) ->
+    e_msg_SearchByRegion(Msg, <<>>, TrUserData).
 
-'e_field_SearchByRegionResp.Wrap_items'([Elem | Rest],
-					Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
-    Bin3 = 'e_mfield_SearchByRegionResp.Wrap_items'(id(Elem,
-						       TrUserData),
-						    Bin2, TrUserData),
-    'e_field_SearchByRegionResp.Wrap_items'(Rest, Bin3,
-					    TrUserData);
-'e_field_SearchByRegionResp.Wrap_items'([], Bin,
-					_TrUserData) ->
-    Bin.
 
-e_mfield_SearchByRegionResp_content(Msg, Bin,
-				    TrUserData) ->
-    SubBin = 'e_msg_SearchByRegionResp.Wrap'(Msg, <<>>,
-					     TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_field_BrowseRegionsResp.Wrap_region_names'([Elem
-					       | Rest],
-					      Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
-    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2),
-    'e_field_BrowseRegionsResp.Wrap_region_names'(Rest,
-						  Bin3, TrUserData);
-'e_field_BrowseRegionsResp.Wrap_region_names'([], Bin,
-					      _TrUserData) ->
-    Bin.
-
-e_mfield_BrowseCategoriesResp_content(Msg, Bin,
-				      TrUserData) ->
-    SubBin = 'e_msg_BrowseCategoriesResp.Wrap'(Msg, <<>>,
-					       TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_mfield_ViewUserResp.Wrap_user_details'(Msg, Bin,
-					  TrUserData) ->
-    SubBin = 'e_msg_ViewUserResp.Wrap.UserInfo'(Msg, <<>>,
-						TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_mfield_ViewUserResp_content(Msg, Bin, TrUserData) ->
-    SubBin = 'e_msg_ViewUserResp.Wrap'(Msg, <<>>,
-				       TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_mfield_ViewItemResp_content(Msg, Bin, TrUserData) ->
-    SubBin = 'e_msg_ViewItemResp.Wrap'(Msg, <<>>,
-				       TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_mfield_SearchByCategoryResp.Wrap_items'(Msg, Bin,
-					   TrUserData) ->
-    SubBin = e_msg_Item(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_field_SearchByCategoryResp.Wrap_items'([Elem | Rest],
-					  Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
-    Bin3 =
-	'e_mfield_SearchByCategoryResp.Wrap_items'(id(Elem,
-						      TrUserData),
-						   Bin2, TrUserData),
-    'e_field_SearchByCategoryResp.Wrap_items'(Rest, Bin3,
-					      TrUserData);
-'e_field_SearchByCategoryResp.Wrap_items'([], Bin,
-					  _TrUserData) ->
-    Bin.
-
-'e_mfield_AboutMeResp.Wrap_sold_items'(Msg, Bin,
-				       TrUserData) ->
-    SubBin = e_msg_Item(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_field_AboutMeResp.Wrap_sold_items'([Elem | Rest],
-				      Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 26>>,
-    Bin3 = 'e_mfield_AboutMeResp.Wrap_sold_items'(id(Elem,
-						     TrUserData),
-						  Bin2, TrUserData),
-    'e_field_AboutMeResp.Wrap_sold_items'(Rest, Bin3,
-					  TrUserData);
-'e_field_AboutMeResp.Wrap_sold_items'([], Bin,
-				      _TrUserData) ->
-    Bin.
-
-'e_mfield_AboutMeResp.Wrap_bought_items'(Msg, Bin,
-					 TrUserData) ->
-    SubBin = 'e_msg_AboutMeResp.BuyNowInfo'(Msg, <<>>,
-					    TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_field_AboutMeResp.Wrap_bought_items'([Elem | Rest],
-					Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 34>>,
-    Bin3 = 'e_mfield_AboutMeResp.Wrap_bought_items'(id(Elem,
-						       TrUserData),
-						    Bin2, TrUserData),
-    'e_field_AboutMeResp.Wrap_bought_items'(Rest, Bin3,
-					    TrUserData);
-'e_field_AboutMeResp.Wrap_bought_items'([], Bin,
-					_TrUserData) ->
-    Bin.
-
-'e_mfield_AboutMeResp.Wrap_placed_bids'(Msg, Bin,
-					TrUserData) ->
-    SubBin = 'e_msg_AboutMeResp.AboutMeBid'(Msg, <<>>,
-					    TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_field_AboutMeResp.Wrap_placed_bids'([Elem | Rest],
-				       Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 42>>,
-    Bin3 = 'e_mfield_AboutMeResp.Wrap_placed_bids'(id(Elem,
-						      TrUserData),
-						   Bin2, TrUserData),
-    'e_field_AboutMeResp.Wrap_placed_bids'(Rest, Bin3,
-					   TrUserData);
-'e_field_AboutMeResp.Wrap_placed_bids'([], Bin,
-				       _TrUserData) ->
-    Bin.
-
-'e_mfield_AboutMeResp.Wrap_authored_comments'(Msg, Bin,
-					      TrUserData) ->
-    SubBin = e_msg_Comment(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-'e_field_AboutMeResp.Wrap_authored_comments'([Elem
-					      | Rest],
-					     Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 50>>,
-    Bin3 =
-	'e_mfield_AboutMeResp.Wrap_authored_comments'(id(Elem,
-							 TrUserData),
-						      Bin2, TrUserData),
-    'e_field_AboutMeResp.Wrap_authored_comments'(Rest, Bin3,
-						 TrUserData);
-'e_field_AboutMeResp.Wrap_authored_comments'([], Bin,
-					     _TrUserData) ->
-    Bin.
-
-e_mfield_AboutMeResp_content(Msg, Bin, TrUserData) ->
-    SubBin = 'e_msg_AboutMeResp.Wrap'(Msg, <<>>,
-				      TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_mfield_SearchByCategoryResp_content(Msg, Bin,
-				      TrUserData) ->
-    SubBin = 'e_msg_SearchByCategoryResp.Wrap'(Msg, <<>>,
-					       TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_mfield_BrowseRegionsResp_content(Msg, Bin,
-				   TrUserData) ->
-    SubBin = 'e_msg_BrowseRegionsResp.Wrap'(Msg, <<>>,
-					    TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_type_int64(Value, Bin)
-    when 0 =< Value, Value =< 127 ->
-    <<Bin/binary, Value>>;
-e_type_int64(Value, Bin) ->
-    <<N:64/unsigned-native>> = <<Value:64/signed-native>>,
-    e_varint(N, Bin).
+e_msg_SearchByRegion(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{category_id := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    case M of
+      #{region_id := F2} ->
+	  begin
+	    TrF2 = id(F2, TrUserData),
+	    case iolist_size(TrF2) of
+	      0 -> B1;
+	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>)
+	    end
+	  end;
+      _ -> B1
+    end.
 
 e_type_bytes(Bytes, Bin) when is_binary(Bytes) ->
     Bin2 = e_varint(byte_size(Bytes), Bin),
@@ -1816,136 +945,114 @@ decode_msg(Bin, MsgName) when is_binary(Bin) ->
 decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-      'AboutMeResp.BuyNowInfo' ->
-	  try 'd_msg_AboutMeResp.BuyNowInfo'(Bin, TrUserData)
-	  catch
+      'AuthUserResp' ->
+	  try d_msg_AuthUserResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'AboutMeResp.BuyNowInfo',
+			{Bin, 'AuthUserResp', {Class, Reason, StackTrace}}}})
+	  end;
+      'StoreComment' ->
+	  try d_msg_StoreComment(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'StoreComment', {Class, Reason, StackTrace}}}})
+	  end;
+      'StoreBuyNow' ->
+	  try d_msg_StoreBuyNow(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'StoreBuyNow', {Class, Reason, StackTrace}}}})
+	  end;
+      'AboutMeResp' ->
+	  try d_msg_AboutMeResp(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'AboutMeResp', {Class, Reason, StackTrace}}}})
+	  end;
+      'SearchByCategoryResp' ->
+	  try d_msg_SearchByCategoryResp(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'SearchByCategoryResp',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'StoreBidResp' ->
-	  try d_msg_StoreBidResp(Bin, TrUserData) catch
+      'BrowseCategoriesResp' ->
+	  try d_msg_BrowseCategoriesResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'StoreBidResp', {Class, Reason, StackTrace}}}})
-	  end;
-      'AboutMe' ->
-	  try d_msg_AboutMe(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'AboutMe', {Class, Reason, StackTrace}}}})
-	  end;
-      'Item' ->
-	  try d_msg_Item(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'Item', {Class, Reason, StackTrace}}}})
-	  end;
-      'ItemDetails' ->
-	  try d_msg_ItemDetails(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ItemDetails', {Class, Reason, StackTrace}}}})
-	  end;
-      'ViewItemResp.Wrap' ->
-	  try 'd_msg_ViewItemResp.Wrap'(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ViewItemResp.Wrap',
+			{Bin, 'BrowseCategoriesResp',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'Comment' ->
-	  try d_msg_Comment(Bin, TrUserData) catch
+      'ViewItemBidHist' ->
+	  try d_msg_ViewItemBidHist(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'Comment', {Class, Reason, StackTrace}}}})
+			{Bin, 'ViewItemBidHist', {Class, Reason, StackTrace}}}})
 	  end;
-      'ViewUserResp.Wrap.UserInfo' ->
-	  try 'd_msg_ViewUserResp.Wrap.UserInfo'(Bin, TrUserData)
-	  catch
+      'SearchByCategory' ->
+	  try d_msg_SearchByCategory(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'ViewUserResp.Wrap.UserInfo',
+			{Bin, 'SearchByCategory',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'BrowseCategoriesResp.Wrap' ->
-	  try 'd_msg_BrowseCategoriesResp.Wrap'(Bin, TrUserData)
-	  catch
+      'RegisterUserResp' ->
+	  try d_msg_RegisterUserResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'BrowseCategoriesResp.Wrap',
+			{Bin, 'RegisterUserResp',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'BidInfo' ->
-	  try d_msg_BidInfo(Bin, TrUserData) catch
+      'BrowseRegionsResp' ->
+	  try d_msg_BrowseRegionsResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'BidInfo', {Class, Reason, StackTrace}}}})
-	  end;
-      'ViewItemBidHistResp.Wrap' ->
-	  try 'd_msg_ViewItemBidHistResp.Wrap'(Bin, TrUserData)
-	  catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ViewItemBidHistResp.Wrap',
+			{Bin, 'BrowseRegionsResp',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'ViewItemBidHistResp' ->
-	  try d_msg_ViewItemBidHistResp(Bin, TrUserData) catch
+      'ViewUser' ->
+	  try d_msg_ViewUser(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'ViewItemBidHistResp',
-			 {Class, Reason, StackTrace}}}})
+			{Bin, 'ViewUser', {Class, Reason, StackTrace}}}})
 	  end;
-      'PutCategoryResp' ->
-	  try d_msg_PutCategoryResp(Bin, TrUserData) catch
+      'ViewUserResp' ->
+	  try d_msg_ViewUserResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'PutCategoryResp', {Class, Reason, StackTrace}}}})
+			{Bin, 'ViewUserResp', {Class, Reason, StackTrace}}}})
 	  end;
-      'ViewItem' ->
-	  try d_msg_ViewItem(Bin, TrUserData) catch
+      'BrowseCategories' ->
+	  try d_msg_BrowseCategories(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'ViewItem', {Class, Reason, StackTrace}}}})
-	  end;
-      'SearchByRegionResp.Wrap' ->
-	  try 'd_msg_SearchByRegionResp.Wrap'(Bin, TrUserData)
-	  catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'SearchByRegionResp.Wrap',
+			{Bin, 'BrowseCategories',
 			 {Class, Reason, StackTrace}}}})
 	  end;
       'SearchByRegionResp' ->
@@ -1957,57 +1064,13 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 			{Bin, 'SearchByRegionResp',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'PutRegionResp' ->
-	  try d_msg_PutRegionResp(Bin, TrUserData) catch
+      'StoreBuyNowResp' ->
+	  try d_msg_StoreBuyNowResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'PutRegionResp', {Class, Reason, StackTrace}}}})
-	  end;
-      'PutRegion' ->
-	  try d_msg_PutRegion(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'PutRegion', {Class, Reason, StackTrace}}}})
-	  end;
-      'AuthUserResp' ->
-	  try d_msg_AuthUserResp(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'AuthUserResp', {Class, Reason, StackTrace}}}})
-	  end;
-      'StoreBid' ->
-	  try d_msg_StoreBid(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'StoreBid', {Class, Reason, StackTrace}}}})
-	  end;
-      'BrowseRegionsResp.Wrap' ->
-	  try 'd_msg_BrowseRegionsResp.Wrap'(Bin, TrUserData)
-	  catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'BrowseRegionsResp.Wrap',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'AboutMeResp.AboutMeBid' ->
-	  try 'd_msg_AboutMeResp.AboutMeBid'(Bin, TrUserData)
-	  catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'AboutMeResp.AboutMeBid',
-			 {Class, Reason, StackTrace}}}})
+			{Bin, 'StoreBuyNowResp', {Class, Reason, StackTrace}}}})
 	  end;
       'StoreItemResp' ->
 	  try d_msg_StoreItemResp(Bin, TrUserData) catch
@@ -2017,64 +1080,13 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 		       {decoding_failure,
 			{Bin, 'StoreItemResp', {Class, Reason, StackTrace}}}})
 	  end;
-      'AuthUser' ->
-	  try d_msg_AuthUser(Bin, TrUserData) catch
+      'StoreBidResp' ->
+	  try d_msg_StoreBidResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'AuthUser', {Class, Reason, StackTrace}}}})
-	  end;
-      'BrowseCategories' ->
-	  try d_msg_BrowseCategories(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'BrowseCategories',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'PutCategory' ->
-	  try d_msg_PutCategory(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'PutCategory', {Class, Reason, StackTrace}}}})
-	  end;
-      'StoreItem' ->
-	  try d_msg_StoreItem(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'StoreItem', {Class, Reason, StackTrace}}}})
-	  end;
-      'BrowseCategoriesResp' ->
-	  try d_msg_BrowseCategoriesResp(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'BrowseCategoriesResp',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'ViewUserResp.Wrap' ->
-	  try 'd_msg_ViewUserResp.Wrap'(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ViewUserResp.Wrap',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'ViewUserResp' ->
-	  try d_msg_ViewUserResp(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ViewUserResp', {Class, Reason, StackTrace}}}})
+			{Bin, 'StoreBidResp', {Class, Reason, StackTrace}}}})
 	  end;
       'ViewItemResp' ->
 	  try d_msg_ViewItemResp(Bin, TrUserData) catch
@@ -2084,57 +1096,30 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 		       {decoding_failure,
 			{Bin, 'ViewItemResp', {Class, Reason, StackTrace}}}})
 	  end;
-      'SearchByCategory' ->
-	  try d_msg_SearchByCategory(Bin, TrUserData) catch
+      'PutRegionResp' ->
+	  try d_msg_PutRegionResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'SearchByCategory',
+			{Bin, 'PutRegionResp', {Class, Reason, StackTrace}}}})
+	  end;
+      'ViewItem' ->
+	  try d_msg_ViewItem(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'ViewItem', {Class, Reason, StackTrace}}}})
+	  end;
+      'ViewItemBidHistResp' ->
+	  try d_msg_ViewItemBidHistResp(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'ViewItemBidHistResp',
 			 {Class, Reason, StackTrace}}}})
-	  end;
-      'SearchByRegion' ->
-	  try d_msg_SearchByRegion(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'SearchByRegion', {Class, Reason, StackTrace}}}})
-	  end;
-      'StoreCommentResp' ->
-	  try d_msg_StoreCommentResp(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'StoreCommentResp',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'StoreBuyNow' ->
-	  try d_msg_StoreBuyNow(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'StoreBuyNow', {Class, Reason, StackTrace}}}})
-	  end;
-      'SearchByCategoryResp.Wrap' ->
-	  try 'd_msg_SearchByCategoryResp.Wrap'(Bin, TrUserData)
-	  catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'SearchByCategoryResp.Wrap',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'StoreComment' ->
-	  try d_msg_StoreComment(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'StoreComment', {Class, Reason, StackTrace}}}})
 	  end;
       'RegisterUser' ->
 	  try d_msg_RegisterUser(Bin, TrUserData) catch
@@ -2152,2765 +1137,82 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 		       {decoding_failure,
 			{Bin, 'BrowseRegions', {Class, Reason, StackTrace}}}})
 	  end;
-      'AboutMeResp.Wrap' ->
-	  try 'd_msg_AboutMeResp.Wrap'(Bin, TrUserData) catch
+      'PutCategoryResp' ->
+	  try d_msg_PutCategoryResp(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'AboutMeResp.Wrap',
+			{Bin, 'PutCategoryResp', {Class, Reason, StackTrace}}}})
+	  end;
+      'AboutMe' ->
+	  try d_msg_AboutMe(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'AboutMe', {Class, Reason, StackTrace}}}})
+	  end;
+      'PutRegion' ->
+	  try d_msg_PutRegion(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'PutRegion', {Class, Reason, StackTrace}}}})
+	  end;
+      'StoreBid' ->
+	  try d_msg_StoreBid(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'StoreBid', {Class, Reason, StackTrace}}}})
+	  end;
+      'StoreCommentResp' ->
+	  try d_msg_StoreCommentResp(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'StoreCommentResp',
 			 {Class, Reason, StackTrace}}}})
 	  end;
-      'AboutMeResp' ->
-	  try d_msg_AboutMeResp(Bin, TrUserData) catch
+      'StoreItem' ->
+	  try d_msg_StoreItem(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'AboutMeResp', {Class, Reason, StackTrace}}}})
+			{Bin, 'StoreItem', {Class, Reason, StackTrace}}}})
 	  end;
-      'ViewItemBidHist' ->
-	  try d_msg_ViewItemBidHist(Bin, TrUserData) catch
+      'PutCategory' ->
+	  try d_msg_PutCategory(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'ViewItemBidHist', {Class, Reason, StackTrace}}}})
+			{Bin, 'PutCategory', {Class, Reason, StackTrace}}}})
 	  end;
-      'RegisterUserResp' ->
-	  try d_msg_RegisterUserResp(Bin, TrUserData) catch
+      'AuthUser' ->
+	  try d_msg_AuthUser(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'RegisterUserResp',
-			 {Class, Reason, StackTrace}}}})
+			{Bin, 'AuthUser', {Class, Reason, StackTrace}}}})
 	  end;
-      'StoreBuyNowResp' ->
-	  try d_msg_StoreBuyNowResp(Bin, TrUserData) catch
+      'SearchByRegion' ->
+	  try d_msg_SearchByRegion(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'StoreBuyNowResp', {Class, Reason, StackTrace}}}})
-	  end;
-      'SearchByCategoryResp' ->
-	  try d_msg_SearchByCategoryResp(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'SearchByCategoryResp',
-			 {Class, Reason, StackTrace}}}})
-	  end;
-      'ViewUser' ->
-	  try d_msg_ViewUser(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ViewUser', {Class, Reason, StackTrace}}}})
-	  end;
-      'BrowseRegionsResp' ->
-	  try d_msg_BrowseRegionsResp(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'BrowseRegionsResp',
-			 {Class, Reason, StackTrace}}}})
+			{Bin, 'SearchByRegion', {Class, Reason, StackTrace}}}})
 	  end
     end.
 
 
-
-'d_msg_AboutMeResp.BuyNowInfo'(Bin, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Bin, 0, 0,
-						id(<<>>, TrUserData),
-						id(<<>>, TrUserData),
-						id(0, TrUserData), TrUserData).
-
-'dfp_read_field_def_AboutMeResp.BuyNowInfo'(<<10,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, F@_2, F@_3,
-					    TrUserData) ->
-    'd_field_AboutMeResp.BuyNowInfo_on_item_name'(Rest, Z1,
-						  Z2, F@_1, F@_2, F@_3,
-						  TrUserData);
-'dfp_read_field_def_AboutMeResp.BuyNowInfo'(<<18,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, F@_2, F@_3,
-					    TrUserData) ->
-    'd_field_AboutMeResp.BuyNowInfo_seller_username'(Rest,
-						     Z1, Z2, F@_1, F@_2, F@_3,
-						     TrUserData);
-'dfp_read_field_def_AboutMeResp.BuyNowInfo'(<<24,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, F@_2, F@_3,
-					    TrUserData) ->
-    'd_field_AboutMeResp.BuyNowInfo_quantity'(Rest, Z1, Z2,
-					      F@_1, F@_2, F@_3, TrUserData);
-'dfp_read_field_def_AboutMeResp.BuyNowInfo'(<<>>, 0, 0,
-					    F@_1, F@_2, F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{seller_username => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{quantity => F@_3}
-    end;
-'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Other, Z1,
-					    Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dg_read_field_def_AboutMeResp.BuyNowInfo'(Other, Z1,
-					       Z2, F@_1, F@_2, F@_3,
-					       TrUserData).
-
-'dg_read_field_def_AboutMeResp.BuyNowInfo'(<<1:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_AboutMeResp.BuyNowInfo'(Rest, N + 7,
-					       X bsl N + Acc, F@_1, F@_2, F@_3,
-					       TrUserData);
-'dg_read_field_def_AboutMeResp.BuyNowInfo'(<<0:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, F@_2, F@_3,
-					   TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_AboutMeResp.BuyNowInfo_on_item_name'(Rest, 0,
-							0, F@_1, F@_2, F@_3,
-							TrUserData);
-      18 ->
-	  'd_field_AboutMeResp.BuyNowInfo_seller_username'(Rest,
-							   0, 0, F@_1, F@_2,
-							   F@_3, TrUserData);
-      24 ->
-	  'd_field_AboutMeResp.BuyNowInfo_quantity'(Rest, 0, 0,
-						    F@_1, F@_2, F@_3,
-						    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_AboutMeResp.BuyNowInfo'(Rest, 0, 0, F@_1,
-						     F@_2, F@_3, TrUserData);
-	    1 ->
-		'skip_64_AboutMeResp.BuyNowInfo'(Rest, 0, 0, F@_1, F@_2,
-						 F@_3, TrUserData);
-	    2 ->
-		'skip_length_delimited_AboutMeResp.BuyNowInfo'(Rest, 0,
-							       0, F@_1, F@_2,
-							       F@_3,
-							       TrUserData);
-	    3 ->
-		'skip_group_AboutMeResp.BuyNowInfo'(Rest, Key bsr 3, 0,
-						    F@_1, F@_2, F@_3,
-						    TrUserData);
-	    5 ->
-		'skip_32_AboutMeResp.BuyNowInfo'(Rest, 0, 0, F@_1, F@_2,
-						 F@_3, TrUserData)
-	  end
-    end;
-'dg_read_field_def_AboutMeResp.BuyNowInfo'(<<>>, 0, 0,
-					   F@_1, F@_2, F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{seller_username => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{quantity => F@_3}
-    end.
-
-'d_field_AboutMeResp.BuyNowInfo_on_item_name'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, F@_3,
-					      TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.BuyNowInfo_on_item_name'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  F@_2, F@_3, TrUserData);
-'d_field_AboutMeResp.BuyNowInfo_on_item_name'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, _, F@_2, F@_3,
-					      TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(RestF, 0, 0,
-						NewFValue, F@_2, F@_3,
-						TrUserData).
-
-'d_field_AboutMeResp.BuyNowInfo_seller_username'(<<1:1,
-						   X:7, Rest/binary>>,
-						 N, Acc, F@_1, F@_2, F@_3,
-						 TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.BuyNowInfo_seller_username'(Rest,
-						     N + 7, X bsl N + Acc, F@_1,
-						     F@_2, F@_3, TrUserData);
-'d_field_AboutMeResp.BuyNowInfo_seller_username'(<<0:1,
-						   X:7, Rest/binary>>,
-						 N, Acc, F@_1, _, F@_3,
-						 TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(RestF, 0, 0,
-						F@_1, NewFValue, F@_3,
-						TrUserData).
-
-'d_field_AboutMeResp.BuyNowInfo_quantity'(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.BuyNowInfo_quantity'(Rest, N + 7,
-					      X bsl N + Acc, F@_1, F@_2, F@_3,
-					      TrUserData);
-'d_field_AboutMeResp.BuyNowInfo_quantity'(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(RestF, 0, 0,
-						F@_1, F@_2, NewFValue,
-						TrUserData).
-
-'skip_varint_AboutMeResp.BuyNowInfo'(<<1:1, _:7,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'skip_varint_AboutMeResp.BuyNowInfo'(Rest, Z1, Z2, F@_1,
-					 F@_2, F@_3, TrUserData);
-'skip_varint_AboutMeResp.BuyNowInfo'(<<0:1, _:7,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData).
-
-'skip_length_delimited_AboutMeResp.BuyNowInfo'(<<1:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, F@_2, F@_3,
-					       TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_AboutMeResp.BuyNowInfo'(Rest,
-						   N + 7, X bsl N + Acc, F@_1,
-						   F@_2, F@_3, TrUserData);
-'skip_length_delimited_AboutMeResp.BuyNowInfo'(<<0:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, F@_2, F@_3,
-					       TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Rest2, 0, 0,
-						F@_1, F@_2, F@_3, TrUserData).
-
-'skip_group_AboutMeResp.BuyNowInfo'(Bin, FNum, Z2, F@_1,
-				    F@_2, F@_3, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Rest, 0, Z2,
-						F@_1, F@_2, F@_3, TrUserData).
-
-'skip_32_AboutMeResp.BuyNowInfo'(<<_:32, Rest/binary>>,
-				 Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData).
-
-'skip_64_AboutMeResp.BuyNowInfo'(<<_:64, Rest/binary>>,
-				 Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.BuyNowInfo'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData).
-
-d_msg_StoreBidResp(Bin, TrUserData) ->
-    dfp_read_field_def_StoreBidResp(Bin, 0, 0,
-				    id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_StoreBidResp(<<10, Rest/binary>>, Z1,
-				Z2, F@_1, TrUserData) ->
-    d_field_StoreBidResp_bid_id(Rest, Z1, Z2, F@_1,
-				TrUserData);
-dfp_read_field_def_StoreBidResp(<<16, Rest/binary>>, Z1,
-				Z2, F@_1, TrUserData) ->
-    d_field_StoreBidResp_error_reason(Rest, Z1, Z2, F@_1,
-				      TrUserData);
-dfp_read_field_def_StoreBidResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_StoreBidResp(Other, Z1, Z2, F@_1,
-				TrUserData) ->
-    dg_read_field_def_StoreBidResp(Other, Z1, Z2, F@_1,
-				   TrUserData).
-
-dg_read_field_def_StoreBidResp(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreBidResp(Rest, N + 7,
-				   X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_StoreBidResp(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreBidResp_bid_id(Rest, 0, 0, F@_1,
-				      TrUserData);
-      16 ->
-	  d_field_StoreBidResp_error_reason(Rest, 0, 0, F@_1,
-					    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreBidResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_StoreBidResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_StoreBidResp(Rest, 0, 0, F@_1,
-						   TrUserData);
-	    3 ->
-		skip_group_StoreBidResp(Rest, Key bsr 3, 0, F@_1,
-					TrUserData);
-	    5 -> skip_32_StoreBidResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreBidResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_StoreBidResp_bid_id(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreBidResp_bid_id(Rest, N + 7, X bsl N + Acc,
-				F@_1, TrUserData);
-d_field_StoreBidResp_bid_id(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreBidResp(RestF, 0, 0,
-				    {bid_id, NewFValue}, TrUserData).
-
-d_field_StoreBidResp_error_reason(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreBidResp_error_reason(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreBidResp_error_reason(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreBidResp(RestF, 0, 0,
-				    {error_reason, NewFValue}, TrUserData).
-
-skip_varint_StoreBidResp(<<1:1, _:7, Rest/binary>>, Z1,
-			 Z2, F@_1, TrUserData) ->
-    skip_varint_StoreBidResp(Rest, Z1, Z2, F@_1,
-			     TrUserData);
-skip_varint_StoreBidResp(<<0:1, _:7, Rest/binary>>, Z1,
-			 Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_StoreBidResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-skip_length_delimited_StoreBidResp(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreBidResp(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_StoreBidResp(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreBidResp(Rest2, 0, 0, F@_1,
-				    TrUserData).
-
-skip_group_StoreBidResp(Bin, FNum, Z2, F@_1,
-			TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreBidResp(Rest, 0, Z2, F@_1,
-				    TrUserData).
-
-skip_32_StoreBidResp(<<_:32, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_StoreBidResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-skip_64_StoreBidResp(<<_:64, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_StoreBidResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-d_msg_AboutMe(Bin, TrUserData) ->
-    dfp_read_field_def_AboutMe(Bin, 0, 0,
-			       id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_AboutMe(<<10, Rest/binary>>, Z1, Z2,
-			   F@_1, TrUserData) ->
-    d_field_AboutMe_user_id(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_AboutMe(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{user_id => F@_1}
-    end;
-dfp_read_field_def_AboutMe(Other, Z1, Z2, F@_1,
-			   TrUserData) ->
-    dg_read_field_def_AboutMe(Other, Z1, Z2, F@_1,
-			      TrUserData).
-
-dg_read_field_def_AboutMe(<<1:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_AboutMe(Rest, N + 7, X bsl N + Acc,
-			      F@_1, TrUserData);
-dg_read_field_def_AboutMe(<<0:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_AboutMe_user_id(Rest, 0, 0, F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 -> skip_varint_AboutMe(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_AboutMe(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_AboutMe(Rest, 0, 0, F@_1,
-					      TrUserData);
-	    3 ->
-		skip_group_AboutMe(Rest, Key bsr 3, 0, F@_1,
-				   TrUserData);
-	    5 -> skip_32_AboutMe(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_AboutMe(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{user_id => F@_1}
-    end.
-
-d_field_AboutMe_user_id(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_AboutMe_user_id(Rest, N + 7, X bsl N + Acc,
-			    F@_1, TrUserData);
-d_field_AboutMe_user_id(<<0:1, X:7, Rest/binary>>, N,
-			Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_AboutMe(RestF, 0, 0, NewFValue,
-			       TrUserData).
-
-skip_varint_AboutMe(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		    F@_1, TrUserData) ->
-    skip_varint_AboutMe(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_AboutMe(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		    F@_1, TrUserData) ->
-    dfp_read_field_def_AboutMe(Rest, Z1, Z2, F@_1,
-			       TrUserData).
-
-skip_length_delimited_AboutMe(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_AboutMe(Rest, N + 7,
-				  X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_AboutMe(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_AboutMe(Rest2, 0, 0, F@_1,
-			       TrUserData).
-
-skip_group_AboutMe(Bin, FNum, Z2, F@_1, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_AboutMe(Rest, 0, Z2, F@_1,
-			       TrUserData).
-
-skip_32_AboutMe(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		TrUserData) ->
-    dfp_read_field_def_AboutMe(Rest, Z1, Z2, F@_1,
-			       TrUserData).
-
-skip_64_AboutMe(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		TrUserData) ->
-    dfp_read_field_def_AboutMe(Rest, Z1, Z2, F@_1,
-			       TrUserData).
-
-d_msg_Item(Bin, TrUserData) ->
-    dfp_read_field_def_Item(Bin, 0, 0, id(<<>>, TrUserData),
-			    id(<<>>, TrUserData), id(0, TrUserData),
-			    id(0, TrUserData), id(0, TrUserData),
-			    id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_Item(<<10, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    d_field_Item_item_name(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			   F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_Item(<<18, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    d_field_Item_description(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			     F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_Item(<<24, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    d_field_Item_num_bids(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			  F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_Item(<<32, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    d_field_Item_quantity(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			  F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_Item(<<40, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    d_field_Item_end_date(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			  F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_Item(<<50, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    d_field_Item_category_id(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			     F@_4, F@_5, F@_6, TrUserData);
-dfp_read_field_def_Item(<<>>, 0, 0, F@_1, F@_2, F@_3,
-			F@_4, F@_5, F@_6, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{description => F@_2}
-	 end,
-    S4 = if F@_3 == '$undef' -> S3;
-	    true -> S3#{num_bids => F@_3}
-	 end,
-    S5 = if F@_4 == '$undef' -> S4;
-	    true -> S4#{quantity => F@_4}
-	 end,
-    S6 = if F@_5 == '$undef' -> S5;
-	    true -> S5#{end_date => F@_5}
-	 end,
-    if F@_6 == '$undef' -> S6;
-       true -> S6#{category_id => F@_6}
-    end;
-dfp_read_field_def_Item(Other, Z1, Z2, F@_1, F@_2, F@_3,
-			F@_4, F@_5, F@_6, TrUserData) ->
-    dg_read_field_def_Item(Other, Z1, Z2, F@_1, F@_2, F@_3,
-			   F@_4, F@_5, F@_6, TrUserData).
-
-dg_read_field_def_Item(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_Item(Rest, N + 7, X bsl N + Acc, F@_1,
-			   F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-dg_read_field_def_Item(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_Item_item_name(Rest, 0, 0, F@_1, F@_2, F@_3,
-				 F@_4, F@_5, F@_6, TrUserData);
-      18 ->
-	  d_field_Item_description(Rest, 0, 0, F@_1, F@_2, F@_3,
-				   F@_4, F@_5, F@_6, TrUserData);
-      24 ->
-	  d_field_Item_num_bids(Rest, 0, 0, F@_1, F@_2, F@_3,
-				F@_4, F@_5, F@_6, TrUserData);
-      32 ->
-	  d_field_Item_quantity(Rest, 0, 0, F@_1, F@_2, F@_3,
-				F@_4, F@_5, F@_6, TrUserData);
-      40 ->
-	  d_field_Item_end_date(Rest, 0, 0, F@_1, F@_2, F@_3,
-				F@_4, F@_5, F@_6, TrUserData);
-      50 ->
-	  d_field_Item_category_id(Rest, 0, 0, F@_1, F@_2, F@_3,
-				   F@_4, F@_5, F@_6, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_Item(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-				 F@_5, F@_6, TrUserData);
-	    1 ->
-		skip_64_Item(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5,
-			     F@_6, TrUserData);
-	    2 ->
-		skip_length_delimited_Item(Rest, 0, 0, F@_1, F@_2, F@_3,
-					   F@_4, F@_5, F@_6, TrUserData);
-	    3 ->
-		skip_group_Item(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3,
-				F@_4, F@_5, F@_6, TrUserData);
-	    5 ->
-		skip_32_Item(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5,
-			     F@_6, TrUserData)
-	  end
-    end;
-dg_read_field_def_Item(<<>>, 0, 0, F@_1, F@_2, F@_3,
-		       F@_4, F@_5, F@_6, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{description => F@_2}
-	 end,
-    S4 = if F@_3 == '$undef' -> S3;
-	    true -> S3#{num_bids => F@_3}
-	 end,
-    S5 = if F@_4 == '$undef' -> S4;
-	    true -> S4#{quantity => F@_4}
-	 end,
-    S6 = if F@_5 == '$undef' -> S5;
-	    true -> S5#{end_date => F@_5}
-	 end,
-    if F@_6 == '$undef' -> S6;
-       true -> S6#{category_id => F@_6}
-    end.
-
-d_field_Item_item_name(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    d_field_Item_item_name(Rest, N + 7, X bsl N + Acc, F@_1,
-			   F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_Item_item_name(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, _, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Item(RestF, 0, 0, NewFValue, F@_2,
-			    F@_3, F@_4, F@_5, F@_6, TrUserData).
-
-d_field_Item_description(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    d_field_Item_description(Rest, N + 7, X bsl N + Acc,
-			     F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_Item_description(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, _, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Item(RestF, 0, 0, F@_1, NewFValue,
-			    F@_3, F@_4, F@_5, F@_6, TrUserData).
-
-d_field_Item_num_bids(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    d_field_Item_num_bids(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_Item_num_bids(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, _, F@_4, F@_5, F@_6, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_Item(RestF, 0, 0, F@_1, F@_2,
-			    NewFValue, F@_4, F@_5, F@_6, TrUserData).
-
-d_field_Item_quantity(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    d_field_Item_quantity(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_Item_quantity(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, _, F@_5, F@_6, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_Item(RestF, 0, 0, F@_1, F@_2, F@_3,
-			    NewFValue, F@_5, F@_6, TrUserData).
-
-d_field_Item_end_date(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    d_field_Item_end_date(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_Item_end_date(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, F@_4, _, F@_6, TrUserData) ->
-    {NewFValue, RestF} = {begin
-			    <<Res:64/signed-native>> = <<(X bsl N +
-							    Acc):64/unsigned-native>>,
-			    Res
-			  end,
-			  Rest},
-    dfp_read_field_def_Item(RestF, 0, 0, F@_1, F@_2, F@_3,
-			    F@_4, NewFValue, F@_6, TrUserData).
-
-d_field_Item_category_id(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    d_field_Item_category_id(Rest, N + 7, X bsl N + Acc,
-			     F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-d_field_Item_category_id(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, F@_3, F@_4, F@_5, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Item(RestF, 0, 0, F@_1, F@_2, F@_3,
-			    F@_4, F@_5, NewFValue, TrUserData).
-
-skip_varint_Item(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		 F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    skip_varint_Item(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4,
-		     F@_5, F@_6, TrUserData);
-skip_varint_Item(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		 F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    dfp_read_field_def_Item(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			    F@_4, F@_5, F@_6, TrUserData).
-
-skip_length_delimited_Item(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_Item(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-skip_length_delimited_Item(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-			   TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_Item(Rest2, 0, 0, F@_1, F@_2, F@_3,
-			    F@_4, F@_5, F@_6, TrUserData).
-
-skip_group_Item(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4,
-		F@_5, F@_6, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_Item(Rest, 0, Z2, F@_1, F@_2, F@_3,
-			    F@_4, F@_5, F@_6, TrUserData).
-
-skip_32_Item(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2,
-	     F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    dfp_read_field_def_Item(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			    F@_4, F@_5, F@_6, TrUserData).
-
-skip_64_Item(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2,
-	     F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    dfp_read_field_def_Item(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			    F@_4, F@_5, F@_6, TrUserData).
-
-d_msg_ItemDetails(Bin, TrUserData) ->
-    dfp_read_field_def_ItemDetails(Bin, 0, 0,
-				   id(undefined, TrUserData),
-				   id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_ItemDetails(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, TrUserData) ->
-    d_field_ItemDetails_item(Rest, Z1, Z2, F@_1, F@_2,
-			     TrUserData);
-dfp_read_field_def_ItemDetails(<<18, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, TrUserData) ->
-    d_field_ItemDetails_seller_name(Rest, Z1, Z2, F@_1,
-				    F@_2, TrUserData);
-dfp_read_field_def_ItemDetails(<<>>, 0, 0, F@_1, F@_2,
-			       _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{item => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{seller_name => F@_2}
-    end;
-dfp_read_field_def_ItemDetails(Other, Z1, Z2, F@_1,
-			       F@_2, TrUserData) ->
-    dg_read_field_def_ItemDetails(Other, Z1, Z2, F@_1, F@_2,
-				  TrUserData).
-
-dg_read_field_def_ItemDetails(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_ItemDetails(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, TrUserData);
-dg_read_field_def_ItemDetails(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_ItemDetails_item(Rest, 0, 0, F@_1, F@_2,
-				   TrUserData);
-      18 ->
-	  d_field_ItemDetails_seller_name(Rest, 0, 0, F@_1, F@_2,
-					  TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_ItemDetails(Rest, 0, 0, F@_1, F@_2,
-					TrUserData);
-	    1 ->
-		skip_64_ItemDetails(Rest, 0, 0, F@_1, F@_2, TrUserData);
-	    2 ->
-		skip_length_delimited_ItemDetails(Rest, 0, 0, F@_1,
-						  F@_2, TrUserData);
-	    3 ->
-		skip_group_ItemDetails(Rest, Key bsr 3, 0, F@_1, F@_2,
-				       TrUserData);
-	    5 ->
-		skip_32_ItemDetails(Rest, 0, 0, F@_1, F@_2, TrUserData)
-	  end
-    end;
-dg_read_field_def_ItemDetails(<<>>, 0, 0, F@_1, F@_2,
-			      _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{item => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{seller_name => F@_2}
-    end.
-
-d_field_ItemDetails_item(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_ItemDetails_item(Rest, N + 7, X bsl N + Acc,
-			     F@_1, F@_2, TrUserData);
-d_field_ItemDetails_item(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, Prev, F@_2, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_Item(Bs, TrUserData), TrUserData), Rest2}
-			 end,
-    dfp_read_field_def_ItemDetails(RestF, 0, 0,
-				   if Prev == '$undef' -> NewFValue;
-				      true ->
-					  merge_msg_Item(Prev, NewFValue,
-							 TrUserData)
-				   end,
-				   F@_2, TrUserData).
-
-d_field_ItemDetails_seller_name(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_ItemDetails_seller_name(Rest, N + 7,
-				    X bsl N + Acc, F@_1, F@_2, TrUserData);
-d_field_ItemDetails_seller_name(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_ItemDetails(RestF, 0, 0, F@_1,
-				   NewFValue, TrUserData).
-
-skip_varint_ItemDetails(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, TrUserData) ->
-    skip_varint_ItemDetails(Rest, Z1, Z2, F@_1, F@_2,
-			    TrUserData);
-skip_varint_ItemDetails(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, TrUserData) ->
-    dfp_read_field_def_ItemDetails(Rest, Z1, Z2, F@_1, F@_2,
-				   TrUserData).
-
-skip_length_delimited_ItemDetails(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_ItemDetails(Rest, N + 7,
-				      X bsl N + Acc, F@_1, F@_2, TrUserData);
-skip_length_delimited_ItemDetails(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ItemDetails(Rest2, 0, 0, F@_1, F@_2,
-				   TrUserData).
-
-skip_group_ItemDetails(Bin, FNum, Z2, F@_1, F@_2,
-		       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ItemDetails(Rest, 0, Z2, F@_1, F@_2,
-				   TrUserData).
-
-skip_32_ItemDetails(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, TrUserData) ->
-    dfp_read_field_def_ItemDetails(Rest, Z1, Z2, F@_1, F@_2,
-				   TrUserData).
-
-skip_64_ItemDetails(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, TrUserData) ->
-    dfp_read_field_def_ItemDetails(Rest, Z1, Z2, F@_1, F@_2,
-				   TrUserData).
-
-'d_msg_ViewItemResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_ViewItemResp.Wrap'(Bin, 0, 0,
-					   id([], TrUserData), TrUserData).
-
-'dfp_read_field_def_ViewItemResp.Wrap'(<<10,
-					 Rest/binary>>,
-				       Z1, Z2, F@_1, TrUserData) ->
-    'd_field_ViewItemResp.Wrap_items'(Rest, Z1, Z2, F@_1,
-				      TrUserData);
-'dfp_read_field_def_ViewItemResp.Wrap'(<<>>, 0, 0, R1,
-				       TrUserData) ->
-    #{items => lists_reverse(R1, TrUserData)};
-'dfp_read_field_def_ViewItemResp.Wrap'(Other, Z1, Z2,
-				       F@_1, TrUserData) ->
-    'dg_read_field_def_ViewItemResp.Wrap'(Other, Z1, Z2,
-					  F@_1, TrUserData).
-
-'dg_read_field_def_ViewItemResp.Wrap'(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_ViewItemResp.Wrap'(Rest, N + 7,
-					  X bsl N + Acc, F@_1, TrUserData);
-'dg_read_field_def_ViewItemResp.Wrap'(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_ViewItemResp.Wrap_items'(Rest, 0, 0, F@_1,
-					    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_ViewItemResp.Wrap'(Rest, 0, 0, F@_1,
-						TrUserData);
-	    1 ->
-		'skip_64_ViewItemResp.Wrap'(Rest, 0, 0, F@_1,
-					    TrUserData);
-	    2 ->
-		'skip_length_delimited_ViewItemResp.Wrap'(Rest, 0, 0,
-							  F@_1, TrUserData);
-	    3 ->
-		'skip_group_ViewItemResp.Wrap'(Rest, Key bsr 3, 0, F@_1,
-					       TrUserData);
-	    5 ->
-		'skip_32_ViewItemResp.Wrap'(Rest, 0, 0, F@_1,
-					    TrUserData)
-	  end
-    end;
-'dg_read_field_def_ViewItemResp.Wrap'(<<>>, 0, 0, R1,
-				      TrUserData) ->
-    #{items => lists_reverse(R1, TrUserData)}.
-
-'d_field_ViewItemResp.Wrap_items'(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'd_field_ViewItemResp.Wrap_items'(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-'d_field_ViewItemResp.Wrap_items'(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_ItemDetails(Bs, TrUserData), TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_ViewItemResp.Wrap'(RestF, 0, 0,
-					   cons(NewFValue, Prev, TrUserData),
-					   TrUserData).
-
-'skip_varint_ViewItemResp.Wrap'(<<1:1, _:7,
-				  Rest/binary>>,
-				Z1, Z2, F@_1, TrUserData) ->
-    'skip_varint_ViewItemResp.Wrap'(Rest, Z1, Z2, F@_1,
-				    TrUserData);
-'skip_varint_ViewItemResp.Wrap'(<<0:1, _:7,
-				  Rest/binary>>,
-				Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_ViewItemResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-'skip_length_delimited_ViewItemResp.Wrap'(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_ViewItemResp.Wrap'(Rest, N + 7,
-					      X bsl N + Acc, F@_1, TrUserData);
-'skip_length_delimited_ViewItemResp.Wrap'(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_ViewItemResp.Wrap'(Rest2, 0, 0,
-					   F@_1, TrUserData).
-
-'skip_group_ViewItemResp.Wrap'(Bin, FNum, Z2, F@_1,
-			       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_ViewItemResp.Wrap'(Rest, 0, Z2,
-					   F@_1, TrUserData).
-
-'skip_32_ViewItemResp.Wrap'(<<_:32, Rest/binary>>, Z1,
-			    Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_ViewItemResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-'skip_64_ViewItemResp.Wrap'(<<_:64, Rest/binary>>, Z1,
-			    Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_ViewItemResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-d_msg_Comment(Bin, TrUserData) ->
-    dfp_read_field_def_Comment(Bin, 0, 0,
-			       id(<<>>, TrUserData), id(0, TrUserData),
-			       id(<<>>, TrUserData), id('$undef', TrUserData),
-			       TrUserData).
-
-dfp_read_field_def_Comment(<<10, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    d_field_Comment_on_item_id(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, F@_4, TrUserData);
-dfp_read_field_def_Comment(<<21, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    d_field_Comment_rating(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			   F@_4, TrUserData);
-dfp_read_field_def_Comment(<<26, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    d_field_Comment_body(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			 F@_4, TrUserData);
-dfp_read_field_def_Comment(<<34, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    d_field_Comment_from_username(Rest, Z1, Z2, F@_1, F@_2,
-				  F@_3, F@_4, TrUserData);
-dfp_read_field_def_Comment(<<42, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    d_field_Comment_to_id(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			  F@_4, TrUserData);
-dfp_read_field_def_Comment(<<>>, 0, 0, F@_1, F@_2, F@_3,
-			   F@_4, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{rating => F@_2}
-	 end,
-    S4 = if F@_3 == '$undef' -> S3;
-	    true -> S3#{body => F@_3}
-	 end,
-    if F@_4 == '$undef' -> S4;
-       true -> S4#{from_to => F@_4}
-    end;
-dfp_read_field_def_Comment(Other, Z1, Z2, F@_1, F@_2,
-			   F@_3, F@_4, TrUserData) ->
-    dg_read_field_def_Comment(Other, Z1, Z2, F@_1, F@_2,
-			      F@_3, F@_4, TrUserData).
-
-dg_read_field_def_Comment(<<1:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_Comment(Rest, N + 7, X bsl N + Acc,
-			      F@_1, F@_2, F@_3, F@_4, TrUserData);
-dg_read_field_def_Comment(<<0:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_Comment_on_item_id(Rest, 0, 0, F@_1, F@_2, F@_3,
-				     F@_4, TrUserData);
-      21 ->
-	  d_field_Comment_rating(Rest, 0, 0, F@_1, F@_2, F@_3,
-				 F@_4, TrUserData);
-      26 ->
-	  d_field_Comment_body(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-			       TrUserData);
-      34 ->
-	  d_field_Comment_from_username(Rest, 0, 0, F@_1, F@_2,
-					F@_3, F@_4, TrUserData);
-      42 ->
-	  d_field_Comment_to_id(Rest, 0, 0, F@_1, F@_2, F@_3,
-				F@_4, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_Comment(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-				    TrUserData);
-	    1 ->
-		skip_64_Comment(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-				TrUserData);
-	    2 ->
-		skip_length_delimited_Comment(Rest, 0, 0, F@_1, F@_2,
-					      F@_3, F@_4, TrUserData);
-	    3 ->
-		skip_group_Comment(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3,
-				   F@_4, TrUserData);
-	    5 ->
-		skip_32_Comment(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-				TrUserData)
-	  end
-    end;
-dg_read_field_def_Comment(<<>>, 0, 0, F@_1, F@_2, F@_3,
-			  F@_4, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{rating => F@_2}
-	 end,
-    S4 = if F@_3 == '$undef' -> S3;
-	    true -> S3#{body => F@_3}
-	 end,
-    if F@_4 == '$undef' -> S4;
-       true -> S4#{from_to => F@_4}
-    end.
-
-d_field_Comment_on_item_id(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
-    when N < 57 ->
-    d_field_Comment_on_item_id(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_Comment_on_item_id(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Comment(RestF, 0, 0, NewFValue, F@_2,
-			       F@_3, F@_4, TrUserData).
-
-d_field_Comment_rating(<<Value:32/little-signed,
-			 Rest/binary>>,
-		       Z1, Z2, F@_1, _, F@_3, F@_4, TrUserData) ->
-    dfp_read_field_def_Comment(Rest, Z1, Z2, F@_1, Value,
-			       F@_3, F@_4, TrUserData).
-
-d_field_Comment_body(<<1:1, X:7, Rest/binary>>, N, Acc,
-		     F@_1, F@_2, F@_3, F@_4, TrUserData)
-    when N < 57 ->
-    d_field_Comment_body(Rest, N + 7, X bsl N + Acc, F@_1,
-			 F@_2, F@_3, F@_4, TrUserData);
-d_field_Comment_body(<<0:1, X:7, Rest/binary>>, N, Acc,
-		     F@_1, F@_2, _, F@_4, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Comment(RestF, 0, 0, F@_1, F@_2,
-			       NewFValue, F@_4, TrUserData).
-
-d_field_Comment_from_username(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
-    when N < 57 ->
-    d_field_Comment_from_username(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
-				  TrUserData);
-d_field_Comment_from_username(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Comment(RestF, 0, 0, F@_1, F@_2,
-			       F@_3, {from_username, NewFValue}, TrUserData).
-
-d_field_Comment_to_id(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, F@_4, TrUserData)
-    when N < 57 ->
-    d_field_Comment_to_id(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, F@_3, F@_4, TrUserData);
-d_field_Comment_to_id(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_Comment(RestF, 0, 0, F@_1, F@_2,
-			       F@_3, {to_id, NewFValue}, TrUserData).
-
-skip_varint_Comment(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		    F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    skip_varint_Comment(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			F@_4, TrUserData);
-skip_varint_Comment(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		    F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    dfp_read_field_def_Comment(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, F@_4, TrUserData).
-
-skip_length_delimited_Comment(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_Comment(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
-				  TrUserData);
-skip_length_delimited_Comment(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_Comment(Rest2, 0, 0, F@_1, F@_2,
-			       F@_3, F@_4, TrUserData).
-
-skip_group_Comment(Bin, FNum, Z2, F@_1, F@_2, F@_3,
-		   F@_4, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_Comment(Rest, 0, Z2, F@_1, F@_2,
-			       F@_3, F@_4, TrUserData).
-
-skip_32_Comment(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		F@_2, F@_3, F@_4, TrUserData) ->
-    dfp_read_field_def_Comment(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, F@_4, TrUserData).
-
-skip_64_Comment(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		F@_2, F@_3, F@_4, TrUserData) ->
-    dfp_read_field_def_Comment(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, F@_4, TrUserData).
-
-'d_msg_ViewUserResp.Wrap.UserInfo'(Bin, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Bin, 0,
-						    0, id(<<>>, TrUserData),
-						    id(0, TrUserData),
-						    id([], TrUserData),
-						    TrUserData).
-
-'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(<<10,
-						  Rest/binary>>,
-						Z1, Z2, F@_1, F@_2, F@_3,
-						TrUserData) ->
-    'd_field_ViewUserResp.Wrap.UserInfo_username'(Rest, Z1,
-						  Z2, F@_1, F@_2, F@_3,
-						  TrUserData);
-'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(<<21,
-						  Rest/binary>>,
-						Z1, Z2, F@_1, F@_2, F@_3,
-						TrUserData) ->
-    'd_field_ViewUserResp.Wrap.UserInfo_rating'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData);
-'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(<<26,
-						  Rest/binary>>,
-						Z1, Z2, F@_1, F@_2, F@_3,
-						TrUserData) ->
-    'd_field_ViewUserResp.Wrap.UserInfo_comments'(Rest, Z1,
-						  Z2, F@_1, F@_2, F@_3,
-						  TrUserData);
-'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(<<>>, 0,
-						0, F@_1, F@_2, R1,
-						TrUserData) ->
-    S1 = #{comments => lists_reverse(R1, TrUserData)},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{username => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{rating => F@_2}
-    end;
-'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Other,
-						Z1, Z2, F@_1, F@_2, F@_3,
-						TrUserData) ->
-    'dg_read_field_def_ViewUserResp.Wrap.UserInfo'(Other,
-						   Z1, Z2, F@_1, F@_2, F@_3,
-						   TrUserData).
-
-'dg_read_field_def_ViewUserResp.Wrap.UserInfo'(<<1:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, F@_2, F@_3,
-					       TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest,
-						   N + 7, X bsl N + Acc, F@_1,
-						   F@_2, F@_3, TrUserData);
-'dg_read_field_def_ViewUserResp.Wrap.UserInfo'(<<0:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, F@_2, F@_3,
-					       TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_ViewUserResp.Wrap.UserInfo_username'(Rest, 0,
-							0, F@_1, F@_2, F@_3,
-							TrUserData);
-      21 ->
-	  'd_field_ViewUserResp.Wrap.UserInfo_rating'(Rest, 0, 0,
-						      F@_1, F@_2, F@_3,
-						      TrUserData);
-      26 ->
-	  'd_field_ViewUserResp.Wrap.UserInfo_comments'(Rest, 0,
-							0, F@_1, F@_2, F@_3,
-							TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_ViewUserResp.Wrap.UserInfo'(Rest, 0, 0,
-							 F@_1, F@_2, F@_3,
-							 TrUserData);
-	    1 ->
-		'skip_64_ViewUserResp.Wrap.UserInfo'(Rest, 0, 0, F@_1,
-						     F@_2, F@_3, TrUserData);
-	    2 ->
-		'skip_length_delimited_ViewUserResp.Wrap.UserInfo'(Rest,
-								   0, 0, F@_1,
-								   F@_2, F@_3,
-								   TrUserData);
-	    3 ->
-		'skip_group_ViewUserResp.Wrap.UserInfo'(Rest, Key bsr 3,
-							0, F@_1, F@_2, F@_3,
-							TrUserData);
-	    5 ->
-		'skip_32_ViewUserResp.Wrap.UserInfo'(Rest, 0, 0, F@_1,
-						     F@_2, F@_3, TrUserData)
-	  end
-    end;
-'dg_read_field_def_ViewUserResp.Wrap.UserInfo'(<<>>, 0,
-					       0, F@_1, F@_2, R1, TrUserData) ->
-    S1 = #{comments => lists_reverse(R1, TrUserData)},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{username => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{rating => F@_2}
-    end.
-
-'d_field_ViewUserResp.Wrap.UserInfo_username'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, F@_3,
-					      TrUserData)
-    when N < 57 ->
-    'd_field_ViewUserResp.Wrap.UserInfo_username'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  F@_2, F@_3, TrUserData);
-'d_field_ViewUserResp.Wrap.UserInfo_username'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, _, F@_2, F@_3,
-					      TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(RestF,
-						    0, 0, NewFValue, F@_2, F@_3,
-						    TrUserData).
-
-'d_field_ViewUserResp.Wrap.UserInfo_rating'(<<Value:32/little-signed,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, _, F@_3,
-					    TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest,
-						    Z1, Z2, F@_1, Value, F@_3,
-						    TrUserData).
-
-'d_field_ViewUserResp.Wrap.UserInfo_comments'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, F@_3,
-					      TrUserData)
-    when N < 57 ->
-    'd_field_ViewUserResp.Wrap.UserInfo_comments'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  F@_2, F@_3, TrUserData);
-'d_field_ViewUserResp.Wrap.UserInfo_comments'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, Prev,
-					      TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_Comment(Bs, TrUserData), TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(RestF,
-						    0, 0, F@_1, F@_2,
-						    cons(NewFValue, Prev,
-							 TrUserData),
-						    TrUserData).
-
-'skip_varint_ViewUserResp.Wrap.UserInfo'(<<1:1, _:7,
-					   Rest/binary>>,
-					 Z1, Z2, F@_1, F@_2, F@_3,
-					 TrUserData) ->
-    'skip_varint_ViewUserResp.Wrap.UserInfo'(Rest, Z1, Z2,
-					     F@_1, F@_2, F@_3, TrUserData);
-'skip_varint_ViewUserResp.Wrap.UserInfo'(<<0:1, _:7,
-					   Rest/binary>>,
-					 Z1, Z2, F@_1, F@_2, F@_3,
-					 TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest,
-						    Z1, Z2, F@_1, F@_2, F@_3,
-						    TrUserData).
-
-'skip_length_delimited_ViewUserResp.Wrap.UserInfo'(<<1:1,
-						     X:7, Rest/binary>>,
-						   N, Acc, F@_1, F@_2, F@_3,
-						   TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_ViewUserResp.Wrap.UserInfo'(Rest,
-						       N + 7, X bsl N + Acc,
-						       F@_1, F@_2, F@_3,
-						       TrUserData);
-'skip_length_delimited_ViewUserResp.Wrap.UserInfo'(<<0:1,
-						     X:7, Rest/binary>>,
-						   N, Acc, F@_1, F@_2, F@_3,
-						   TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest2,
-						    0, 0, F@_1, F@_2, F@_3,
-						    TrUserData).
-
-'skip_group_ViewUserResp.Wrap.UserInfo'(Bin, FNum, Z2,
-					F@_1, F@_2, F@_3, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest, 0,
-						    Z2, F@_1, F@_2, F@_3,
-						    TrUserData).
-
-'skip_32_ViewUserResp.Wrap.UserInfo'(<<_:32,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest,
-						    Z1, Z2, F@_1, F@_2, F@_3,
-						    TrUserData).
-
-'skip_64_ViewUserResp.Wrap.UserInfo'(<<_:64,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap.UserInfo'(Rest,
-						    Z1, Z2, F@_1, F@_2, F@_3,
-						    TrUserData).
-
-'d_msg_BrowseCategoriesResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Bin, 0,
-						   0, id([], TrUserData),
-						   TrUserData).
-
-'dfp_read_field_def_BrowseCategoriesResp.Wrap'(<<10,
-						 Rest/binary>>,
-					       Z1, Z2, F@_1, TrUserData) ->
-    'd_field_BrowseCategoriesResp.Wrap_category_names'(Rest,
-						       Z1, Z2, F@_1,
-						       TrUserData);
-'dfp_read_field_def_BrowseCategoriesResp.Wrap'(<<>>, 0,
-					       0, R1, TrUserData) ->
-    #{category_names => lists_reverse(R1, TrUserData)};
-'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Other,
-					       Z1, Z2, F@_1, TrUserData) ->
-    'dg_read_field_def_BrowseCategoriesResp.Wrap'(Other, Z1,
-						  Z2, F@_1, TrUserData).
-
-'dg_read_field_def_BrowseCategoriesResp.Wrap'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_BrowseCategoriesResp.Wrap'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  TrUserData);
-'dg_read_field_def_BrowseCategoriesResp.Wrap'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_BrowseCategoriesResp.Wrap_category_names'(Rest,
-							     0, 0, F@_1,
-							     TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_BrowseCategoriesResp.Wrap'(Rest, 0, 0,
-							F@_1, TrUserData);
-	    1 ->
-		'skip_64_BrowseCategoriesResp.Wrap'(Rest, 0, 0, F@_1,
-						    TrUserData);
-	    2 ->
-		'skip_length_delimited_BrowseCategoriesResp.Wrap'(Rest,
-								  0, 0, F@_1,
-								  TrUserData);
-	    3 ->
-		'skip_group_BrowseCategoriesResp.Wrap'(Rest, Key bsr 3,
-						       0, F@_1, TrUserData);
-	    5 ->
-		'skip_32_BrowseCategoriesResp.Wrap'(Rest, 0, 0, F@_1,
-						    TrUserData)
-	  end
-    end;
-'dg_read_field_def_BrowseCategoriesResp.Wrap'(<<>>, 0,
-					      0, R1, TrUserData) ->
-    #{category_names => lists_reverse(R1, TrUserData)}.
-
-'d_field_BrowseCategoriesResp.Wrap_category_names'(<<1:1,
-						     X:7, Rest/binary>>,
-						   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'd_field_BrowseCategoriesResp.Wrap_category_names'(Rest,
-						       N + 7, X bsl N + Acc,
-						       F@_1, TrUserData);
-'d_field_BrowseCategoriesResp.Wrap_category_names'(<<0:1,
-						     X:7, Rest/binary>>,
-						   N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(RestF, 0,
-						   0,
-						   cons(NewFValue, Prev,
-							TrUserData),
-						   TrUserData).
-
-'skip_varint_BrowseCategoriesResp.Wrap'(<<1:1, _:7,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    'skip_varint_BrowseCategoriesResp.Wrap'(Rest, Z1, Z2,
-					    F@_1, TrUserData);
-'skip_varint_BrowseCategoriesResp.Wrap'(<<0:1, _:7,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Rest, Z1,
-						   Z2, F@_1, TrUserData).
-
-'skip_length_delimited_BrowseCategoriesResp.Wrap'(<<1:1,
-						    X:7, Rest/binary>>,
-						  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_BrowseCategoriesResp.Wrap'(Rest,
-						      N + 7, X bsl N + Acc,
-						      F@_1, TrUserData);
-'skip_length_delimited_BrowseCategoriesResp.Wrap'(<<0:1,
-						    X:7, Rest/binary>>,
-						  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Rest2, 0,
-						   0, F@_1, TrUserData).
-
-'skip_group_BrowseCategoriesResp.Wrap'(Bin, FNum, Z2,
-				       F@_1, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Rest, 0,
-						   Z2, F@_1, TrUserData).
-
-'skip_32_BrowseCategoriesResp.Wrap'(<<_:32,
-				      Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Rest, Z1,
-						   Z2, F@_1, TrUserData).
-
-'skip_64_BrowseCategoriesResp.Wrap'(<<_:64,
-				      Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_BrowseCategoriesResp.Wrap'(Rest, Z1,
-						   Z2, F@_1, TrUserData).
-
-d_msg_BidInfo(Bin, TrUserData) ->
-    dfp_read_field_def_BidInfo(Bin, 0, 0,
-			       id(<<>>, TrUserData), id(0, TrUserData),
-			       id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_BidInfo(<<10, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_BidInfo_on_item_id(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData);
-dfp_read_field_def_BidInfo(<<16, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_BidInfo_price(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			  TrUserData);
-dfp_read_field_def_BidInfo(<<26, Rest/binary>>, Z1, Z2,
-			   F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_BidInfo_bidder_name(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, TrUserData);
-dfp_read_field_def_BidInfo(<<>>, 0, 0, F@_1, F@_2, F@_3,
-			   _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{price => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{bidder_name => F@_3}
-    end;
-dfp_read_field_def_BidInfo(Other, Z1, Z2, F@_1, F@_2,
-			   F@_3, TrUserData) ->
-    dg_read_field_def_BidInfo(Other, Z1, Z2, F@_1, F@_2,
-			      F@_3, TrUserData).
-
-dg_read_field_def_BidInfo(<<1:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_BidInfo(Rest, N + 7, X bsl N + Acc,
-			      F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_BidInfo(<<0:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_BidInfo_on_item_id(Rest, 0, 0, F@_1, F@_2, F@_3,
-				     TrUserData);
-      16 ->
-	  d_field_BidInfo_price(Rest, 0, 0, F@_1, F@_2, F@_3,
-				TrUserData);
-      26 ->
-	  d_field_BidInfo_bidder_name(Rest, 0, 0, F@_1, F@_2,
-				      F@_3, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_BidInfo(Rest, 0, 0, F@_1, F@_2, F@_3,
-				    TrUserData);
-	    1 ->
-		skip_64_BidInfo(Rest, 0, 0, F@_1, F@_2, F@_3,
-				TrUserData);
-	    2 ->
-		skip_length_delimited_BidInfo(Rest, 0, 0, F@_1, F@_2,
-					      F@_3, TrUserData);
-	    3 ->
-		skip_group_BidInfo(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3,
-				   TrUserData);
-	    5 ->
-		skip_32_BidInfo(Rest, 0, 0, F@_1, F@_2, F@_3,
-				TrUserData)
-	  end
-    end;
-dg_read_field_def_BidInfo(<<>>, 0, 0, F@_1, F@_2, F@_3,
-			  _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{price => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{bidder_name => F@_3}
-    end.
-
-d_field_BidInfo_on_item_id(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_BidInfo_on_item_id(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, TrUserData);
-d_field_BidInfo_on_item_id(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, _, F@_2, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_BidInfo(RestF, 0, 0, NewFValue, F@_2,
-			       F@_3, TrUserData).
-
-d_field_BidInfo_price(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_BidInfo_price(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, F@_3, TrUserData);
-d_field_BidInfo_price(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_BidInfo(RestF, 0, 0, F@_1, NewFValue,
-			       F@_3, TrUserData).
-
-d_field_BidInfo_bidder_name(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_BidInfo_bidder_name(Rest, N + 7, X bsl N + Acc,
-				F@_1, F@_2, F@_3, TrUserData);
-d_field_BidInfo_bidder_name(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_BidInfo(RestF, 0, 0, F@_1, F@_2,
-			       NewFValue, TrUserData).
-
-skip_varint_BidInfo(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		    F@_1, F@_2, F@_3, TrUserData) ->
-    skip_varint_BidInfo(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			TrUserData);
-skip_varint_BidInfo(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		    F@_1, F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_BidInfo(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData).
-
-skip_length_delimited_BidInfo(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_BidInfo(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_BidInfo(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_BidInfo(Rest2, 0, 0, F@_1, F@_2,
-			       F@_3, TrUserData).
-
-skip_group_BidInfo(Bin, FNum, Z2, F@_1, F@_2, F@_3,
-		   TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_BidInfo(Rest, 0, Z2, F@_1, F@_2,
-			       F@_3, TrUserData).
-
-skip_32_BidInfo(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_BidInfo(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData).
-
-skip_64_BidInfo(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_BidInfo(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData).
-
-'d_msg_ViewItemBidHistResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Bin, 0, 0,
-						  id(<<>>, TrUserData),
-						  id([], TrUserData),
-						  TrUserData).
-
-'dfp_read_field_def_ViewItemBidHistResp.Wrap'(<<10,
-						Rest/binary>>,
-					      Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'd_field_ViewItemBidHistResp.Wrap_item_name'(Rest, Z1,
-						 Z2, F@_1, F@_2, TrUserData);
-'dfp_read_field_def_ViewItemBidHistResp.Wrap'(<<18,
-						Rest/binary>>,
-					      Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'd_field_ViewItemBidHistResp.Wrap_bids'(Rest, Z1, Z2,
-					    F@_1, F@_2, TrUserData);
-'dfp_read_field_def_ViewItemBidHistResp.Wrap'(<<>>, 0,
-					      0, F@_1, R1, TrUserData) ->
-    S1 = #{bids => lists_reverse(R1, TrUserData)},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{item_name => F@_1}
-    end;
-'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Other, Z1,
-					      Z2, F@_1, F@_2, TrUserData) ->
-    'dg_read_field_def_ViewItemBidHistResp.Wrap'(Other, Z1,
-						 Z2, F@_1, F@_2, TrUserData).
-
-'dg_read_field_def_ViewItemBidHistResp.Wrap'(<<1:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_ViewItemBidHistResp.Wrap'(Rest,
-						 N + 7, X bsl N + Acc, F@_1,
-						 F@_2, TrUserData);
-'dg_read_field_def_ViewItemBidHistResp.Wrap'(<<0:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_ViewItemBidHistResp.Wrap_item_name'(Rest, 0, 0,
-						       F@_1, F@_2, TrUserData);
-      18 ->
-	  'd_field_ViewItemBidHistResp.Wrap_bids'(Rest, 0, 0,
-						  F@_1, F@_2, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_ViewItemBidHistResp.Wrap'(Rest, 0, 0, F@_1,
-						       F@_2, TrUserData);
-	    1 ->
-		'skip_64_ViewItemBidHistResp.Wrap'(Rest, 0, 0, F@_1,
-						   F@_2, TrUserData);
-	    2 ->
-		'skip_length_delimited_ViewItemBidHistResp.Wrap'(Rest,
-								 0, 0, F@_1,
-								 F@_2,
-								 TrUserData);
-	    3 ->
-		'skip_group_ViewItemBidHistResp.Wrap'(Rest, Key bsr 3,
-						      0, F@_1, F@_2,
-						      TrUserData);
-	    5 ->
-		'skip_32_ViewItemBidHistResp.Wrap'(Rest, 0, 0, F@_1,
-						   F@_2, TrUserData)
-	  end
-    end;
-'dg_read_field_def_ViewItemBidHistResp.Wrap'(<<>>, 0, 0,
-					     F@_1, R1, TrUserData) ->
-    S1 = #{bids => lists_reverse(R1, TrUserData)},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{item_name => F@_1}
-    end.
-
-'d_field_ViewItemBidHistResp.Wrap_item_name'(<<1:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    'd_field_ViewItemBidHistResp.Wrap_item_name'(Rest,
-						 N + 7, X bsl N + Acc, F@_1,
-						 F@_2, TrUserData);
-'d_field_ViewItemBidHistResp.Wrap_item_name'(<<0:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, _, F@_2, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(RestF, 0,
-						  0, NewFValue, F@_2,
-						  TrUserData).
-
-'d_field_ViewItemBidHistResp.Wrap_bids'(<<1:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    'd_field_ViewItemBidHistResp.Wrap_bids'(Rest, N + 7,
-					    X bsl N + Acc, F@_1, F@_2,
-					    TrUserData);
-'d_field_ViewItemBidHistResp.Wrap_bids'(<<0:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_BidInfo(Bs, TrUserData), TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(RestF, 0,
-						  0, F@_1,
-						  cons(NewFValue, Prev,
-						       TrUserData),
-						  TrUserData).
-
-'skip_varint_ViewItemBidHistResp.Wrap'(<<1:1, _:7,
-					 Rest/binary>>,
-				       Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'skip_varint_ViewItemBidHistResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, F@_2, TrUserData);
-'skip_varint_ViewItemBidHistResp.Wrap'(<<0:1, _:7,
-					 Rest/binary>>,
-				       Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Rest, Z1,
-						  Z2, F@_1, F@_2, TrUserData).
-
-'skip_length_delimited_ViewItemBidHistResp.Wrap'(<<1:1,
-						   X:7, Rest/binary>>,
-						 N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_ViewItemBidHistResp.Wrap'(Rest,
-						     N + 7, X bsl N + Acc, F@_1,
-						     F@_2, TrUserData);
-'skip_length_delimited_ViewItemBidHistResp.Wrap'(<<0:1,
-						   X:7, Rest/binary>>,
-						 N, Acc, F@_1, F@_2,
-						 TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Rest2, 0,
-						  0, F@_1, F@_2, TrUserData).
-
-'skip_group_ViewItemBidHistResp.Wrap'(Bin, FNum, Z2,
-				      F@_1, F@_2, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Rest, 0,
-						  Z2, F@_1, F@_2, TrUserData).
-
-'skip_32_ViewItemBidHistResp.Wrap'(<<_:32,
-				     Rest/binary>>,
-				   Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Rest, Z1,
-						  Z2, F@_1, F@_2, TrUserData).
-
-'skip_64_ViewItemBidHistResp.Wrap'(<<_:64,
-				     Rest/binary>>,
-				   Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'dfp_read_field_def_ViewItemBidHistResp.Wrap'(Rest, Z1,
-						  Z2, F@_1, F@_2, TrUserData).
-
-d_msg_ViewItemBidHistResp(Bin, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHistResp(Bin, 0, 0,
-					   id('$undef', TrUserData),
-					   TrUserData).
-
-dfp_read_field_def_ViewItemBidHistResp(<<10,
-					 Rest/binary>>,
-				       Z1, Z2, F@_1, TrUserData) ->
-    d_field_ViewItemBidHistResp_content(Rest, Z1, Z2, F@_1,
-					TrUserData);
-dfp_read_field_def_ViewItemBidHistResp(<<16,
-					 Rest/binary>>,
-				       Z1, Z2, F@_1, TrUserData) ->
-    d_field_ViewItemBidHistResp_error_reason(Rest, Z1, Z2,
-					     F@_1, TrUserData);
-dfp_read_field_def_ViewItemBidHistResp(<<>>, 0, 0, F@_1,
-				       _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_ViewItemBidHistResp(Other, Z1, Z2,
-				       F@_1, TrUserData) ->
-    dg_read_field_def_ViewItemBidHistResp(Other, Z1, Z2,
-					  F@_1, TrUserData).
-
-dg_read_field_def_ViewItemBidHistResp(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_ViewItemBidHistResp(Rest, N + 7,
-					  X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_ViewItemBidHistResp(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_ViewItemBidHistResp_content(Rest, 0, 0, F@_1,
-					      TrUserData);
-      16 ->
-	  d_field_ViewItemBidHistResp_error_reason(Rest, 0, 0,
-						   F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_ViewItemBidHistResp(Rest, 0, 0, F@_1,
-						TrUserData);
-	    1 ->
-		skip_64_ViewItemBidHistResp(Rest, 0, 0, F@_1,
-					    TrUserData);
-	    2 ->
-		skip_length_delimited_ViewItemBidHistResp(Rest, 0, 0,
-							  F@_1, TrUserData);
-	    3 ->
-		skip_group_ViewItemBidHistResp(Rest, Key bsr 3, 0, F@_1,
-					       TrUserData);
-	    5 ->
-		skip_32_ViewItemBidHistResp(Rest, 0, 0, F@_1,
-					    TrUserData)
-	  end
-    end;
-dg_read_field_def_ViewItemBidHistResp(<<>>, 0, 0, F@_1,
-				      _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_ViewItemBidHistResp_content(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewItemBidHistResp_content(Rest, N + 7,
-					X bsl N + Acc, F@_1, TrUserData);
-d_field_ViewItemBidHistResp_content(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_ViewItemBidHistResp.Wrap'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_ViewItemBidHistResp(RestF, 0, 0,
-					   case Prev of
-					     '$undef' -> {content, NewFValue};
-					     {content, MVPrev} ->
-						 {content,
-						  'merge_msg_ViewItemBidHistResp.Wrap'(MVPrev,
-										       NewFValue,
-										       TrUserData)};
-					     _ -> {content, NewFValue}
-					   end,
-					   TrUserData).
-
-d_field_ViewItemBidHistResp_error_reason(<<1:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewItemBidHistResp_error_reason(Rest, N + 7,
-					     X bsl N + Acc, F@_1, TrUserData);
-d_field_ViewItemBidHistResp_error_reason(<<0:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_ViewItemBidHistResp(RestF, 0, 0,
-					   {error_reason, NewFValue},
-					   TrUserData).
-
-skip_varint_ViewItemBidHistResp(<<1:1, _:7,
-				  Rest/binary>>,
-				Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_ViewItemBidHistResp(Rest, Z1, Z2, F@_1,
-				    TrUserData);
-skip_varint_ViewItemBidHistResp(<<0:1, _:7,
-				  Rest/binary>>,
-				Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHistResp(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-skip_length_delimited_ViewItemBidHistResp(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_ViewItemBidHistResp(Rest, N + 7,
-					      X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ViewItemBidHistResp(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ViewItemBidHistResp(Rest2, 0, 0,
-					   F@_1, TrUserData).
-
-skip_group_ViewItemBidHistResp(Bin, FNum, Z2, F@_1,
-			       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ViewItemBidHistResp(Rest, 0, Z2,
-					   F@_1, TrUserData).
-
-skip_32_ViewItemBidHistResp(<<_:32, Rest/binary>>, Z1,
-			    Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHistResp(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-skip_64_ViewItemBidHistResp(<<_:64, Rest/binary>>, Z1,
-			    Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHistResp(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-d_msg_PutCategoryResp(Bin, TrUserData) ->
-    dfp_read_field_def_PutCategoryResp(Bin, 0, 0,
-				       id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_PutCategoryResp(<<10, Rest/binary>>,
-				   Z1, Z2, F@_1, TrUserData) ->
-    d_field_PutCategoryResp_category_id(Rest, Z1, Z2, F@_1,
-					TrUserData);
-dfp_read_field_def_PutCategoryResp(<<16, Rest/binary>>,
-				   Z1, Z2, F@_1, TrUserData) ->
-    d_field_PutCategoryResp_error_reason(Rest, Z1, Z2, F@_1,
-					 TrUserData);
-dfp_read_field_def_PutCategoryResp(<<>>, 0, 0, F@_1,
-				   _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_PutCategoryResp(Other, Z1, Z2, F@_1,
-				   TrUserData) ->
-    dg_read_field_def_PutCategoryResp(Other, Z1, Z2, F@_1,
-				      TrUserData).
-
-dg_read_field_def_PutCategoryResp(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_PutCategoryResp(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_PutCategoryResp(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_PutCategoryResp_category_id(Rest, 0, 0, F@_1,
-					      TrUserData);
-      16 ->
-	  d_field_PutCategoryResp_error_reason(Rest, 0, 0, F@_1,
-					       TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_PutCategoryResp(Rest, 0, 0, F@_1,
-					    TrUserData);
-	    1 ->
-		skip_64_PutCategoryResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_PutCategoryResp(Rest, 0, 0, F@_1,
-						      TrUserData);
-	    3 ->
-		skip_group_PutCategoryResp(Rest, Key bsr 3, 0, F@_1,
-					   TrUserData);
-	    5 ->
-		skip_32_PutCategoryResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_PutCategoryResp(<<>>, 0, 0, F@_1,
-				  _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_PutCategoryResp_category_id(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_PutCategoryResp_category_id(Rest, N + 7,
-					X bsl N + Acc, F@_1, TrUserData);
-d_field_PutCategoryResp_category_id(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_PutCategoryResp(RestF, 0, 0,
-				       {category_id, NewFValue}, TrUserData).
-
-d_field_PutCategoryResp_error_reason(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_PutCategoryResp_error_reason(Rest, N + 7,
-					 X bsl N + Acc, F@_1, TrUserData);
-d_field_PutCategoryResp_error_reason(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_PutCategoryResp(RestF, 0, 0,
-				       {error_reason, NewFValue}, TrUserData).
-
-skip_varint_PutCategoryResp(<<1:1, _:7, Rest/binary>>,
-			    Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_PutCategoryResp(Rest, Z1, Z2, F@_1,
-				TrUserData);
-skip_varint_PutCategoryResp(<<0:1, _:7, Rest/binary>>,
-			    Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_PutCategoryResp(Rest, Z1, Z2, F@_1,
-				       TrUserData).
-
-skip_length_delimited_PutCategoryResp(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_PutCategoryResp(Rest, N + 7,
-					  X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_PutCategoryResp(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_PutCategoryResp(Rest2, 0, 0, F@_1,
-				       TrUserData).
-
-skip_group_PutCategoryResp(Bin, FNum, Z2, F@_1,
-			   TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_PutCategoryResp(Rest, 0, Z2, F@_1,
-				       TrUserData).
-
-skip_32_PutCategoryResp(<<_:32, Rest/binary>>, Z1, Z2,
-			F@_1, TrUserData) ->
-    dfp_read_field_def_PutCategoryResp(Rest, Z1, Z2, F@_1,
-				       TrUserData).
-
-skip_64_PutCategoryResp(<<_:64, Rest/binary>>, Z1, Z2,
-			F@_1, TrUserData) ->
-    dfp_read_field_def_PutCategoryResp(Rest, Z1, Z2, F@_1,
-				       TrUserData).
-
-d_msg_ViewItem(Bin, TrUserData) ->
-    dfp_read_field_def_ViewItem(Bin, 0, 0,
-				id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_ViewItem(<<10, Rest/binary>>, Z1, Z2,
-			    F@_1, TrUserData) ->
-    d_field_ViewItem_item_id(Rest, Z1, Z2, F@_1,
-			     TrUserData);
-dfp_read_field_def_ViewItem(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{item_id => F@_1}
-    end;
-dfp_read_field_def_ViewItem(Other, Z1, Z2, F@_1,
-			    TrUserData) ->
-    dg_read_field_def_ViewItem(Other, Z1, Z2, F@_1,
-			       TrUserData).
-
-dg_read_field_def_ViewItem(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_ViewItem(Rest, N + 7, X bsl N + Acc,
-			       F@_1, TrUserData);
-dg_read_field_def_ViewItem(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_ViewItem_item_id(Rest, 0, 0, F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 -> skip_varint_ViewItem(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_ViewItem(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_ViewItem(Rest, 0, 0, F@_1,
-					       TrUserData);
-	    3 ->
-		skip_group_ViewItem(Rest, Key bsr 3, 0, F@_1,
-				    TrUserData);
-	    5 -> skip_32_ViewItem(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_ViewItem(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{item_id => F@_1}
-    end.
-
-d_field_ViewItem_item_id(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewItem_item_id(Rest, N + 7, X bsl N + Acc,
-			     F@_1, TrUserData);
-d_field_ViewItem_item_id(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_ViewItem(RestF, 0, 0, NewFValue,
-				TrUserData).
-
-skip_varint_ViewItem(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    skip_varint_ViewItem(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_ViewItem(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItem(Rest, Z1, Z2, F@_1,
-				TrUserData).
-
-skip_length_delimited_ViewItem(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_ViewItem(Rest, N + 7,
-				   X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ViewItem(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ViewItem(Rest2, 0, 0, F@_1,
-				TrUserData).
-
-skip_group_ViewItem(Bin, FNum, Z2, F@_1, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ViewItem(Rest, 0, Z2, F@_1,
-				TrUserData).
-
-skip_32_ViewItem(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		 TrUserData) ->
-    dfp_read_field_def_ViewItem(Rest, Z1, Z2, F@_1,
-				TrUserData).
-
-skip_64_ViewItem(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		 TrUserData) ->
-    dfp_read_field_def_ViewItem(Rest, Z1, Z2, F@_1,
-				TrUserData).
-
-'d_msg_SearchByRegionResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(Bin, 0, 0,
-						 id([], TrUserData),
-						 TrUserData).
-
-'dfp_read_field_def_SearchByRegionResp.Wrap'(<<10,
-					       Rest/binary>>,
-					     Z1, Z2, F@_1, TrUserData) ->
-    'd_field_SearchByRegionResp.Wrap_items'(Rest, Z1, Z2,
-					    F@_1, TrUserData);
-'dfp_read_field_def_SearchByRegionResp.Wrap'(<<>>, 0, 0,
-					     R1, TrUserData) ->
-    #{items => lists_reverse(R1, TrUserData)};
-'dfp_read_field_def_SearchByRegionResp.Wrap'(Other, Z1,
-					     Z2, F@_1, TrUserData) ->
-    'dg_read_field_def_SearchByRegionResp.Wrap'(Other, Z1,
-						Z2, F@_1, TrUserData).
-
-'dg_read_field_def_SearchByRegionResp.Wrap'(<<1:1, X:7,
-					      Rest/binary>>,
-					    N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_SearchByRegionResp.Wrap'(Rest, N + 7,
-						X bsl N + Acc, F@_1,
-						TrUserData);
-'dg_read_field_def_SearchByRegionResp.Wrap'(<<0:1, X:7,
-					      Rest/binary>>,
-					    N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_SearchByRegionResp.Wrap_items'(Rest, 0, 0,
-						  F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_SearchByRegionResp.Wrap'(Rest, 0, 0, F@_1,
-						      TrUserData);
-	    1 ->
-		'skip_64_SearchByRegionResp.Wrap'(Rest, 0, 0, F@_1,
-						  TrUserData);
-	    2 ->
-		'skip_length_delimited_SearchByRegionResp.Wrap'(Rest, 0,
-								0, F@_1,
-								TrUserData);
-	    3 ->
-		'skip_group_SearchByRegionResp.Wrap'(Rest, Key bsr 3, 0,
-						     F@_1, TrUserData);
-	    5 ->
-		'skip_32_SearchByRegionResp.Wrap'(Rest, 0, 0, F@_1,
-						  TrUserData)
-	  end
-    end;
-'dg_read_field_def_SearchByRegionResp.Wrap'(<<>>, 0, 0,
-					    R1, TrUserData) ->
-    #{items => lists_reverse(R1, TrUserData)}.
-
-'d_field_SearchByRegionResp.Wrap_items'(<<1:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'd_field_SearchByRegionResp.Wrap_items'(Rest, N + 7,
-					    X bsl N + Acc, F@_1, TrUserData);
-'d_field_SearchByRegionResp.Wrap_items'(<<0:1, X:7,
-					  Rest/binary>>,
-					N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_ItemDetails(Bs, TrUserData), TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(RestF, 0,
-						 0,
-						 cons(NewFValue, Prev,
-						      TrUserData),
-						 TrUserData).
-
-'skip_varint_SearchByRegionResp.Wrap'(<<1:1, _:7,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, TrUserData) ->
-    'skip_varint_SearchByRegionResp.Wrap'(Rest, Z1, Z2,
-					  F@_1, TrUserData);
-'skip_varint_SearchByRegionResp.Wrap'(<<0:1, _:7,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(Rest, Z1,
-						 Z2, F@_1, TrUserData).
-
-'skip_length_delimited_SearchByRegionResp.Wrap'(<<1:1,
-						  X:7, Rest/binary>>,
-						N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_SearchByRegionResp.Wrap'(Rest,
-						    N + 7, X bsl N + Acc, F@_1,
-						    TrUserData);
-'skip_length_delimited_SearchByRegionResp.Wrap'(<<0:1,
-						  X:7, Rest/binary>>,
-						N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(Rest2, 0,
-						 0, F@_1, TrUserData).
-
-'skip_group_SearchByRegionResp.Wrap'(Bin, FNum, Z2,
-				     F@_1, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(Rest, 0,
-						 Z2, F@_1, TrUserData).
-
-'skip_32_SearchByRegionResp.Wrap'(<<_:32, Rest/binary>>,
-				  Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(Rest, Z1,
-						 Z2, F@_1, TrUserData).
-
-'skip_64_SearchByRegionResp.Wrap'(<<_:64, Rest/binary>>,
-				  Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_SearchByRegionResp.Wrap'(Rest, Z1,
-						 Z2, F@_1, TrUserData).
-
-d_msg_SearchByRegionResp(Bin, TrUserData) ->
-    dfp_read_field_def_SearchByRegionResp(Bin, 0, 0,
-					  id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_SearchByRegionResp(<<10,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, TrUserData) ->
-    d_field_SearchByRegionResp_content(Rest, Z1, Z2, F@_1,
-				       TrUserData);
-dfp_read_field_def_SearchByRegionResp(<<16,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, TrUserData) ->
-    d_field_SearchByRegionResp_error_reason(Rest, Z1, Z2,
-					    F@_1, TrUserData);
-dfp_read_field_def_SearchByRegionResp(<<>>, 0, 0, F@_1,
-				      _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_SearchByRegionResp(Other, Z1, Z2,
-				      F@_1, TrUserData) ->
-    dg_read_field_def_SearchByRegionResp(Other, Z1, Z2,
-					 F@_1, TrUserData).
-
-dg_read_field_def_SearchByRegionResp(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_SearchByRegionResp(Rest, N + 7,
-					 X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_SearchByRegionResp(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_SearchByRegionResp_content(Rest, 0, 0, F@_1,
-					     TrUserData);
-      16 ->
-	  d_field_SearchByRegionResp_error_reason(Rest, 0, 0,
-						  F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_SearchByRegionResp(Rest, 0, 0, F@_1,
-					       TrUserData);
-	    1 ->
-		skip_64_SearchByRegionResp(Rest, 0, 0, F@_1,
-					   TrUserData);
-	    2 ->
-		skip_length_delimited_SearchByRegionResp(Rest, 0, 0,
-							 F@_1, TrUserData);
-	    3 ->
-		skip_group_SearchByRegionResp(Rest, Key bsr 3, 0, F@_1,
-					      TrUserData);
-	    5 ->
-		skip_32_SearchByRegionResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_SearchByRegionResp(<<>>, 0, 0, F@_1,
-				     _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_SearchByRegionResp_content(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_SearchByRegionResp_content(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-d_field_SearchByRegionResp_content(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_SearchByRegionResp.Wrap'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_SearchByRegionResp(RestF, 0, 0,
-					  case Prev of
-					    '$undef' -> {content, NewFValue};
-					    {content, MVPrev} ->
-						{content,
-						 'merge_msg_SearchByRegionResp.Wrap'(MVPrev,
-										     NewFValue,
-										     TrUserData)};
-					    _ -> {content, NewFValue}
-					  end,
-					  TrUserData).
-
-d_field_SearchByRegionResp_error_reason(<<1:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_SearchByRegionResp_error_reason(Rest, N + 7,
-					    X bsl N + Acc, F@_1, TrUserData);
-d_field_SearchByRegionResp_error_reason(<<0:1, X:7,
-					  Rest/binary>>,
-					N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_SearchByRegionResp(RestF, 0, 0,
-					  {error_reason, NewFValue},
-					  TrUserData).
-
-skip_varint_SearchByRegionResp(<<1:1, _:7,
-				 Rest/binary>>,
-			       Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_SearchByRegionResp(Rest, Z1, Z2, F@_1,
-				   TrUserData);
-skip_varint_SearchByRegionResp(<<0:1, _:7,
-				 Rest/binary>>,
-			       Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByRegionResp(Rest, Z1, Z2,
-					  F@_1, TrUserData).
-
-skip_length_delimited_SearchByRegionResp(<<1:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_SearchByRegionResp(Rest, N + 7,
-					     X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_SearchByRegionResp(<<0:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_SearchByRegionResp(Rest2, 0, 0, F@_1,
-					  TrUserData).
-
-skip_group_SearchByRegionResp(Bin, FNum, Z2, F@_1,
-			      TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_SearchByRegionResp(Rest, 0, Z2, F@_1,
-					  TrUserData).
-
-skip_32_SearchByRegionResp(<<_:32, Rest/binary>>, Z1,
-			   Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByRegionResp(Rest, Z1, Z2,
-					  F@_1, TrUserData).
-
-skip_64_SearchByRegionResp(<<_:64, Rest/binary>>, Z1,
-			   Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByRegionResp(Rest, Z1, Z2,
-					  F@_1, TrUserData).
-
-d_msg_PutRegionResp(Bin, TrUserData) ->
-    dfp_read_field_def_PutRegionResp(Bin, 0, 0,
-				     id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_PutRegionResp(<<10, Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    d_field_PutRegionResp_region_id(Rest, Z1, Z2, F@_1,
-				    TrUserData);
-dfp_read_field_def_PutRegionResp(<<16, Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    d_field_PutRegionResp_error_reason(Rest, Z1, Z2, F@_1,
-				       TrUserData);
-dfp_read_field_def_PutRegionResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_PutRegionResp(Other, Z1, Z2, F@_1,
-				 TrUserData) ->
-    dg_read_field_def_PutRegionResp(Other, Z1, Z2, F@_1,
-				    TrUserData).
-
-dg_read_field_def_PutRegionResp(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_PutRegionResp(Rest, N + 7,
-				    X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_PutRegionResp(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_PutRegionResp_region_id(Rest, 0, 0, F@_1,
-					  TrUserData);
-      16 ->
-	  d_field_PutRegionResp_error_reason(Rest, 0, 0, F@_1,
-					     TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_PutRegionResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 ->
-		skip_64_PutRegionResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_PutRegionResp(Rest, 0, 0, F@_1,
-						    TrUserData);
-	    3 ->
-		skip_group_PutRegionResp(Rest, Key bsr 3, 0, F@_1,
-					 TrUserData);
-	    5 -> skip_32_PutRegionResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_PutRegionResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_PutRegionResp_region_id(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_PutRegionResp_region_id(Rest, N + 7,
-				    X bsl N + Acc, F@_1, TrUserData);
-d_field_PutRegionResp_region_id(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_PutRegionResp(RestF, 0, 0,
-				     {region_id, NewFValue}, TrUserData).
-
-d_field_PutRegionResp_error_reason(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_PutRegionResp_error_reason(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-d_field_PutRegionResp_error_reason(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_PutRegionResp(RestF, 0, 0,
-				     {error_reason, NewFValue}, TrUserData).
-
-skip_varint_PutRegionResp(<<1:1, _:7, Rest/binary>>, Z1,
-			  Z2, F@_1, TrUserData) ->
-    skip_varint_PutRegionResp(Rest, Z1, Z2, F@_1,
-			      TrUserData);
-skip_varint_PutRegionResp(<<0:1, _:7, Rest/binary>>, Z1,
-			  Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_PutRegionResp(Rest, Z1, Z2, F@_1,
-				     TrUserData).
-
-skip_length_delimited_PutRegionResp(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_PutRegionResp(Rest, N + 7,
-					X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_PutRegionResp(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_PutRegionResp(Rest2, 0, 0, F@_1,
-				     TrUserData).
-
-skip_group_PutRegionResp(Bin, FNum, Z2, F@_1,
-			 TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_PutRegionResp(Rest, 0, Z2, F@_1,
-				     TrUserData).
-
-skip_32_PutRegionResp(<<_:32, Rest/binary>>, Z1, Z2,
-		      F@_1, TrUserData) ->
-    dfp_read_field_def_PutRegionResp(Rest, Z1, Z2, F@_1,
-				     TrUserData).
-
-skip_64_PutRegionResp(<<_:64, Rest/binary>>, Z1, Z2,
-		      F@_1, TrUserData) ->
-    dfp_read_field_def_PutRegionResp(Rest, Z1, Z2, F@_1,
-				     TrUserData).
-
-d_msg_PutRegion(Bin, TrUserData) ->
-    dfp_read_field_def_PutRegion(Bin, 0, 0,
-				 id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_PutRegion(<<10, Rest/binary>>, Z1,
-			     Z2, F@_1, TrUserData) ->
-    d_field_PutRegion_region_name(Rest, Z1, Z2, F@_1,
-				  TrUserData);
-dfp_read_field_def_PutRegion(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{region_name => F@_1}
-    end;
-dfp_read_field_def_PutRegion(Other, Z1, Z2, F@_1,
-			     TrUserData) ->
-    dg_read_field_def_PutRegion(Other, Z1, Z2, F@_1,
-				TrUserData).
-
-dg_read_field_def_PutRegion(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_PutRegion(Rest, N + 7, X bsl N + Acc,
-				F@_1, TrUserData);
-dg_read_field_def_PutRegion(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_PutRegion_region_name(Rest, 0, 0, F@_1,
-					TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_PutRegion(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_PutRegion(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_PutRegion(Rest, 0, 0, F@_1,
-						TrUserData);
-	    3 ->
-		skip_group_PutRegion(Rest, Key bsr 3, 0, F@_1,
-				     TrUserData);
-	    5 -> skip_32_PutRegion(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_PutRegion(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{region_name => F@_1}
-    end.
-
-d_field_PutRegion_region_name(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_PutRegion_region_name(Rest, N + 7,
-				  X bsl N + Acc, F@_1, TrUserData);
-d_field_PutRegion_region_name(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_PutRegion(RestF, 0, 0, NewFValue,
-				 TrUserData).
-
-skip_varint_PutRegion(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		      F@_1, TrUserData) ->
-    skip_varint_PutRegion(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_PutRegion(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		      F@_1, TrUserData) ->
-    dfp_read_field_def_PutRegion(Rest, Z1, Z2, F@_1,
-				 TrUserData).
-
-skip_length_delimited_PutRegion(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_PutRegion(Rest, N + 7,
-				    X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_PutRegion(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_PutRegion(Rest2, 0, 0, F@_1,
-				 TrUserData).
-
-skip_group_PutRegion(Bin, FNum, Z2, F@_1, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_PutRegion(Rest, 0, Z2, F@_1,
-				 TrUserData).
-
-skip_32_PutRegion(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		  TrUserData) ->
-    dfp_read_field_def_PutRegion(Rest, Z1, Z2, F@_1,
-				 TrUserData).
-
-skip_64_PutRegion(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		  TrUserData) ->
-    dfp_read_field_def_PutRegion(Rest, Z1, Z2, F@_1,
-				 TrUserData).
 
 d_msg_AuthUserResp(Bin, TrUserData) ->
     dfp_read_field_def_AuthUserResp(Bin, 0, 0,
@@ -5037,2398 +1339,6 @@ skip_64_AuthUserResp(<<_:64, Rest/binary>>, Z1, Z2,
 		     F@_1, TrUserData) ->
     dfp_read_field_def_AuthUserResp(Rest, Z1, Z2, F@_1,
 				    TrUserData).
-
-d_msg_StoreBid(Bin, TrUserData) ->
-    dfp_read_field_def_StoreBid(Bin, 0, 0,
-				id(<<>>, TrUserData), id(<<>>, TrUserData),
-				id(0, TrUserData), TrUserData).
-
-dfp_read_field_def_StoreBid(<<10, Rest/binary>>, Z1, Z2,
-			    F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_StoreBid_on_item_id(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, TrUserData);
-dfp_read_field_def_StoreBid(<<18, Rest/binary>>, Z1, Z2,
-			    F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_StoreBid_bidder_id(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData);
-dfp_read_field_def_StoreBid(<<24, Rest/binary>>, Z1, Z2,
-			    F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_StoreBid_value(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			   TrUserData);
-dfp_read_field_def_StoreBid(<<>>, 0, 0, F@_1, F@_2,
-			    F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{bidder_id => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{value => F@_3}
-    end;
-dfp_read_field_def_StoreBid(Other, Z1, Z2, F@_1, F@_2,
-			    F@_3, TrUserData) ->
-    dg_read_field_def_StoreBid(Other, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData).
-
-dg_read_field_def_StoreBid(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreBid(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_StoreBid(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreBid_on_item_id(Rest, 0, 0, F@_1, F@_2,
-				      F@_3, TrUserData);
-      18 ->
-	  d_field_StoreBid_bidder_id(Rest, 0, 0, F@_1, F@_2, F@_3,
-				     TrUserData);
-      24 ->
-	  d_field_StoreBid_value(Rest, 0, 0, F@_1, F@_2, F@_3,
-				 TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreBid(Rest, 0, 0, F@_1, F@_2, F@_3,
-				     TrUserData);
-	    1 ->
-		skip_64_StoreBid(Rest, 0, 0, F@_1, F@_2, F@_3,
-				 TrUserData);
-	    2 ->
-		skip_length_delimited_StoreBid(Rest, 0, 0, F@_1, F@_2,
-					       F@_3, TrUserData);
-	    3 ->
-		skip_group_StoreBid(Rest, Key bsr 3, 0, F@_1, F@_2,
-				    F@_3, TrUserData);
-	    5 ->
-		skip_32_StoreBid(Rest, 0, 0, F@_1, F@_2, F@_3,
-				 TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreBid(<<>>, 0, 0, F@_1, F@_2, F@_3,
-			   _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{bidder_id => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{value => F@_3}
-    end.
-
-d_field_StoreBid_on_item_id(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_StoreBid_on_item_id(Rest, N + 7, X bsl N + Acc,
-				F@_1, F@_2, F@_3, TrUserData);
-d_field_StoreBid_on_item_id(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, _, F@_2, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreBid(RestF, 0, 0, NewFValue,
-				F@_2, F@_3, TrUserData).
-
-d_field_StoreBid_bidder_id(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_StoreBid_bidder_id(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, TrUserData);
-d_field_StoreBid_bidder_id(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreBid(RestF, 0, 0, F@_1,
-				NewFValue, F@_3, TrUserData).
-
-d_field_StoreBid_value(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_StoreBid_value(Rest, N + 7, X bsl N + Acc, F@_1,
-			   F@_2, F@_3, TrUserData);
-d_field_StoreBid_value(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreBid(RestF, 0, 0, F@_1, F@_2,
-				NewFValue, TrUserData).
-
-skip_varint_StoreBid(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, F@_2, F@_3, TrUserData) ->
-    skip_varint_StoreBid(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			 TrUserData);
-skip_varint_StoreBid(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_StoreBid(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, TrUserData).
-
-skip_length_delimited_StoreBid(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreBid(Rest, N + 7,
-				   X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_StoreBid(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreBid(Rest2, 0, 0, F@_1, F@_2,
-				F@_3, TrUserData).
-
-skip_group_StoreBid(Bin, FNum, Z2, F@_1, F@_2, F@_3,
-		    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreBid(Rest, 0, Z2, F@_1, F@_2,
-				F@_3, TrUserData).
-
-skip_32_StoreBid(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		 F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_StoreBid(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, TrUserData).
-
-skip_64_StoreBid(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		 F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_StoreBid(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, TrUserData).
-
-'d_msg_BrowseRegionsResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(Bin, 0, 0,
-						id([], TrUserData), TrUserData).
-
-'dfp_read_field_def_BrowseRegionsResp.Wrap'(<<10,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, TrUserData) ->
-    'd_field_BrowseRegionsResp.Wrap_region_names'(Rest, Z1,
-						  Z2, F@_1, TrUserData);
-'dfp_read_field_def_BrowseRegionsResp.Wrap'(<<>>, 0, 0,
-					    R1, TrUserData) ->
-    #{region_names => lists_reverse(R1, TrUserData)};
-'dfp_read_field_def_BrowseRegionsResp.Wrap'(Other, Z1,
-					    Z2, F@_1, TrUserData) ->
-    'dg_read_field_def_BrowseRegionsResp.Wrap'(Other, Z1,
-					       Z2, F@_1, TrUserData).
-
-'dg_read_field_def_BrowseRegionsResp.Wrap'(<<1:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_BrowseRegionsResp.Wrap'(Rest, N + 7,
-					       X bsl N + Acc, F@_1, TrUserData);
-'dg_read_field_def_BrowseRegionsResp.Wrap'(<<0:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_BrowseRegionsResp.Wrap_region_names'(Rest, 0,
-							0, F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_BrowseRegionsResp.Wrap'(Rest, 0, 0, F@_1,
-						     TrUserData);
-	    1 ->
-		'skip_64_BrowseRegionsResp.Wrap'(Rest, 0, 0, F@_1,
-						 TrUserData);
-	    2 ->
-		'skip_length_delimited_BrowseRegionsResp.Wrap'(Rest, 0,
-							       0, F@_1,
-							       TrUserData);
-	    3 ->
-		'skip_group_BrowseRegionsResp.Wrap'(Rest, Key bsr 3, 0,
-						    F@_1, TrUserData);
-	    5 ->
-		'skip_32_BrowseRegionsResp.Wrap'(Rest, 0, 0, F@_1,
-						 TrUserData)
-	  end
-    end;
-'dg_read_field_def_BrowseRegionsResp.Wrap'(<<>>, 0, 0,
-					   R1, TrUserData) ->
-    #{region_names => lists_reverse(R1, TrUserData)}.
-
-'d_field_BrowseRegionsResp.Wrap_region_names'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'd_field_BrowseRegionsResp.Wrap_region_names'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  TrUserData);
-'d_field_BrowseRegionsResp.Wrap_region_names'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(RestF, 0, 0,
-						cons(NewFValue, Prev,
-						     TrUserData),
-						TrUserData).
-
-'skip_varint_BrowseRegionsResp.Wrap'(<<1:1, _:7,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, TrUserData) ->
-    'skip_varint_BrowseRegionsResp.Wrap'(Rest, Z1, Z2, F@_1,
-					 TrUserData);
-'skip_varint_BrowseRegionsResp.Wrap'(<<0:1, _:7,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(Rest, Z1,
-						Z2, F@_1, TrUserData).
-
-'skip_length_delimited_BrowseRegionsResp.Wrap'(<<1:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_BrowseRegionsResp.Wrap'(Rest,
-						   N + 7, X bsl N + Acc, F@_1,
-						   TrUserData);
-'skip_length_delimited_BrowseRegionsResp.Wrap'(<<0:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(Rest2, 0, 0,
-						F@_1, TrUserData).
-
-'skip_group_BrowseRegionsResp.Wrap'(Bin, FNum, Z2, F@_1,
-				    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(Rest, 0, Z2,
-						F@_1, TrUserData).
-
-'skip_32_BrowseRegionsResp.Wrap'(<<_:32, Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(Rest, Z1,
-						Z2, F@_1, TrUserData).
-
-'skip_64_BrowseRegionsResp.Wrap'(<<_:64, Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_BrowseRegionsResp.Wrap'(Rest, Z1,
-						Z2, F@_1, TrUserData).
-
-'d_msg_AboutMeResp.AboutMeBid'(Bin, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(Bin, 0, 0,
-						id(<<>>, TrUserData),
-						id(<<>>, TrUserData),
-						id(0, TrUserData), TrUserData).
-
-'dfp_read_field_def_AboutMeResp.AboutMeBid'(<<10,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, F@_2, F@_3,
-					    TrUserData) ->
-    'd_field_AboutMeResp.AboutMeBid_on_item_name'(Rest, Z1,
-						  Z2, F@_1, F@_2, F@_3,
-						  TrUserData);
-'dfp_read_field_def_AboutMeResp.AboutMeBid'(<<18,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, F@_2, F@_3,
-					    TrUserData) ->
-    'd_field_AboutMeResp.AboutMeBid_seller_username'(Rest,
-						     Z1, Z2, F@_1, F@_2, F@_3,
-						     TrUserData);
-'dfp_read_field_def_AboutMeResp.AboutMeBid'(<<24,
-					      Rest/binary>>,
-					    Z1, Z2, F@_1, F@_2, F@_3,
-					    TrUserData) ->
-    'd_field_AboutMeResp.AboutMeBid_price'(Rest, Z1, Z2,
-					   F@_1, F@_2, F@_3, TrUserData);
-'dfp_read_field_def_AboutMeResp.AboutMeBid'(<<>>, 0, 0,
-					    F@_1, F@_2, F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{seller_username => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{price => F@_3}
-    end;
-'dfp_read_field_def_AboutMeResp.AboutMeBid'(Other, Z1,
-					    Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dg_read_field_def_AboutMeResp.AboutMeBid'(Other, Z1,
-					       Z2, F@_1, F@_2, F@_3,
-					       TrUserData).
-
-'dg_read_field_def_AboutMeResp.AboutMeBid'(<<1:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_AboutMeResp.AboutMeBid'(Rest, N + 7,
-					       X bsl N + Acc, F@_1, F@_2, F@_3,
-					       TrUserData);
-'dg_read_field_def_AboutMeResp.AboutMeBid'(<<0:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, F@_2, F@_3,
-					   TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_AboutMeResp.AboutMeBid_on_item_name'(Rest, 0,
-							0, F@_1, F@_2, F@_3,
-							TrUserData);
-      18 ->
-	  'd_field_AboutMeResp.AboutMeBid_seller_username'(Rest,
-							   0, 0, F@_1, F@_2,
-							   F@_3, TrUserData);
-      24 ->
-	  'd_field_AboutMeResp.AboutMeBid_price'(Rest, 0, 0, F@_1,
-						 F@_2, F@_3, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_AboutMeResp.AboutMeBid'(Rest, 0, 0, F@_1,
-						     F@_2, F@_3, TrUserData);
-	    1 ->
-		'skip_64_AboutMeResp.AboutMeBid'(Rest, 0, 0, F@_1, F@_2,
-						 F@_3, TrUserData);
-	    2 ->
-		'skip_length_delimited_AboutMeResp.AboutMeBid'(Rest, 0,
-							       0, F@_1, F@_2,
-							       F@_3,
-							       TrUserData);
-	    3 ->
-		'skip_group_AboutMeResp.AboutMeBid'(Rest, Key bsr 3, 0,
-						    F@_1, F@_2, F@_3,
-						    TrUserData);
-	    5 ->
-		'skip_32_AboutMeResp.AboutMeBid'(Rest, 0, 0, F@_1, F@_2,
-						 F@_3, TrUserData)
-	  end
-    end;
-'dg_read_field_def_AboutMeResp.AboutMeBid'(<<>>, 0, 0,
-					   F@_1, F@_2, F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{seller_username => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{price => F@_3}
-    end.
-
-'d_field_AboutMeResp.AboutMeBid_on_item_name'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, F@_3,
-					      TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.AboutMeBid_on_item_name'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  F@_2, F@_3, TrUserData);
-'d_field_AboutMeResp.AboutMeBid_on_item_name'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, _, F@_2, F@_3,
-					      TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(RestF, 0, 0,
-						NewFValue, F@_2, F@_3,
-						TrUserData).
-
-'d_field_AboutMeResp.AboutMeBid_seller_username'(<<1:1,
-						   X:7, Rest/binary>>,
-						 N, Acc, F@_1, F@_2, F@_3,
-						 TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.AboutMeBid_seller_username'(Rest,
-						     N + 7, X bsl N + Acc, F@_1,
-						     F@_2, F@_3, TrUserData);
-'d_field_AboutMeResp.AboutMeBid_seller_username'(<<0:1,
-						   X:7, Rest/binary>>,
-						 N, Acc, F@_1, _, F@_3,
-						 TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(RestF, 0, 0,
-						F@_1, NewFValue, F@_3,
-						TrUserData).
-
-'d_field_AboutMeResp.AboutMeBid_price'(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.AboutMeBid_price'(Rest, N + 7,
-					   X bsl N + Acc, F@_1, F@_2, F@_3,
-					   TrUserData);
-'d_field_AboutMeResp.AboutMeBid_price'(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(RestF, 0, 0,
-						F@_1, F@_2, NewFValue,
-						TrUserData).
-
-'skip_varint_AboutMeResp.AboutMeBid'(<<1:1, _:7,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'skip_varint_AboutMeResp.AboutMeBid'(Rest, Z1, Z2, F@_1,
-					 F@_2, F@_3, TrUserData);
-'skip_varint_AboutMeResp.AboutMeBid'(<<0:1, _:7,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData).
-
-'skip_length_delimited_AboutMeResp.AboutMeBid'(<<1:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, F@_2, F@_3,
-					       TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_AboutMeResp.AboutMeBid'(Rest,
-						   N + 7, X bsl N + Acc, F@_1,
-						   F@_2, F@_3, TrUserData);
-'skip_length_delimited_AboutMeResp.AboutMeBid'(<<0:1,
-						 X:7, Rest/binary>>,
-					       N, Acc, F@_1, F@_2, F@_3,
-					       TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(Rest2, 0, 0,
-						F@_1, F@_2, F@_3, TrUserData).
-
-'skip_group_AboutMeResp.AboutMeBid'(Bin, FNum, Z2, F@_1,
-				    F@_2, F@_3, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(Rest, 0, Z2,
-						F@_1, F@_2, F@_3, TrUserData).
-
-'skip_32_AboutMeResp.AboutMeBid'(<<_:32, Rest/binary>>,
-				 Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData).
-
-'skip_64_AboutMeResp.AboutMeBid'(<<_:64, Rest/binary>>,
-				 Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.AboutMeBid'(Rest, Z1,
-						Z2, F@_1, F@_2, F@_3,
-						TrUserData).
-
-d_msg_StoreItemResp(Bin, TrUserData) ->
-    dfp_read_field_def_StoreItemResp(Bin, 0, 0,
-				     id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_StoreItemResp(<<10, Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    d_field_StoreItemResp_item_id(Rest, Z1, Z2, F@_1,
-				  TrUserData);
-dfp_read_field_def_StoreItemResp(<<16, Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    d_field_StoreItemResp_error_reason(Rest, Z1, Z2, F@_1,
-				       TrUserData);
-dfp_read_field_def_StoreItemResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_StoreItemResp(Other, Z1, Z2, F@_1,
-				 TrUserData) ->
-    dg_read_field_def_StoreItemResp(Other, Z1, Z2, F@_1,
-				    TrUserData).
-
-dg_read_field_def_StoreItemResp(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreItemResp(Rest, N + 7,
-				    X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_StoreItemResp(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreItemResp_item_id(Rest, 0, 0, F@_1,
-					TrUserData);
-      16 ->
-	  d_field_StoreItemResp_error_reason(Rest, 0, 0, F@_1,
-					     TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreItemResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 ->
-		skip_64_StoreItemResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_StoreItemResp(Rest, 0, 0, F@_1,
-						    TrUserData);
-	    3 ->
-		skip_group_StoreItemResp(Rest, Key bsr 3, 0, F@_1,
-					 TrUserData);
-	    5 -> skip_32_StoreItemResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreItemResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_StoreItemResp_item_id(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreItemResp_item_id(Rest, N + 7,
-				  X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreItemResp_item_id(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreItemResp(RestF, 0, 0,
-				     {item_id, NewFValue}, TrUserData).
-
-d_field_StoreItemResp_error_reason(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreItemResp_error_reason(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreItemResp_error_reason(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreItemResp(RestF, 0, 0,
-				     {error_reason, NewFValue}, TrUserData).
-
-skip_varint_StoreItemResp(<<1:1, _:7, Rest/binary>>, Z1,
-			  Z2, F@_1, TrUserData) ->
-    skip_varint_StoreItemResp(Rest, Z1, Z2, F@_1,
-			      TrUserData);
-skip_varint_StoreItemResp(<<0:1, _:7, Rest/binary>>, Z1,
-			  Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_StoreItemResp(Rest, Z1, Z2, F@_1,
-				     TrUserData).
-
-skip_length_delimited_StoreItemResp(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreItemResp(Rest, N + 7,
-					X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_StoreItemResp(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreItemResp(Rest2, 0, 0, F@_1,
-				     TrUserData).
-
-skip_group_StoreItemResp(Bin, FNum, Z2, F@_1,
-			 TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreItemResp(Rest, 0, Z2, F@_1,
-				     TrUserData).
-
-skip_32_StoreItemResp(<<_:32, Rest/binary>>, Z1, Z2,
-		      F@_1, TrUserData) ->
-    dfp_read_field_def_StoreItemResp(Rest, Z1, Z2, F@_1,
-				     TrUserData).
-
-skip_64_StoreItemResp(<<_:64, Rest/binary>>, Z1, Z2,
-		      F@_1, TrUserData) ->
-    dfp_read_field_def_StoreItemResp(Rest, Z1, Z2, F@_1,
-				     TrUserData).
-
-d_msg_AuthUser(Bin, TrUserData) ->
-    dfp_read_field_def_AuthUser(Bin, 0, 0,
-				id(<<>>, TrUserData), id(<<>>, TrUserData),
-				TrUserData).
-
-dfp_read_field_def_AuthUser(<<10, Rest/binary>>, Z1, Z2,
-			    F@_1, F@_2, TrUserData) ->
-    d_field_AuthUser_username(Rest, Z1, Z2, F@_1, F@_2,
-			      TrUserData);
-dfp_read_field_def_AuthUser(<<18, Rest/binary>>, Z1, Z2,
-			    F@_1, F@_2, TrUserData) ->
-    d_field_AuthUser_password(Rest, Z1, Z2, F@_1, F@_2,
-			      TrUserData);
-dfp_read_field_def_AuthUser(<<>>, 0, 0, F@_1, F@_2,
-			    _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{username => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{password => F@_2}
-    end;
-dfp_read_field_def_AuthUser(Other, Z1, Z2, F@_1, F@_2,
-			    TrUserData) ->
-    dg_read_field_def_AuthUser(Other, Z1, Z2, F@_1, F@_2,
-			       TrUserData).
-
-dg_read_field_def_AuthUser(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_AuthUser(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, TrUserData);
-dg_read_field_def_AuthUser(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_AuthUser_username(Rest, 0, 0, F@_1, F@_2,
-				    TrUserData);
-      18 ->
-	  d_field_AuthUser_password(Rest, 0, 0, F@_1, F@_2,
-				    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_AuthUser(Rest, 0, 0, F@_1, F@_2,
-				     TrUserData);
-	    1 ->
-		skip_64_AuthUser(Rest, 0, 0, F@_1, F@_2, TrUserData);
-	    2 ->
-		skip_length_delimited_AuthUser(Rest, 0, 0, F@_1, F@_2,
-					       TrUserData);
-	    3 ->
-		skip_group_AuthUser(Rest, Key bsr 3, 0, F@_1, F@_2,
-				    TrUserData);
-	    5 ->
-		skip_32_AuthUser(Rest, 0, 0, F@_1, F@_2, TrUserData)
-	  end
-    end;
-dg_read_field_def_AuthUser(<<>>, 0, 0, F@_1, F@_2, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{username => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{password => F@_2}
-    end.
-
-d_field_AuthUser_username(<<1:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_AuthUser_username(Rest, N + 7, X bsl N + Acc,
-			      F@_1, F@_2, TrUserData);
-d_field_AuthUser_username(<<0:1, X:7, Rest/binary>>, N,
-			  Acc, _, F@_2, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_AuthUser(RestF, 0, 0, NewFValue,
-				F@_2, TrUserData).
-
-d_field_AuthUser_password(<<1:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_AuthUser_password(Rest, N + 7, X bsl N + Acc,
-			      F@_1, F@_2, TrUserData);
-d_field_AuthUser_password(<<0:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_AuthUser(RestF, 0, 0, F@_1,
-				NewFValue, TrUserData).
-
-skip_varint_AuthUser(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, F@_2, TrUserData) ->
-    skip_varint_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
-			 TrUserData);
-skip_varint_AuthUser(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, F@_2, TrUserData) ->
-    dfp_read_field_def_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
-				TrUserData).
-
-skip_length_delimited_AuthUser(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_AuthUser(Rest, N + 7,
-				   X bsl N + Acc, F@_1, F@_2, TrUserData);
-skip_length_delimited_AuthUser(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, F@_2, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_AuthUser(Rest2, 0, 0, F@_1, F@_2,
-				TrUserData).
-
-skip_group_AuthUser(Bin, FNum, Z2, F@_1, F@_2,
-		    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_AuthUser(Rest, 0, Z2, F@_1, F@_2,
-				TrUserData).
-
-skip_32_AuthUser(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		 F@_2, TrUserData) ->
-    dfp_read_field_def_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
-				TrUserData).
-
-skip_64_AuthUser(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		 F@_2, TrUserData) ->
-    dfp_read_field_def_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
-				TrUserData).
-
-d_msg_BrowseCategories(Bin, TrUserData) ->
-    dfp_read_field_def_BrowseCategories(Bin, 0, 0,
-					TrUserData).
-
-dfp_read_field_def_BrowseCategories(<<>>, 0, 0, _) ->
-    #{};
-dfp_read_field_def_BrowseCategories(Other, Z1, Z2,
-				    TrUserData) ->
-    dg_read_field_def_BrowseCategories(Other, Z1, Z2,
-				       TrUserData).
-
-dg_read_field_def_BrowseCategories(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_BrowseCategories(Rest, N + 7,
-				       X bsl N + Acc, TrUserData);
-dg_read_field_def_BrowseCategories(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key band 7 of
-      0 ->
-	  skip_varint_BrowseCategories(Rest, 0, 0, TrUserData);
-      1 -> skip_64_BrowseCategories(Rest, 0, 0, TrUserData);
-      2 ->
-	  skip_length_delimited_BrowseCategories(Rest, 0, 0,
-						 TrUserData);
-      3 ->
-	  skip_group_BrowseCategories(Rest, Key bsr 3, 0,
-				      TrUserData);
-      5 -> skip_32_BrowseCategories(Rest, 0, 0, TrUserData)
-    end;
-dg_read_field_def_BrowseCategories(<<>>, 0, 0, _) ->
-    #{}.
-
-skip_varint_BrowseCategories(<<1:1, _:7, Rest/binary>>,
-			     Z1, Z2, TrUserData) ->
-    skip_varint_BrowseCategories(Rest, Z1, Z2, TrUserData);
-skip_varint_BrowseCategories(<<0:1, _:7, Rest/binary>>,
-			     Z1, Z2, TrUserData) ->
-    dfp_read_field_def_BrowseCategories(Rest, Z1, Z2,
-					TrUserData).
-
-skip_length_delimited_BrowseCategories(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_BrowseCategories(Rest, N + 7,
-					   X bsl N + Acc, TrUserData);
-skip_length_delimited_BrowseCategories(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_BrowseCategories(Rest2, 0, 0,
-					TrUserData).
-
-skip_group_BrowseCategories(Bin, FNum, Z2,
-			    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_BrowseCategories(Rest, 0, Z2,
-					TrUserData).
-
-skip_32_BrowseCategories(<<_:32, Rest/binary>>, Z1, Z2,
-			 TrUserData) ->
-    dfp_read_field_def_BrowseCategories(Rest, Z1, Z2,
-					TrUserData).
-
-skip_64_BrowseCategories(<<_:64, Rest/binary>>, Z1, Z2,
-			 TrUserData) ->
-    dfp_read_field_def_BrowseCategories(Rest, Z1, Z2,
-					TrUserData).
-
-d_msg_PutCategory(Bin, TrUserData) ->
-    dfp_read_field_def_PutCategory(Bin, 0, 0,
-				   id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_PutCategory(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, TrUserData) ->
-    d_field_PutCategory_category_name(Rest, Z1, Z2, F@_1,
-				      TrUserData);
-dfp_read_field_def_PutCategory(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{category_name => F@_1}
-    end;
-dfp_read_field_def_PutCategory(Other, Z1, Z2, F@_1,
-			       TrUserData) ->
-    dg_read_field_def_PutCategory(Other, Z1, Z2, F@_1,
-				  TrUserData).
-
-dg_read_field_def_PutCategory(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_PutCategory(Rest, N + 7,
-				  X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_PutCategory(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_PutCategory_category_name(Rest, 0, 0, F@_1,
-					    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_PutCategory(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_PutCategory(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_PutCategory(Rest, 0, 0, F@_1,
-						  TrUserData);
-	    3 ->
-		skip_group_PutCategory(Rest, Key bsr 3, 0, F@_1,
-				       TrUserData);
-	    5 -> skip_32_PutCategory(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_PutCategory(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{category_name => F@_1}
-    end.
-
-d_field_PutCategory_category_name(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_PutCategory_category_name(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-d_field_PutCategory_category_name(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_PutCategory(RestF, 0, 0, NewFValue,
-				   TrUserData).
-
-skip_varint_PutCategory(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, TrUserData) ->
-    skip_varint_PutCategory(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_PutCategory(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_PutCategory(Rest, Z1, Z2, F@_1,
-				   TrUserData).
-
-skip_length_delimited_PutCategory(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_PutCategory(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_PutCategory(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_PutCategory(Rest2, 0, 0, F@_1,
-				   TrUserData).
-
-skip_group_PutCategory(Bin, FNum, Z2, F@_1,
-		       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_PutCategory(Rest, 0, Z2, F@_1,
-				   TrUserData).
-
-skip_32_PutCategory(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    TrUserData) ->
-    dfp_read_field_def_PutCategory(Rest, Z1, Z2, F@_1,
-				   TrUserData).
-
-skip_64_PutCategory(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    TrUserData) ->
-    dfp_read_field_def_PutCategory(Rest, Z1, Z2, F@_1,
-				   TrUserData).
-
-d_msg_StoreItem(Bin, TrUserData) ->
-    dfp_read_field_def_StoreItem(Bin, 0, 0,
-				 id(<<>>, TrUserData), id(<<>>, TrUserData),
-				 id(0, TrUserData), id(<<>>, TrUserData),
-				 id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_StoreItem(<<10, Rest/binary>>, Z1,
-			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    d_field_StoreItem_item_name(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, F@_4, F@_5, TrUserData);
-dfp_read_field_def_StoreItem(<<18, Rest/binary>>, Z1,
-			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    d_field_StoreItem_description(Rest, Z1, Z2, F@_1, F@_2,
-				  F@_3, F@_4, F@_5, TrUserData);
-dfp_read_field_def_StoreItem(<<24, Rest/binary>>, Z1,
-			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    d_field_StoreItem_quantity(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, F@_4, F@_5, TrUserData);
-dfp_read_field_def_StoreItem(<<34, Rest/binary>>, Z1,
-			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    d_field_StoreItem_category_id(Rest, Z1, Z2, F@_1, F@_2,
-				  F@_3, F@_4, F@_5, TrUserData);
-dfp_read_field_def_StoreItem(<<42, Rest/binary>>, Z1,
-			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    d_field_StoreItem_seller_id(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, F@_4, F@_5, TrUserData);
-dfp_read_field_def_StoreItem(<<>>, 0, 0, F@_1, F@_2,
-			     F@_3, F@_4, F@_5, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{description => F@_2}
-	 end,
-    S4 = if F@_3 == '$undef' -> S3;
-	    true -> S3#{quantity => F@_3}
-	 end,
-    S5 = if F@_4 == '$undef' -> S4;
-	    true -> S4#{category_id => F@_4}
-	 end,
-    if F@_5 == '$undef' -> S5;
-       true -> S5#{seller_id => F@_5}
-    end;
-dfp_read_field_def_StoreItem(Other, Z1, Z2, F@_1, F@_2,
-			     F@_3, F@_4, F@_5, TrUserData) ->
-    dg_read_field_def_StoreItem(Other, Z1, Z2, F@_1, F@_2,
-				F@_3, F@_4, F@_5, TrUserData).
-
-dg_read_field_def_StoreItem(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreItem(Rest, N + 7, X bsl N + Acc,
-				F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
-dg_read_field_def_StoreItem(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreItem_item_name(Rest, 0, 0, F@_1, F@_2,
-				      F@_3, F@_4, F@_5, TrUserData);
-      18 ->
-	  d_field_StoreItem_description(Rest, 0, 0, F@_1, F@_2,
-					F@_3, F@_4, F@_5, TrUserData);
-      24 ->
-	  d_field_StoreItem_quantity(Rest, 0, 0, F@_1, F@_2, F@_3,
-				     F@_4, F@_5, TrUserData);
-      34 ->
-	  d_field_StoreItem_category_id(Rest, 0, 0, F@_1, F@_2,
-					F@_3, F@_4, F@_5, TrUserData);
-      42 ->
-	  d_field_StoreItem_seller_id(Rest, 0, 0, F@_1, F@_2,
-				      F@_3, F@_4, F@_5, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreItem(Rest, 0, 0, F@_1, F@_2, F@_3,
-				      F@_4, F@_5, TrUserData);
-	    1 ->
-		skip_64_StoreItem(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-				  F@_5, TrUserData);
-	    2 ->
-		skip_length_delimited_StoreItem(Rest, 0, 0, F@_1, F@_2,
-						F@_3, F@_4, F@_5, TrUserData);
-	    3 ->
-		skip_group_StoreItem(Rest, Key bsr 3, 0, F@_1, F@_2,
-				     F@_3, F@_4, F@_5, TrUserData);
-	    5 ->
-		skip_32_StoreItem(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
-				  F@_5, TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreItem(<<>>, 0, 0, F@_1, F@_2,
-			    F@_3, F@_4, F@_5, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{item_name => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{description => F@_2}
-	 end,
-    S4 = if F@_3 == '$undef' -> S3;
-	    true -> S3#{quantity => F@_3}
-	 end,
-    S5 = if F@_4 == '$undef' -> S4;
-	    true -> S4#{category_id => F@_4}
-	 end,
-    if F@_5 == '$undef' -> S5;
-       true -> S5#{seller_id => F@_5}
-    end.
-
-d_field_StoreItem_item_name(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
-    when N < 57 ->
-    d_field_StoreItem_item_name(Rest, N + 7, X bsl N + Acc,
-				F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
-d_field_StoreItem_item_name(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, _, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreItem(RestF, 0, 0, NewFValue,
-				 F@_2, F@_3, F@_4, F@_5, TrUserData).
-
-d_field_StoreItem_description(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
-    when N < 57 ->
-    d_field_StoreItem_description(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				  TrUserData);
-d_field_StoreItem_description(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, _, F@_3, F@_4, F@_5, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1,
-				 NewFValue, F@_3, F@_4, F@_5, TrUserData).
-
-d_field_StoreItem_quantity(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
-    when N < 57 ->
-    d_field_StoreItem_quantity(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
-d_field_StoreItem_quantity(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, _, F@_4, F@_5, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1, F@_2,
-				 NewFValue, F@_4, F@_5, TrUserData).
-
-d_field_StoreItem_category_id(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
-    when N < 57 ->
-    d_field_StoreItem_category_id(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				  TrUserData);
-d_field_StoreItem_category_id(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, _, F@_5, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1, F@_2,
-				 F@_3, NewFValue, F@_5, TrUserData).
-
-d_field_StoreItem_seller_id(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
-    when N < 57 ->
-    d_field_StoreItem_seller_id(Rest, N + 7, X bsl N + Acc,
-				F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
-d_field_StoreItem_seller_id(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, F@_4, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1, F@_2,
-				 F@_3, F@_4, NewFValue, TrUserData).
-
-skip_varint_StoreItem(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		      F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    skip_varint_StoreItem(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			  F@_4, F@_5, TrUserData);
-skip_varint_StoreItem(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		      F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    dfp_read_field_def_StoreItem(Rest, Z1, Z2, F@_1, F@_2,
-				 F@_3, F@_4, F@_5, TrUserData).
-
-skip_length_delimited_StoreItem(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreItem(Rest, N + 7,
-				    X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				    TrUserData);
-skip_length_delimited_StoreItem(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreItem(Rest2, 0, 0, F@_1, F@_2,
-				 F@_3, F@_4, F@_5, TrUserData).
-
-skip_group_StoreItem(Bin, FNum, Z2, F@_1, F@_2, F@_3,
-		     F@_4, F@_5, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreItem(Rest, 0, Z2, F@_1, F@_2,
-				 F@_3, F@_4, F@_5, TrUserData).
-
-skip_32_StoreItem(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		  F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    dfp_read_field_def_StoreItem(Rest, Z1, Z2, F@_1, F@_2,
-				 F@_3, F@_4, F@_5, TrUserData).
-
-skip_64_StoreItem(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		  F@_2, F@_3, F@_4, F@_5, TrUserData) ->
-    dfp_read_field_def_StoreItem(Rest, Z1, Z2, F@_1, F@_2,
-				 F@_3, F@_4, F@_5, TrUserData).
-
-d_msg_BrowseCategoriesResp(Bin, TrUserData) ->
-    dfp_read_field_def_BrowseCategoriesResp(Bin, 0, 0,
-					    id('$undef', TrUserData),
-					    TrUserData).
-
-dfp_read_field_def_BrowseCategoriesResp(<<10,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    d_field_BrowseCategoriesResp_content(Rest, Z1, Z2, F@_1,
-					 TrUserData);
-dfp_read_field_def_BrowseCategoriesResp(<<16,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    d_field_BrowseCategoriesResp_error_reason(Rest, Z1, Z2,
-					      F@_1, TrUserData);
-dfp_read_field_def_BrowseCategoriesResp(<<>>, 0, 0,
-					F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_BrowseCategoriesResp(Other, Z1, Z2,
-					F@_1, TrUserData) ->
-    dg_read_field_def_BrowseCategoriesResp(Other, Z1, Z2,
-					   F@_1, TrUserData).
-
-dg_read_field_def_BrowseCategoriesResp(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_BrowseCategoriesResp(Rest, N + 7,
-					   X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_BrowseCategoriesResp(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_BrowseCategoriesResp_content(Rest, 0, 0, F@_1,
-					       TrUserData);
-      16 ->
-	  d_field_BrowseCategoriesResp_error_reason(Rest, 0, 0,
-						    F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_BrowseCategoriesResp(Rest, 0, 0, F@_1,
-						 TrUserData);
-	    1 ->
-		skip_64_BrowseCategoriesResp(Rest, 0, 0, F@_1,
-					     TrUserData);
-	    2 ->
-		skip_length_delimited_BrowseCategoriesResp(Rest, 0, 0,
-							   F@_1, TrUserData);
-	    3 ->
-		skip_group_BrowseCategoriesResp(Rest, Key bsr 3, 0,
-						F@_1, TrUserData);
-	    5 ->
-		skip_32_BrowseCategoriesResp(Rest, 0, 0, F@_1,
-					     TrUserData)
-	  end
-    end;
-dg_read_field_def_BrowseCategoriesResp(<<>>, 0, 0, F@_1,
-				       _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_BrowseCategoriesResp_content(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_BrowseCategoriesResp_content(Rest, N + 7,
-					 X bsl N + Acc, F@_1, TrUserData);
-d_field_BrowseCategoriesResp_content(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_BrowseCategoriesResp.Wrap'(Bs,
-								 TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_BrowseCategoriesResp(RestF, 0, 0,
-					    case Prev of
-					      '$undef' -> {content, NewFValue};
-					      {content, MVPrev} ->
-						  {content,
-						   'merge_msg_BrowseCategoriesResp.Wrap'(MVPrev,
-											 NewFValue,
-											 TrUserData)};
-					      _ -> {content, NewFValue}
-					    end,
-					    TrUserData).
-
-d_field_BrowseCategoriesResp_error_reason(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_BrowseCategoriesResp_error_reason(Rest, N + 7,
-					      X bsl N + Acc, F@_1, TrUserData);
-d_field_BrowseCategoriesResp_error_reason(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_BrowseCategoriesResp(RestF, 0, 0,
-					    {error_reason, NewFValue},
-					    TrUserData).
-
-skip_varint_BrowseCategoriesResp(<<1:1, _:7,
-				   Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_BrowseCategoriesResp(Rest, Z1, Z2, F@_1,
-				     TrUserData);
-skip_varint_BrowseCategoriesResp(<<0:1, _:7,
-				   Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_BrowseCategoriesResp(Rest, Z1, Z2,
-					    F@_1, TrUserData).
-
-skip_length_delimited_BrowseCategoriesResp(<<1:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_BrowseCategoriesResp(Rest, N + 7,
-					       X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_BrowseCategoriesResp(<<0:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_BrowseCategoriesResp(Rest2, 0, 0,
-					    F@_1, TrUserData).
-
-skip_group_BrowseCategoriesResp(Bin, FNum, Z2, F@_1,
-				TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_BrowseCategoriesResp(Rest, 0, Z2,
-					    F@_1, TrUserData).
-
-skip_32_BrowseCategoriesResp(<<_:32, Rest/binary>>, Z1,
-			     Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_BrowseCategoriesResp(Rest, Z1, Z2,
-					    F@_1, TrUserData).
-
-skip_64_BrowseCategoriesResp(<<_:64, Rest/binary>>, Z1,
-			     Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_BrowseCategoriesResp(Rest, Z1, Z2,
-					    F@_1, TrUserData).
-
-'d_msg_ViewUserResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap'(Bin, 0, 0,
-					   id(undefined, TrUserData),
-					   TrUserData).
-
-'dfp_read_field_def_ViewUserResp.Wrap'(<<10,
-					 Rest/binary>>,
-				       Z1, Z2, F@_1, TrUserData) ->
-    'd_field_ViewUserResp.Wrap_user_details'(Rest, Z1, Z2,
-					     F@_1, TrUserData);
-'dfp_read_field_def_ViewUserResp.Wrap'(<<>>, 0, 0, F@_1,
-				       _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{user_details => F@_1}
-    end;
-'dfp_read_field_def_ViewUserResp.Wrap'(Other, Z1, Z2,
-				       F@_1, TrUserData) ->
-    'dg_read_field_def_ViewUserResp.Wrap'(Other, Z1, Z2,
-					  F@_1, TrUserData).
-
-'dg_read_field_def_ViewUserResp.Wrap'(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_ViewUserResp.Wrap'(Rest, N + 7,
-					  X bsl N + Acc, F@_1, TrUserData);
-'dg_read_field_def_ViewUserResp.Wrap'(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_ViewUserResp.Wrap_user_details'(Rest, 0, 0,
-						   F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_ViewUserResp.Wrap'(Rest, 0, 0, F@_1,
-						TrUserData);
-	    1 ->
-		'skip_64_ViewUserResp.Wrap'(Rest, 0, 0, F@_1,
-					    TrUserData);
-	    2 ->
-		'skip_length_delimited_ViewUserResp.Wrap'(Rest, 0, 0,
-							  F@_1, TrUserData);
-	    3 ->
-		'skip_group_ViewUserResp.Wrap'(Rest, Key bsr 3, 0, F@_1,
-					       TrUserData);
-	    5 ->
-		'skip_32_ViewUserResp.Wrap'(Rest, 0, 0, F@_1,
-					    TrUserData)
-	  end
-    end;
-'dg_read_field_def_ViewUserResp.Wrap'(<<>>, 0, 0, F@_1,
-				      _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{user_details => F@_1}
-    end.
-
-'d_field_ViewUserResp.Wrap_user_details'(<<1:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'd_field_ViewUserResp.Wrap_user_details'(Rest, N + 7,
-					     X bsl N + Acc, F@_1, TrUserData);
-'d_field_ViewUserResp.Wrap_user_details'(<<0:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_ViewUserResp.Wrap.UserInfo'(Bs,
-								  TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_ViewUserResp.Wrap'(RestF, 0, 0,
-					   if Prev == '$undef' -> NewFValue;
-					      true ->
-						  'merge_msg_ViewUserResp.Wrap.UserInfo'(Prev,
-											 NewFValue,
-											 TrUserData)
-					   end,
-					   TrUserData).
-
-'skip_varint_ViewUserResp.Wrap'(<<1:1, _:7,
-				  Rest/binary>>,
-				Z1, Z2, F@_1, TrUserData) ->
-    'skip_varint_ViewUserResp.Wrap'(Rest, Z1, Z2, F@_1,
-				    TrUserData);
-'skip_varint_ViewUserResp.Wrap'(<<0:1, _:7,
-				  Rest/binary>>,
-				Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-'skip_length_delimited_ViewUserResp.Wrap'(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_ViewUserResp.Wrap'(Rest, N + 7,
-					      X bsl N + Acc, F@_1, TrUserData);
-'skip_length_delimited_ViewUserResp.Wrap'(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_ViewUserResp.Wrap'(Rest2, 0, 0,
-					   F@_1, TrUserData).
-
-'skip_group_ViewUserResp.Wrap'(Bin, FNum, Z2, F@_1,
-			       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_ViewUserResp.Wrap'(Rest, 0, Z2,
-					   F@_1, TrUserData).
-
-'skip_32_ViewUserResp.Wrap'(<<_:32, Rest/binary>>, Z1,
-			    Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-'skip_64_ViewUserResp.Wrap'(<<_:64, Rest/binary>>, Z1,
-			    Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_ViewUserResp.Wrap'(Rest, Z1, Z2,
-					   F@_1, TrUserData).
-
-d_msg_ViewUserResp(Bin, TrUserData) ->
-    dfp_read_field_def_ViewUserResp(Bin, 0, 0,
-				    id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_ViewUserResp(<<10, Rest/binary>>, Z1,
-				Z2, F@_1, TrUserData) ->
-    d_field_ViewUserResp_content(Rest, Z1, Z2, F@_1,
-				 TrUserData);
-dfp_read_field_def_ViewUserResp(<<16, Rest/binary>>, Z1,
-				Z2, F@_1, TrUserData) ->
-    d_field_ViewUserResp_error_reason(Rest, Z1, Z2, F@_1,
-				      TrUserData);
-dfp_read_field_def_ViewUserResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_ViewUserResp(Other, Z1, Z2, F@_1,
-				TrUserData) ->
-    dg_read_field_def_ViewUserResp(Other, Z1, Z2, F@_1,
-				   TrUserData).
-
-dg_read_field_def_ViewUserResp(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_ViewUserResp(Rest, N + 7,
-				   X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_ViewUserResp(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_ViewUserResp_content(Rest, 0, 0, F@_1,
-				       TrUserData);
-      16 ->
-	  d_field_ViewUserResp_error_reason(Rest, 0, 0, F@_1,
-					    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_ViewUserResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_ViewUserResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_ViewUserResp(Rest, 0, 0, F@_1,
-						   TrUserData);
-	    3 ->
-		skip_group_ViewUserResp(Rest, Key bsr 3, 0, F@_1,
-					TrUserData);
-	    5 -> skip_32_ViewUserResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_ViewUserResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_ViewUserResp_content(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewUserResp_content(Rest, N + 7, X bsl N + Acc,
-				 F@_1, TrUserData);
-d_field_ViewUserResp_content(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_ViewUserResp.Wrap'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_ViewUserResp(RestF, 0, 0,
-				    case Prev of
-				      '$undef' -> {content, NewFValue};
-				      {content, MVPrev} ->
-					  {content,
-					   'merge_msg_ViewUserResp.Wrap'(MVPrev,
-									 NewFValue,
-									 TrUserData)};
-				      _ -> {content, NewFValue}
-				    end,
-				    TrUserData).
-
-d_field_ViewUserResp_error_reason(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewUserResp_error_reason(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-d_field_ViewUserResp_error_reason(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_ViewUserResp(RestF, 0, 0,
-				    {error_reason, NewFValue}, TrUserData).
-
-skip_varint_ViewUserResp(<<1:1, _:7, Rest/binary>>, Z1,
-			 Z2, F@_1, TrUserData) ->
-    skip_varint_ViewUserResp(Rest, Z1, Z2, F@_1,
-			     TrUserData);
-skip_varint_ViewUserResp(<<0:1, _:7, Rest/binary>>, Z1,
-			 Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ViewUserResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-skip_length_delimited_ViewUserResp(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_ViewUserResp(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ViewUserResp(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ViewUserResp(Rest2, 0, 0, F@_1,
-				    TrUserData).
-
-skip_group_ViewUserResp(Bin, FNum, Z2, F@_1,
-			TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ViewUserResp(Rest, 0, Z2, F@_1,
-				    TrUserData).
-
-skip_32_ViewUserResp(<<_:32, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_ViewUserResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-skip_64_ViewUserResp(<<_:64, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_ViewUserResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-d_msg_ViewItemResp(Bin, TrUserData) ->
-    dfp_read_field_def_ViewItemResp(Bin, 0, 0,
-				    id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_ViewItemResp(<<10, Rest/binary>>, Z1,
-				Z2, F@_1, TrUserData) ->
-    d_field_ViewItemResp_content(Rest, Z1, Z2, F@_1,
-				 TrUserData);
-dfp_read_field_def_ViewItemResp(<<16, Rest/binary>>, Z1,
-				Z2, F@_1, TrUserData) ->
-    d_field_ViewItemResp_error_reason(Rest, Z1, Z2, F@_1,
-				      TrUserData);
-dfp_read_field_def_ViewItemResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_ViewItemResp(Other, Z1, Z2, F@_1,
-				TrUserData) ->
-    dg_read_field_def_ViewItemResp(Other, Z1, Z2, F@_1,
-				   TrUserData).
-
-dg_read_field_def_ViewItemResp(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_ViewItemResp(Rest, N + 7,
-				   X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_ViewItemResp(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_ViewItemResp_content(Rest, 0, 0, F@_1,
-				       TrUserData);
-      16 ->
-	  d_field_ViewItemResp_error_reason(Rest, 0, 0, F@_1,
-					    TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_ViewItemResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_ViewItemResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_ViewItemResp(Rest, 0, 0, F@_1,
-						   TrUserData);
-	    3 ->
-		skip_group_ViewItemResp(Rest, Key bsr 3, 0, F@_1,
-					TrUserData);
-	    5 -> skip_32_ViewItemResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_ViewItemResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_ViewItemResp_content(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewItemResp_content(Rest, N + 7, X bsl N + Acc,
-				 F@_1, TrUserData);
-d_field_ViewItemResp_content(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_ViewItemResp.Wrap'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_ViewItemResp(RestF, 0, 0,
-				    case Prev of
-				      '$undef' -> {content, NewFValue};
-				      {content, MVPrev} ->
-					  {content,
-					   'merge_msg_ViewItemResp.Wrap'(MVPrev,
-									 NewFValue,
-									 TrUserData)};
-				      _ -> {content, NewFValue}
-				    end,
-				    TrUserData).
-
-d_field_ViewItemResp_error_reason(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ViewItemResp_error_reason(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-d_field_ViewItemResp_error_reason(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_ViewItemResp(RestF, 0, 0,
-				    {error_reason, NewFValue}, TrUserData).
-
-skip_varint_ViewItemResp(<<1:1, _:7, Rest/binary>>, Z1,
-			 Z2, F@_1, TrUserData) ->
-    skip_varint_ViewItemResp(Rest, Z1, Z2, F@_1,
-			     TrUserData);
-skip_varint_ViewItemResp(<<0:1, _:7, Rest/binary>>, Z1,
-			 Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-skip_length_delimited_ViewItemResp(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_ViewItemResp(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ViewItemResp(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ViewItemResp(Rest2, 0, 0, F@_1,
-				    TrUserData).
-
-skip_group_ViewItemResp(Bin, FNum, Z2, F@_1,
-			TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ViewItemResp(Rest, 0, Z2, F@_1,
-				    TrUserData).
-
-skip_32_ViewItemResp(<<_:32, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-skip_64_ViewItemResp(<<_:64, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemResp(Rest, Z1, Z2, F@_1,
-				    TrUserData).
-
-d_msg_SearchByCategory(Bin, TrUserData) ->
-    dfp_read_field_def_SearchByCategory(Bin, 0, 0,
-					id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_SearchByCategory(<<10, Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    d_field_SearchByCategory_category_id(Rest, Z1, Z2, F@_1,
-					 TrUserData);
-dfp_read_field_def_SearchByCategory(<<>>, 0, 0, F@_1,
-				    _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{category_id => F@_1}
-    end;
-dfp_read_field_def_SearchByCategory(Other, Z1, Z2, F@_1,
-				    TrUserData) ->
-    dg_read_field_def_SearchByCategory(Other, Z1, Z2, F@_1,
-				       TrUserData).
-
-dg_read_field_def_SearchByCategory(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_SearchByCategory(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_SearchByCategory(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_SearchByCategory_category_id(Rest, 0, 0, F@_1,
-					       TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_SearchByCategory(Rest, 0, 0, F@_1,
-					     TrUserData);
-	    1 ->
-		skip_64_SearchByCategory(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_SearchByCategory(Rest, 0, 0, F@_1,
-						       TrUserData);
-	    3 ->
-		skip_group_SearchByCategory(Rest, Key bsr 3, 0, F@_1,
-					    TrUserData);
-	    5 ->
-		skip_32_SearchByCategory(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_SearchByCategory(<<>>, 0, 0, F@_1,
-				   _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{category_id => F@_1}
-    end.
-
-d_field_SearchByCategory_category_id(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_SearchByCategory_category_id(Rest, N + 7,
-					 X bsl N + Acc, F@_1, TrUserData);
-d_field_SearchByCategory_category_id(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_SearchByCategory(RestF, 0, 0,
-					NewFValue, TrUserData).
-
-skip_varint_SearchByCategory(<<1:1, _:7, Rest/binary>>,
-			     Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_SearchByCategory(Rest, Z1, Z2, F@_1,
-				 TrUserData);
-skip_varint_SearchByCategory(<<0:1, _:7, Rest/binary>>,
-			     Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByCategory(Rest, Z1, Z2, F@_1,
-					TrUserData).
-
-skip_length_delimited_SearchByCategory(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_SearchByCategory(Rest, N + 7,
-					   X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_SearchByCategory(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_SearchByCategory(Rest2, 0, 0, F@_1,
-					TrUserData).
-
-skip_group_SearchByCategory(Bin, FNum, Z2, F@_1,
-			    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_SearchByCategory(Rest, 0, Z2, F@_1,
-					TrUserData).
-
-skip_32_SearchByCategory(<<_:32, Rest/binary>>, Z1, Z2,
-			 F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByCategory(Rest, Z1, Z2, F@_1,
-					TrUserData).
-
-skip_64_SearchByCategory(<<_:64, Rest/binary>>, Z1, Z2,
-			 F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByCategory(Rest, Z1, Z2, F@_1,
-					TrUserData).
-
-d_msg_SearchByRegion(Bin, TrUserData) ->
-    dfp_read_field_def_SearchByRegion(Bin, 0, 0,
-				      id(<<>>, TrUserData),
-				      id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_SearchByRegion(<<10, Rest/binary>>,
-				  Z1, Z2, F@_1, F@_2, TrUserData) ->
-    d_field_SearchByRegion_category_id(Rest, Z1, Z2, F@_1,
-				       F@_2, TrUserData);
-dfp_read_field_def_SearchByRegion(<<18, Rest/binary>>,
-				  Z1, Z2, F@_1, F@_2, TrUserData) ->
-    d_field_SearchByRegion_region_id(Rest, Z1, Z2, F@_1,
-				     F@_2, TrUserData);
-dfp_read_field_def_SearchByRegion(<<>>, 0, 0, F@_1,
-				  F@_2, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{category_id => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{region_id => F@_2}
-    end;
-dfp_read_field_def_SearchByRegion(Other, Z1, Z2, F@_1,
-				  F@_2, TrUserData) ->
-    dg_read_field_def_SearchByRegion(Other, Z1, Z2, F@_1,
-				     F@_2, TrUserData).
-
-dg_read_field_def_SearchByRegion(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_SearchByRegion(Rest, N + 7,
-				     X bsl N + Acc, F@_1, F@_2, TrUserData);
-dg_read_field_def_SearchByRegion(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_SearchByRegion_category_id(Rest, 0, 0, F@_1,
-					     F@_2, TrUserData);
-      18 ->
-	  d_field_SearchByRegion_region_id(Rest, 0, 0, F@_1, F@_2,
-					   TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_SearchByRegion(Rest, 0, 0, F@_1, F@_2,
-					   TrUserData);
-	    1 ->
-		skip_64_SearchByRegion(Rest, 0, 0, F@_1, F@_2,
-				       TrUserData);
-	    2 ->
-		skip_length_delimited_SearchByRegion(Rest, 0, 0, F@_1,
-						     F@_2, TrUserData);
-	    3 ->
-		skip_group_SearchByRegion(Rest, Key bsr 3, 0, F@_1,
-					  F@_2, TrUserData);
-	    5 ->
-		skip_32_SearchByRegion(Rest, 0, 0, F@_1, F@_2,
-				       TrUserData)
-	  end
-    end;
-dg_read_field_def_SearchByRegion(<<>>, 0, 0, F@_1, F@_2,
-				 _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{category_id => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{region_id => F@_2}
-    end.
-
-d_field_SearchByRegion_category_id(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_SearchByRegion_category_id(Rest, N + 7,
-				       X bsl N + Acc, F@_1, F@_2, TrUserData);
-d_field_SearchByRegion_category_id(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, _, F@_2, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_SearchByRegion(RestF, 0, 0,
-				      NewFValue, F@_2, TrUserData).
-
-d_field_SearchByRegion_region_id(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_SearchByRegion_region_id(Rest, N + 7,
-				     X bsl N + Acc, F@_1, F@_2, TrUserData);
-d_field_SearchByRegion_region_id(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_SearchByRegion(RestF, 0, 0, F@_1,
-				      NewFValue, TrUserData).
-
-skip_varint_SearchByRegion(<<1:1, _:7, Rest/binary>>,
-			   Z1, Z2, F@_1, F@_2, TrUserData) ->
-    skip_varint_SearchByRegion(Rest, Z1, Z2, F@_1, F@_2,
-			       TrUserData);
-skip_varint_SearchByRegion(<<0:1, _:7, Rest/binary>>,
-			   Z1, Z2, F@_1, F@_2, TrUserData) ->
-    dfp_read_field_def_SearchByRegion(Rest, Z1, Z2, F@_1,
-				      F@_2, TrUserData).
-
-skip_length_delimited_SearchByRegion(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_SearchByRegion(Rest, N + 7,
-					 X bsl N + Acc, F@_1, F@_2, TrUserData);
-skip_length_delimited_SearchByRegion(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, F@_2, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_SearchByRegion(Rest2, 0, 0, F@_1,
-				      F@_2, TrUserData).
-
-skip_group_SearchByRegion(Bin, FNum, Z2, F@_1, F@_2,
-			  TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_SearchByRegion(Rest, 0, Z2, F@_1,
-				      F@_2, TrUserData).
-
-skip_32_SearchByRegion(<<_:32, Rest/binary>>, Z1, Z2,
-		       F@_1, F@_2, TrUserData) ->
-    dfp_read_field_def_SearchByRegion(Rest, Z1, Z2, F@_1,
-				      F@_2, TrUserData).
-
-skip_64_SearchByRegion(<<_:64, Rest/binary>>, Z1, Z2,
-		       F@_1, F@_2, TrUserData) ->
-    dfp_read_field_def_SearchByRegion(Rest, Z1, Z2, F@_1,
-				      F@_2, TrUserData).
-
-d_msg_StoreCommentResp(Bin, TrUserData) ->
-    dfp_read_field_def_StoreCommentResp(Bin, 0, 0,
-					id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_StoreCommentResp(<<10, Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    d_field_StoreCommentResp_comment_id(Rest, Z1, Z2, F@_1,
-					TrUserData);
-dfp_read_field_def_StoreCommentResp(<<16, Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    d_field_StoreCommentResp_error_reason(Rest, Z1, Z2,
-					  F@_1, TrUserData);
-dfp_read_field_def_StoreCommentResp(<<>>, 0, 0, F@_1,
-				    _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_StoreCommentResp(Other, Z1, Z2, F@_1,
-				    TrUserData) ->
-    dg_read_field_def_StoreCommentResp(Other, Z1, Z2, F@_1,
-				       TrUserData).
-
-dg_read_field_def_StoreCommentResp(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreCommentResp(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_StoreCommentResp(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreCommentResp_comment_id(Rest, 0, 0, F@_1,
-					      TrUserData);
-      16 ->
-	  d_field_StoreCommentResp_error_reason(Rest, 0, 0, F@_1,
-						TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreCommentResp(Rest, 0, 0, F@_1,
-					     TrUserData);
-	    1 ->
-		skip_64_StoreCommentResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_StoreCommentResp(Rest, 0, 0, F@_1,
-						       TrUserData);
-	    3 ->
-		skip_group_StoreCommentResp(Rest, Key bsr 3, 0, F@_1,
-					    TrUserData);
-	    5 ->
-		skip_32_StoreCommentResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreCommentResp(<<>>, 0, 0, F@_1,
-				   _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_StoreCommentResp_comment_id(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreCommentResp_comment_id(Rest, N + 7,
-					X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreCommentResp_comment_id(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreCommentResp(RestF, 0, 0,
-					{comment_id, NewFValue}, TrUserData).
-
-d_field_StoreCommentResp_error_reason(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreCommentResp_error_reason(Rest, N + 7,
-					  X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreCommentResp_error_reason(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreCommentResp(RestF, 0, 0,
-					{error_reason, NewFValue}, TrUserData).
-
-skip_varint_StoreCommentResp(<<1:1, _:7, Rest/binary>>,
-			     Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_StoreCommentResp(Rest, Z1, Z2, F@_1,
-				 TrUserData);
-skip_varint_StoreCommentResp(<<0:1, _:7, Rest/binary>>,
-			     Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_StoreCommentResp(Rest, Z1, Z2, F@_1,
-					TrUserData).
-
-skip_length_delimited_StoreCommentResp(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreCommentResp(Rest, N + 7,
-					   X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_StoreCommentResp(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreCommentResp(Rest2, 0, 0, F@_1,
-					TrUserData).
-
-skip_group_StoreCommentResp(Bin, FNum, Z2, F@_1,
-			    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreCommentResp(Rest, 0, Z2, F@_1,
-					TrUserData).
-
-skip_32_StoreCommentResp(<<_:32, Rest/binary>>, Z1, Z2,
-			 F@_1, TrUserData) ->
-    dfp_read_field_def_StoreCommentResp(Rest, Z1, Z2, F@_1,
-					TrUserData).
-
-skip_64_StoreCommentResp(<<_:64, Rest/binary>>, Z1, Z2,
-			 F@_1, TrUserData) ->
-    dfp_read_field_def_StoreCommentResp(Rest, Z1, Z2, F@_1,
-					TrUserData).
-
-d_msg_StoreBuyNow(Bin, TrUserData) ->
-    dfp_read_field_def_StoreBuyNow(Bin, 0, 0,
-				   id(<<>>, TrUserData), id(<<>>, TrUserData),
-				   id(0, TrUserData), TrUserData).
-
-dfp_read_field_def_StoreBuyNow(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_StoreBuyNow_on_item_id(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData);
-dfp_read_field_def_StoreBuyNow(<<18, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_StoreBuyNow_buyer_id(Rest, Z1, Z2, F@_1, F@_2,
-				 F@_3, TrUserData);
-dfp_read_field_def_StoreBuyNow(<<24, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_StoreBuyNow_quantity(Rest, Z1, Z2, F@_1, F@_2,
-				 F@_3, TrUserData);
-dfp_read_field_def_StoreBuyNow(<<>>, 0, 0, F@_1, F@_2,
-			       F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{buyer_id => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{quantity => F@_3}
-    end;
-dfp_read_field_def_StoreBuyNow(Other, Z1, Z2, F@_1,
-			       F@_2, F@_3, TrUserData) ->
-    dg_read_field_def_StoreBuyNow(Other, Z1, Z2, F@_1, F@_2,
-				  F@_3, TrUserData).
-
-dg_read_field_def_StoreBuyNow(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreBuyNow(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_StoreBuyNow(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreBuyNow_on_item_id(Rest, 0, 0, F@_1, F@_2,
-					 F@_3, TrUserData);
-      18 ->
-	  d_field_StoreBuyNow_buyer_id(Rest, 0, 0, F@_1, F@_2,
-				       F@_3, TrUserData);
-      24 ->
-	  d_field_StoreBuyNow_quantity(Rest, 0, 0, F@_1, F@_2,
-				       F@_3, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreBuyNow(Rest, 0, 0, F@_1, F@_2, F@_3,
-					TrUserData);
-	    1 ->
-		skip_64_StoreBuyNow(Rest, 0, 0, F@_1, F@_2, F@_3,
-				    TrUserData);
-	    2 ->
-		skip_length_delimited_StoreBuyNow(Rest, 0, 0, F@_1,
-						  F@_2, F@_3, TrUserData);
-	    3 ->
-		skip_group_StoreBuyNow(Rest, Key bsr 3, 0, F@_1, F@_2,
-				       F@_3, TrUserData);
-	    5 ->
-		skip_32_StoreBuyNow(Rest, 0, 0, F@_1, F@_2, F@_3,
-				    TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreBuyNow(<<>>, 0, 0, F@_1, F@_2,
-			      F@_3, _) ->
-    S1 = #{},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{on_item_id => F@_1}
-	 end,
-    S3 = if F@_2 == '$undef' -> S2;
-	    true -> S2#{buyer_id => F@_2}
-	 end,
-    if F@_3 == '$undef' -> S3;
-       true -> S3#{quantity => F@_3}
-    end.
-
-d_field_StoreBuyNow_on_item_id(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_StoreBuyNow_on_item_id(Rest, N + 7,
-				   X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_StoreBuyNow_on_item_id(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, _, F@_2, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreBuyNow(RestF, 0, 0, NewFValue,
-				   F@_2, F@_3, TrUserData).
-
-d_field_StoreBuyNow_buyer_id(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_StoreBuyNow_buyer_id(Rest, N + 7, X bsl N + Acc,
-				 F@_1, F@_2, F@_3, TrUserData);
-d_field_StoreBuyNow_buyer_id(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreBuyNow(RestF, 0, 0, F@_1,
-				   NewFValue, F@_3, TrUserData).
-
-d_field_StoreBuyNow_quantity(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_StoreBuyNow_quantity(Rest, N + 7, X bsl N + Acc,
-				 F@_1, F@_2, F@_3, TrUserData);
-d_field_StoreBuyNow_quantity(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreBuyNow(RestF, 0, 0, F@_1, F@_2,
-				   NewFValue, TrUserData).
-
-skip_varint_StoreBuyNow(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    skip_varint_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			    TrUserData);
-skip_varint_StoreBuyNow(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
-
-skip_length_delimited_StoreBuyNow(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreBuyNow(Rest, N + 7,
-				      X bsl N + Acc, F@_1, F@_2, F@_3,
-				      TrUserData);
-skip_length_delimited_StoreBuyNow(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreBuyNow(Rest2, 0, 0, F@_1, F@_2,
-				   F@_3, TrUserData).
-
-skip_group_StoreBuyNow(Bin, FNum, Z2, F@_1, F@_2, F@_3,
-		       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreBuyNow(Rest, 0, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
-
-skip_32_StoreBuyNow(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
-
-skip_64_StoreBuyNow(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, F@_3, TrUserData) ->
-    dfp_read_field_def_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
-
-'d_msg_SearchByCategoryResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(Bin, 0,
-						   0, id([], TrUserData),
-						   TrUserData).
-
-'dfp_read_field_def_SearchByCategoryResp.Wrap'(<<10,
-						 Rest/binary>>,
-					       Z1, Z2, F@_1, TrUserData) ->
-    'd_field_SearchByCategoryResp.Wrap_items'(Rest, Z1, Z2,
-					      F@_1, TrUserData);
-'dfp_read_field_def_SearchByCategoryResp.Wrap'(<<>>, 0,
-					       0, R1, TrUserData) ->
-    #{items => lists_reverse(R1, TrUserData)};
-'dfp_read_field_def_SearchByCategoryResp.Wrap'(Other,
-					       Z1, Z2, F@_1, TrUserData) ->
-    'dg_read_field_def_SearchByCategoryResp.Wrap'(Other, Z1,
-						  Z2, F@_1, TrUserData).
-
-'dg_read_field_def_SearchByCategoryResp.Wrap'(<<1:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_SearchByCategoryResp.Wrap'(Rest,
-						  N + 7, X bsl N + Acc, F@_1,
-						  TrUserData);
-'dg_read_field_def_SearchByCategoryResp.Wrap'(<<0:1,
-						X:7, Rest/binary>>,
-					      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_SearchByCategoryResp.Wrap_items'(Rest, 0, 0,
-						    F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_SearchByCategoryResp.Wrap'(Rest, 0, 0,
-							F@_1, TrUserData);
-	    1 ->
-		'skip_64_SearchByCategoryResp.Wrap'(Rest, 0, 0, F@_1,
-						    TrUserData);
-	    2 ->
-		'skip_length_delimited_SearchByCategoryResp.Wrap'(Rest,
-								  0, 0, F@_1,
-								  TrUserData);
-	    3 ->
-		'skip_group_SearchByCategoryResp.Wrap'(Rest, Key bsr 3,
-						       0, F@_1, TrUserData);
-	    5 ->
-		'skip_32_SearchByCategoryResp.Wrap'(Rest, 0, 0, F@_1,
-						    TrUserData)
-	  end
-    end;
-'dg_read_field_def_SearchByCategoryResp.Wrap'(<<>>, 0,
-					      0, R1, TrUserData) ->
-    #{items => lists_reverse(R1, TrUserData)}.
-
-'d_field_SearchByCategoryResp.Wrap_items'(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'd_field_SearchByCategoryResp.Wrap_items'(Rest, N + 7,
-					      X bsl N + Acc, F@_1, TrUserData);
-'d_field_SearchByCategoryResp.Wrap_items'(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_Item(Bs, TrUserData), TrUserData), Rest2}
-			 end,
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(RestF, 0,
-						   0,
-						   cons(NewFValue, Prev,
-							TrUserData),
-						   TrUserData).
-
-'skip_varint_SearchByCategoryResp.Wrap'(<<1:1, _:7,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    'skip_varint_SearchByCategoryResp.Wrap'(Rest, Z1, Z2,
-					    F@_1, TrUserData);
-'skip_varint_SearchByCategoryResp.Wrap'(<<0:1, _:7,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(Rest, Z1,
-						   Z2, F@_1, TrUserData).
-
-'skip_length_delimited_SearchByCategoryResp.Wrap'(<<1:1,
-						    X:7, Rest/binary>>,
-						  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_SearchByCategoryResp.Wrap'(Rest,
-						      N + 7, X bsl N + Acc,
-						      F@_1, TrUserData);
-'skip_length_delimited_SearchByCategoryResp.Wrap'(<<0:1,
-						    X:7, Rest/binary>>,
-						  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(Rest2, 0,
-						   0, F@_1, TrUserData).
-
-'skip_group_SearchByCategoryResp.Wrap'(Bin, FNum, Z2,
-				       F@_1, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(Rest, 0,
-						   Z2, F@_1, TrUserData).
-
-'skip_32_SearchByCategoryResp.Wrap'(<<_:32,
-				      Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(Rest, Z1,
-						   Z2, F@_1, TrUserData).
-
-'skip_64_SearchByCategoryResp.Wrap'(<<_:64,
-				      Rest/binary>>,
-				    Z1, Z2, F@_1, TrUserData) ->
-    'dfp_read_field_def_SearchByCategoryResp.Wrap'(Rest, Z1,
-						   Z2, F@_1, TrUserData).
 
 d_msg_StoreComment(Bin, TrUserData) ->
     dfp_read_field_def_StoreComment(Bin, 0, 0,
@@ -7658,6 +1568,2360 @@ skip_64_StoreComment(<<_:64, Rest/binary>>, Z1, Z2,
 		     F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     dfp_read_field_def_StoreComment(Rest, Z1, Z2, F@_1,
 				    F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+d_msg_StoreBuyNow(Bin, TrUserData) ->
+    dfp_read_field_def_StoreBuyNow(Bin, 0, 0,
+				   id(<<>>, TrUserData), id(<<>>, TrUserData),
+				   id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_StoreBuyNow(<<10, Rest/binary>>, Z1,
+			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_StoreBuyNow_on_item_id(Rest, Z1, Z2, F@_1, F@_2,
+				   F@_3, TrUserData);
+dfp_read_field_def_StoreBuyNow(<<18, Rest/binary>>, Z1,
+			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_StoreBuyNow_buyer_id(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, TrUserData);
+dfp_read_field_def_StoreBuyNow(<<24, Rest/binary>>, Z1,
+			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_StoreBuyNow_quantity(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, TrUserData);
+dfp_read_field_def_StoreBuyNow(<<>>, 0, 0, F@_1, F@_2,
+			       F@_3, _) ->
+    S1 = #{},
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{on_item_id => F@_1}
+	 end,
+    S3 = if F@_2 == '$undef' -> S2;
+	    true -> S2#{buyer_id => F@_2}
+	 end,
+    if F@_3 == '$undef' -> S3;
+       true -> S3#{quantity => F@_3}
+    end;
+dfp_read_field_def_StoreBuyNow(Other, Z1, Z2, F@_1,
+			       F@_2, F@_3, TrUserData) ->
+    dg_read_field_def_StoreBuyNow(Other, Z1, Z2, F@_1, F@_2,
+				  F@_3, TrUserData).
+
+dg_read_field_def_StoreBuyNow(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_StoreBuyNow(Rest, N + 7,
+				  X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_StoreBuyNow(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_StoreBuyNow_on_item_id(Rest, 0, 0, F@_1, F@_2,
+					 F@_3, TrUserData);
+      18 ->
+	  d_field_StoreBuyNow_buyer_id(Rest, 0, 0, F@_1, F@_2,
+				       F@_3, TrUserData);
+      24 ->
+	  d_field_StoreBuyNow_quantity(Rest, 0, 0, F@_1, F@_2,
+				       F@_3, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_StoreBuyNow(Rest, 0, 0, F@_1, F@_2, F@_3,
+					TrUserData);
+	    1 ->
+		skip_64_StoreBuyNow(Rest, 0, 0, F@_1, F@_2, F@_3,
+				    TrUserData);
+	    2 ->
+		skip_length_delimited_StoreBuyNow(Rest, 0, 0, F@_1,
+						  F@_2, F@_3, TrUserData);
+	    3 ->
+		skip_group_StoreBuyNow(Rest, Key bsr 3, 0, F@_1, F@_2,
+				       F@_3, TrUserData);
+	    5 ->
+		skip_32_StoreBuyNow(Rest, 0, 0, F@_1, F@_2, F@_3,
+				    TrUserData)
+	  end
+    end;
+dg_read_field_def_StoreBuyNow(<<>>, 0, 0, F@_1, F@_2,
+			      F@_3, _) ->
+    S1 = #{},
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{on_item_id => F@_1}
+	 end,
+    S3 = if F@_2 == '$undef' -> S2;
+	    true -> S2#{buyer_id => F@_2}
+	 end,
+    if F@_3 == '$undef' -> S3;
+       true -> S3#{quantity => F@_3}
+    end.
+
+d_field_StoreBuyNow_on_item_id(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_StoreBuyNow_on_item_id(Rest, N + 7,
+				   X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+d_field_StoreBuyNow_on_item_id(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreBuyNow(RestF, 0, 0, NewFValue,
+				   F@_2, F@_3, TrUserData).
+
+d_field_StoreBuyNow_buyer_id(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_StoreBuyNow_buyer_id(Rest, N + 7, X bsl N + Acc,
+				 F@_1, F@_2, F@_3, TrUserData);
+d_field_StoreBuyNow_buyer_id(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreBuyNow(RestF, 0, 0, F@_1,
+				   NewFValue, F@_3, TrUserData).
+
+d_field_StoreBuyNow_quantity(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_StoreBuyNow_quantity(Rest, N + 7, X bsl N + Acc,
+				 F@_1, F@_2, F@_3, TrUserData);
+d_field_StoreBuyNow_quantity(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_StoreBuyNow(RestF, 0, 0, F@_1, F@_2,
+				   NewFValue, TrUserData).
+
+skip_varint_StoreBuyNow(<<1:1, _:7, Rest/binary>>, Z1,
+			Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    skip_varint_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			    TrUserData);
+skip_varint_StoreBuyNow(<<0:1, _:7, Rest/binary>>, Z1,
+			Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2,
+				   F@_3, TrUserData).
+
+skip_length_delimited_StoreBuyNow(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_StoreBuyNow(Rest, N + 7,
+				      X bsl N + Acc, F@_1, F@_2, F@_3,
+				      TrUserData);
+skip_length_delimited_StoreBuyNow(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StoreBuyNow(Rest2, 0, 0, F@_1, F@_2,
+				   F@_3, TrUserData).
+
+skip_group_StoreBuyNow(Bin, FNum, Z2, F@_1, F@_2, F@_3,
+		       TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StoreBuyNow(Rest, 0, Z2, F@_1, F@_2,
+				   F@_3, TrUserData).
+
+skip_32_StoreBuyNow(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		    F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2,
+				   F@_3, TrUserData).
+
+skip_64_StoreBuyNow(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		    F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_StoreBuyNow(Rest, Z1, Z2, F@_1, F@_2,
+				   F@_3, TrUserData).
+
+d_msg_AboutMeResp(Bin, TrUserData) ->
+    dfp_read_field_def_AboutMeResp(Bin, 0, 0,
+				   id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_AboutMeResp(<<8, Rest/binary>>, Z1,
+			       Z2, F@_1, TrUserData) ->
+    d_field_AboutMeResp_success(Rest, Z1, Z2, F@_1,
+				TrUserData);
+dfp_read_field_def_AboutMeResp(<<16, Rest/binary>>, Z1,
+			       Z2, F@_1, TrUserData) ->
+    d_field_AboutMeResp_error_reason(Rest, Z1, Z2, F@_1,
+				     TrUserData);
+dfp_read_field_def_AboutMeResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_AboutMeResp(Other, Z1, Z2, F@_1,
+			       TrUserData) ->
+    dg_read_field_def_AboutMeResp(Other, Z1, Z2, F@_1,
+				  TrUserData).
+
+dg_read_field_def_AboutMeResp(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_AboutMeResp(Rest, N + 7,
+				  X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_AboutMeResp(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_AboutMeResp_success(Rest, 0, 0, F@_1,
+				      TrUserData);
+      16 ->
+	  d_field_AboutMeResp_error_reason(Rest, 0, 0, F@_1,
+					   TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_AboutMeResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_AboutMeResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_AboutMeResp(Rest, 0, 0, F@_1,
+						  TrUserData);
+	    3 ->
+		skip_group_AboutMeResp(Rest, Key bsr 3, 0, F@_1,
+				       TrUserData);
+	    5 -> skip_32_AboutMeResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_AboutMeResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_AboutMeResp_success(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_AboutMeResp_success(Rest, N + 7, X bsl N + Acc,
+				F@_1, TrUserData);
+d_field_AboutMeResp_success(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_AboutMeResp(RestF, 0, 0,
+				   {success, NewFValue}, TrUserData).
+
+d_field_AboutMeResp_error_reason(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_AboutMeResp_error_reason(Rest, N + 7,
+				     X bsl N + Acc, F@_1, TrUserData);
+d_field_AboutMeResp_error_reason(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_AboutMeResp(RestF, 0, 0,
+				   {error_reason, NewFValue}, TrUserData).
+
+skip_varint_AboutMeResp(<<1:1, _:7, Rest/binary>>, Z1,
+			Z2, F@_1, TrUserData) ->
+    skip_varint_AboutMeResp(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_AboutMeResp(<<0:1, _:7, Rest/binary>>, Z1,
+			Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_AboutMeResp(Rest, Z1, Z2, F@_1,
+				   TrUserData).
+
+skip_length_delimited_AboutMeResp(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_AboutMeResp(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_AboutMeResp(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_AboutMeResp(Rest2, 0, 0, F@_1,
+				   TrUserData).
+
+skip_group_AboutMeResp(Bin, FNum, Z2, F@_1,
+		       TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_AboutMeResp(Rest, 0, Z2, F@_1,
+				   TrUserData).
+
+skip_32_AboutMeResp(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		    TrUserData) ->
+    dfp_read_field_def_AboutMeResp(Rest, Z1, Z2, F@_1,
+				   TrUserData).
+
+skip_64_AboutMeResp(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		    TrUserData) ->
+    dfp_read_field_def_AboutMeResp(Rest, Z1, Z2, F@_1,
+				   TrUserData).
+
+d_msg_SearchByCategoryResp(Bin, TrUserData) ->
+    dfp_read_field_def_SearchByCategoryResp(Bin, 0, 0,
+					    id('$undef', TrUserData),
+					    TrUserData).
+
+dfp_read_field_def_SearchByCategoryResp(<<8,
+					  Rest/binary>>,
+					Z1, Z2, F@_1, TrUserData) ->
+    d_field_SearchByCategoryResp_success(Rest, Z1, Z2, F@_1,
+					 TrUserData);
+dfp_read_field_def_SearchByCategoryResp(<<16,
+					  Rest/binary>>,
+					Z1, Z2, F@_1, TrUserData) ->
+    d_field_SearchByCategoryResp_error_reason(Rest, Z1, Z2,
+					      F@_1, TrUserData);
+dfp_read_field_def_SearchByCategoryResp(<<>>, 0, 0,
+					F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_SearchByCategoryResp(Other, Z1, Z2,
+					F@_1, TrUserData) ->
+    dg_read_field_def_SearchByCategoryResp(Other, Z1, Z2,
+					   F@_1, TrUserData).
+
+dg_read_field_def_SearchByCategoryResp(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_SearchByCategoryResp(Rest, N + 7,
+					   X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_SearchByCategoryResp(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_SearchByCategoryResp_success(Rest, 0, 0, F@_1,
+					       TrUserData);
+      16 ->
+	  d_field_SearchByCategoryResp_error_reason(Rest, 0, 0,
+						    F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_SearchByCategoryResp(Rest, 0, 0, F@_1,
+						 TrUserData);
+	    1 ->
+		skip_64_SearchByCategoryResp(Rest, 0, 0, F@_1,
+					     TrUserData);
+	    2 ->
+		skip_length_delimited_SearchByCategoryResp(Rest, 0, 0,
+							   F@_1, TrUserData);
+	    3 ->
+		skip_group_SearchByCategoryResp(Rest, Key bsr 3, 0,
+						F@_1, TrUserData);
+	    5 ->
+		skip_32_SearchByCategoryResp(Rest, 0, 0, F@_1,
+					     TrUserData)
+	  end
+    end;
+dg_read_field_def_SearchByCategoryResp(<<>>, 0, 0, F@_1,
+				       _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_SearchByCategoryResp_success(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_SearchByCategoryResp_success(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+d_field_SearchByCategoryResp_success(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_SearchByCategoryResp(RestF, 0, 0,
+					    {success, NewFValue}, TrUserData).
+
+d_field_SearchByCategoryResp_error_reason(<<1:1, X:7,
+					    Rest/binary>>,
+					  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_SearchByCategoryResp_error_reason(Rest, N + 7,
+					      X bsl N + Acc, F@_1, TrUserData);
+d_field_SearchByCategoryResp_error_reason(<<0:1, X:7,
+					    Rest/binary>>,
+					  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_SearchByCategoryResp(RestF, 0, 0,
+					    {error_reason, NewFValue},
+					    TrUserData).
+
+skip_varint_SearchByCategoryResp(<<1:1, _:7,
+				   Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_SearchByCategoryResp(Rest, Z1, Z2, F@_1,
+				     TrUserData);
+skip_varint_SearchByCategoryResp(<<0:1, _:7,
+				   Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByCategoryResp(Rest, Z1, Z2,
+					    F@_1, TrUserData).
+
+skip_length_delimited_SearchByCategoryResp(<<1:1, X:7,
+					     Rest/binary>>,
+					   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_SearchByCategoryResp(Rest, N + 7,
+					       X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_SearchByCategoryResp(<<0:1, X:7,
+					     Rest/binary>>,
+					   N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SearchByCategoryResp(Rest2, 0, 0,
+					    F@_1, TrUserData).
+
+skip_group_SearchByCategoryResp(Bin, FNum, Z2, F@_1,
+				TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SearchByCategoryResp(Rest, 0, Z2,
+					    F@_1, TrUserData).
+
+skip_32_SearchByCategoryResp(<<_:32, Rest/binary>>, Z1,
+			     Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByCategoryResp(Rest, Z1, Z2,
+					    F@_1, TrUserData).
+
+skip_64_SearchByCategoryResp(<<_:64, Rest/binary>>, Z1,
+			     Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByCategoryResp(Rest, Z1, Z2,
+					    F@_1, TrUserData).
+
+d_msg_BrowseCategoriesResp(Bin, TrUserData) ->
+    dfp_read_field_def_BrowseCategoriesResp(Bin, 0, 0,
+					    id('$undef', TrUserData),
+					    TrUserData).
+
+dfp_read_field_def_BrowseCategoriesResp(<<8,
+					  Rest/binary>>,
+					Z1, Z2, F@_1, TrUserData) ->
+    d_field_BrowseCategoriesResp_success(Rest, Z1, Z2, F@_1,
+					 TrUserData);
+dfp_read_field_def_BrowseCategoriesResp(<<16,
+					  Rest/binary>>,
+					Z1, Z2, F@_1, TrUserData) ->
+    d_field_BrowseCategoriesResp_error_reason(Rest, Z1, Z2,
+					      F@_1, TrUserData);
+dfp_read_field_def_BrowseCategoriesResp(<<>>, 0, 0,
+					F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_BrowseCategoriesResp(Other, Z1, Z2,
+					F@_1, TrUserData) ->
+    dg_read_field_def_BrowseCategoriesResp(Other, Z1, Z2,
+					   F@_1, TrUserData).
+
+dg_read_field_def_BrowseCategoriesResp(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_BrowseCategoriesResp(Rest, N + 7,
+					   X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_BrowseCategoriesResp(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_BrowseCategoriesResp_success(Rest, 0, 0, F@_1,
+					       TrUserData);
+      16 ->
+	  d_field_BrowseCategoriesResp_error_reason(Rest, 0, 0,
+						    F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_BrowseCategoriesResp(Rest, 0, 0, F@_1,
+						 TrUserData);
+	    1 ->
+		skip_64_BrowseCategoriesResp(Rest, 0, 0, F@_1,
+					     TrUserData);
+	    2 ->
+		skip_length_delimited_BrowseCategoriesResp(Rest, 0, 0,
+							   F@_1, TrUserData);
+	    3 ->
+		skip_group_BrowseCategoriesResp(Rest, Key bsr 3, 0,
+						F@_1, TrUserData);
+	    5 ->
+		skip_32_BrowseCategoriesResp(Rest, 0, 0, F@_1,
+					     TrUserData)
+	  end
+    end;
+dg_read_field_def_BrowseCategoriesResp(<<>>, 0, 0, F@_1,
+				       _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_BrowseCategoriesResp_success(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_BrowseCategoriesResp_success(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+d_field_BrowseCategoriesResp_success(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_BrowseCategoriesResp(RestF, 0, 0,
+					    {success, NewFValue}, TrUserData).
+
+d_field_BrowseCategoriesResp_error_reason(<<1:1, X:7,
+					    Rest/binary>>,
+					  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_BrowseCategoriesResp_error_reason(Rest, N + 7,
+					      X bsl N + Acc, F@_1, TrUserData);
+d_field_BrowseCategoriesResp_error_reason(<<0:1, X:7,
+					    Rest/binary>>,
+					  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_BrowseCategoriesResp(RestF, 0, 0,
+					    {error_reason, NewFValue},
+					    TrUserData).
+
+skip_varint_BrowseCategoriesResp(<<1:1, _:7,
+				   Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_BrowseCategoriesResp(Rest, Z1, Z2, F@_1,
+				     TrUserData);
+skip_varint_BrowseCategoriesResp(<<0:1, _:7,
+				   Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_BrowseCategoriesResp(Rest, Z1, Z2,
+					    F@_1, TrUserData).
+
+skip_length_delimited_BrowseCategoriesResp(<<1:1, X:7,
+					     Rest/binary>>,
+					   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_BrowseCategoriesResp(Rest, N + 7,
+					       X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_BrowseCategoriesResp(<<0:1, X:7,
+					     Rest/binary>>,
+					   N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_BrowseCategoriesResp(Rest2, 0, 0,
+					    F@_1, TrUserData).
+
+skip_group_BrowseCategoriesResp(Bin, FNum, Z2, F@_1,
+				TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_BrowseCategoriesResp(Rest, 0, Z2,
+					    F@_1, TrUserData).
+
+skip_32_BrowseCategoriesResp(<<_:32, Rest/binary>>, Z1,
+			     Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_BrowseCategoriesResp(Rest, Z1, Z2,
+					    F@_1, TrUserData).
+
+skip_64_BrowseCategoriesResp(<<_:64, Rest/binary>>, Z1,
+			     Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_BrowseCategoriesResp(Rest, Z1, Z2,
+					    F@_1, TrUserData).
+
+d_msg_ViewItemBidHist(Bin, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHist(Bin, 0, 0,
+				       id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_ViewItemBidHist(<<10, Rest/binary>>,
+				   Z1, Z2, F@_1, TrUserData) ->
+    d_field_ViewItemBidHist_item_id(Rest, Z1, Z2, F@_1,
+				    TrUserData);
+dfp_read_field_def_ViewItemBidHist(<<>>, 0, 0, F@_1,
+				   _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{item_id => F@_1}
+    end;
+dfp_read_field_def_ViewItemBidHist(Other, Z1, Z2, F@_1,
+				   TrUserData) ->
+    dg_read_field_def_ViewItemBidHist(Other, Z1, Z2, F@_1,
+				      TrUserData).
+
+dg_read_field_def_ViewItemBidHist(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ViewItemBidHist(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_ViewItemBidHist(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_ViewItemBidHist_item_id(Rest, 0, 0, F@_1,
+					  TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ViewItemBidHist(Rest, 0, 0, F@_1,
+					    TrUserData);
+	    1 ->
+		skip_64_ViewItemBidHist(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_ViewItemBidHist(Rest, 0, 0, F@_1,
+						      TrUserData);
+	    3 ->
+		skip_group_ViewItemBidHist(Rest, Key bsr 3, 0, F@_1,
+					   TrUserData);
+	    5 ->
+		skip_32_ViewItemBidHist(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_ViewItemBidHist(<<>>, 0, 0, F@_1,
+				  _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{item_id => F@_1}
+    end.
+
+d_field_ViewItemBidHist_item_id(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewItemBidHist_item_id(Rest, N + 7,
+				    X bsl N + Acc, F@_1, TrUserData);
+d_field_ViewItemBidHist_item_id(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_ViewItemBidHist(RestF, 0, 0,
+				       NewFValue, TrUserData).
+
+skip_varint_ViewItemBidHist(<<1:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+				TrUserData);
+skip_varint_ViewItemBidHist(<<0:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+				       TrUserData).
+
+skip_length_delimited_ViewItemBidHist(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ViewItemBidHist(Rest, N + 7,
+					  X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ViewItemBidHist(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ViewItemBidHist(Rest2, 0, 0, F@_1,
+				       TrUserData).
+
+skip_group_ViewItemBidHist(Bin, FNum, Z2, F@_1,
+			   TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ViewItemBidHist(Rest, 0, Z2, F@_1,
+				       TrUserData).
+
+skip_32_ViewItemBidHist(<<_:32, Rest/binary>>, Z1, Z2,
+			F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+				       TrUserData).
+
+skip_64_ViewItemBidHist(<<_:64, Rest/binary>>, Z1, Z2,
+			F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+				       TrUserData).
+
+d_msg_SearchByCategory(Bin, TrUserData) ->
+    dfp_read_field_def_SearchByCategory(Bin, 0, 0,
+					id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_SearchByCategory(<<10, Rest/binary>>,
+				    Z1, Z2, F@_1, TrUserData) ->
+    d_field_SearchByCategory_category_id(Rest, Z1, Z2, F@_1,
+					 TrUserData);
+dfp_read_field_def_SearchByCategory(<<>>, 0, 0, F@_1,
+				    _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{category_id => F@_1}
+    end;
+dfp_read_field_def_SearchByCategory(Other, Z1, Z2, F@_1,
+				    TrUserData) ->
+    dg_read_field_def_SearchByCategory(Other, Z1, Z2, F@_1,
+				       TrUserData).
+
+dg_read_field_def_SearchByCategory(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_SearchByCategory(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_SearchByCategory(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_SearchByCategory_category_id(Rest, 0, 0, F@_1,
+					       TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_SearchByCategory(Rest, 0, 0, F@_1,
+					     TrUserData);
+	    1 ->
+		skip_64_SearchByCategory(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_SearchByCategory(Rest, 0, 0, F@_1,
+						       TrUserData);
+	    3 ->
+		skip_group_SearchByCategory(Rest, Key bsr 3, 0, F@_1,
+					    TrUserData);
+	    5 ->
+		skip_32_SearchByCategory(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_SearchByCategory(<<>>, 0, 0, F@_1,
+				   _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{category_id => F@_1}
+    end.
+
+d_field_SearchByCategory_category_id(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_SearchByCategory_category_id(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+d_field_SearchByCategory_category_id(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_SearchByCategory(RestF, 0, 0,
+					NewFValue, TrUserData).
+
+skip_varint_SearchByCategory(<<1:1, _:7, Rest/binary>>,
+			     Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_SearchByCategory(Rest, Z1, Z2, F@_1,
+				 TrUserData);
+skip_varint_SearchByCategory(<<0:1, _:7, Rest/binary>>,
+			     Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByCategory(Rest, Z1, Z2, F@_1,
+					TrUserData).
+
+skip_length_delimited_SearchByCategory(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_SearchByCategory(Rest, N + 7,
+					   X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_SearchByCategory(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SearchByCategory(Rest2, 0, 0, F@_1,
+					TrUserData).
+
+skip_group_SearchByCategory(Bin, FNum, Z2, F@_1,
+			    TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SearchByCategory(Rest, 0, Z2, F@_1,
+					TrUserData).
+
+skip_32_SearchByCategory(<<_:32, Rest/binary>>, Z1, Z2,
+			 F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByCategory(Rest, Z1, Z2, F@_1,
+					TrUserData).
+
+skip_64_SearchByCategory(<<_:64, Rest/binary>>, Z1, Z2,
+			 F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByCategory(Rest, Z1, Z2, F@_1,
+					TrUserData).
+
+d_msg_RegisterUserResp(Bin, TrUserData) ->
+    dfp_read_field_def_RegisterUserResp(Bin, 0, 0,
+					id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_RegisterUserResp(<<10, Rest/binary>>,
+				    Z1, Z2, F@_1, TrUserData) ->
+    d_field_RegisterUserResp_user_id(Rest, Z1, Z2, F@_1,
+				     TrUserData);
+dfp_read_field_def_RegisterUserResp(<<16, Rest/binary>>,
+				    Z1, Z2, F@_1, TrUserData) ->
+    d_field_RegisterUserResp_error_reason(Rest, Z1, Z2,
+					  F@_1, TrUserData);
+dfp_read_field_def_RegisterUserResp(<<>>, 0, 0, F@_1,
+				    _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_RegisterUserResp(Other, Z1, Z2, F@_1,
+				    TrUserData) ->
+    dg_read_field_def_RegisterUserResp(Other, Z1, Z2, F@_1,
+				       TrUserData).
+
+dg_read_field_def_RegisterUserResp(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_RegisterUserResp(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_RegisterUserResp(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_RegisterUserResp_user_id(Rest, 0, 0, F@_1,
+					   TrUserData);
+      16 ->
+	  d_field_RegisterUserResp_error_reason(Rest, 0, 0, F@_1,
+						TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_RegisterUserResp(Rest, 0, 0, F@_1,
+					     TrUserData);
+	    1 ->
+		skip_64_RegisterUserResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_RegisterUserResp(Rest, 0, 0, F@_1,
+						       TrUserData);
+	    3 ->
+		skip_group_RegisterUserResp(Rest, Key bsr 3, 0, F@_1,
+					    TrUserData);
+	    5 ->
+		skip_32_RegisterUserResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_RegisterUserResp(<<>>, 0, 0, F@_1,
+				   _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_RegisterUserResp_user_id(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_RegisterUserResp_user_id(Rest, N + 7,
+				     X bsl N + Acc, F@_1, TrUserData);
+d_field_RegisterUserResp_user_id(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_RegisterUserResp(RestF, 0, 0,
+					{user_id, NewFValue}, TrUserData).
+
+d_field_RegisterUserResp_error_reason(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_RegisterUserResp_error_reason(Rest, N + 7,
+					  X bsl N + Acc, F@_1, TrUserData);
+d_field_RegisterUserResp_error_reason(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_RegisterUserResp(RestF, 0, 0,
+					{error_reason, NewFValue}, TrUserData).
+
+skip_varint_RegisterUserResp(<<1:1, _:7, Rest/binary>>,
+			     Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_RegisterUserResp(Rest, Z1, Z2, F@_1,
+				 TrUserData);
+skip_varint_RegisterUserResp(<<0:1, _:7, Rest/binary>>,
+			     Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_RegisterUserResp(Rest, Z1, Z2, F@_1,
+					TrUserData).
+
+skip_length_delimited_RegisterUserResp(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_RegisterUserResp(Rest, N + 7,
+					   X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_RegisterUserResp(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_RegisterUserResp(Rest2, 0, 0, F@_1,
+					TrUserData).
+
+skip_group_RegisterUserResp(Bin, FNum, Z2, F@_1,
+			    TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_RegisterUserResp(Rest, 0, Z2, F@_1,
+					TrUserData).
+
+skip_32_RegisterUserResp(<<_:32, Rest/binary>>, Z1, Z2,
+			 F@_1, TrUserData) ->
+    dfp_read_field_def_RegisterUserResp(Rest, Z1, Z2, F@_1,
+					TrUserData).
+
+skip_64_RegisterUserResp(<<_:64, Rest/binary>>, Z1, Z2,
+			 F@_1, TrUserData) ->
+    dfp_read_field_def_RegisterUserResp(Rest, Z1, Z2, F@_1,
+					TrUserData).
+
+d_msg_BrowseRegionsResp(Bin, TrUserData) ->
+    dfp_read_field_def_BrowseRegionsResp(Bin, 0, 0,
+					 id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_BrowseRegionsResp(<<8, Rest/binary>>,
+				     Z1, Z2, F@_1, TrUserData) ->
+    d_field_BrowseRegionsResp_success(Rest, Z1, Z2, F@_1,
+				      TrUserData);
+dfp_read_field_def_BrowseRegionsResp(<<16,
+				       Rest/binary>>,
+				     Z1, Z2, F@_1, TrUserData) ->
+    d_field_BrowseRegionsResp_error_reason(Rest, Z1, Z2,
+					   F@_1, TrUserData);
+dfp_read_field_def_BrowseRegionsResp(<<>>, 0, 0, F@_1,
+				     _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_BrowseRegionsResp(Other, Z1, Z2,
+				     F@_1, TrUserData) ->
+    dg_read_field_def_BrowseRegionsResp(Other, Z1, Z2, F@_1,
+					TrUserData).
+
+dg_read_field_def_BrowseRegionsResp(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_BrowseRegionsResp(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_BrowseRegionsResp(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_BrowseRegionsResp_success(Rest, 0, 0, F@_1,
+					    TrUserData);
+      16 ->
+	  d_field_BrowseRegionsResp_error_reason(Rest, 0, 0, F@_1,
+						 TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_BrowseRegionsResp(Rest, 0, 0, F@_1,
+					      TrUserData);
+	    1 ->
+		skip_64_BrowseRegionsResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_BrowseRegionsResp(Rest, 0, 0,
+							F@_1, TrUserData);
+	    3 ->
+		skip_group_BrowseRegionsResp(Rest, Key bsr 3, 0, F@_1,
+					     TrUserData);
+	    5 ->
+		skip_32_BrowseRegionsResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_BrowseRegionsResp(<<>>, 0, 0, F@_1,
+				    _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_BrowseRegionsResp_success(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_BrowseRegionsResp_success(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+d_field_BrowseRegionsResp_success(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_BrowseRegionsResp(RestF, 0, 0,
+					 {success, NewFValue}, TrUserData).
+
+d_field_BrowseRegionsResp_error_reason(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_BrowseRegionsResp_error_reason(Rest, N + 7,
+					   X bsl N + Acc, F@_1, TrUserData);
+d_field_BrowseRegionsResp_error_reason(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_BrowseRegionsResp(RestF, 0, 0,
+					 {error_reason, NewFValue}, TrUserData).
+
+skip_varint_BrowseRegionsResp(<<1:1, _:7, Rest/binary>>,
+			      Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
+				  TrUserData);
+skip_varint_BrowseRegionsResp(<<0:1, _:7, Rest/binary>>,
+			      Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
+					 TrUserData).
+
+skip_length_delimited_BrowseRegionsResp(<<1:1, X:7,
+					  Rest/binary>>,
+					N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_BrowseRegionsResp(Rest, N + 7,
+					    X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_BrowseRegionsResp(<<0:1, X:7,
+					  Rest/binary>>,
+					N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_BrowseRegionsResp(Rest2, 0, 0, F@_1,
+					 TrUserData).
+
+skip_group_BrowseRegionsResp(Bin, FNum, Z2, F@_1,
+			     TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_BrowseRegionsResp(Rest, 0, Z2, F@_1,
+					 TrUserData).
+
+skip_32_BrowseRegionsResp(<<_:32, Rest/binary>>, Z1, Z2,
+			  F@_1, TrUserData) ->
+    dfp_read_field_def_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
+					 TrUserData).
+
+skip_64_BrowseRegionsResp(<<_:64, Rest/binary>>, Z1, Z2,
+			  F@_1, TrUserData) ->
+    dfp_read_field_def_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
+					 TrUserData).
+
+d_msg_ViewUser(Bin, TrUserData) ->
+    dfp_read_field_def_ViewUser(Bin, 0, 0,
+				id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_ViewUser(<<10, Rest/binary>>, Z1, Z2,
+			    F@_1, TrUserData) ->
+    d_field_ViewUser_user_id(Rest, Z1, Z2, F@_1,
+			     TrUserData);
+dfp_read_field_def_ViewUser(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{user_id => F@_1}
+    end;
+dfp_read_field_def_ViewUser(Other, Z1, Z2, F@_1,
+			    TrUserData) ->
+    dg_read_field_def_ViewUser(Other, Z1, Z2, F@_1,
+			       TrUserData).
+
+dg_read_field_def_ViewUser(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ViewUser(Rest, N + 7, X bsl N + Acc,
+			       F@_1, TrUserData);
+dg_read_field_def_ViewUser(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_ViewUser_user_id(Rest, 0, 0, F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_ViewUser(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_ViewUser(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_ViewUser(Rest, 0, 0, F@_1,
+					       TrUserData);
+	    3 ->
+		skip_group_ViewUser(Rest, Key bsr 3, 0, F@_1,
+				    TrUserData);
+	    5 -> skip_32_ViewUser(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_ViewUser(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{user_id => F@_1}
+    end.
+
+d_field_ViewUser_user_id(<<1:1, X:7, Rest/binary>>, N,
+			 Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewUser_user_id(Rest, N + 7, X bsl N + Acc,
+			     F@_1, TrUserData);
+d_field_ViewUser_user_id(<<0:1, X:7, Rest/binary>>, N,
+			 Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_ViewUser(RestF, 0, 0, NewFValue,
+				TrUserData).
+
+skip_varint_ViewUser(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    skip_varint_ViewUser(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_ViewUser(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_ViewUser(Rest, Z1, Z2, F@_1,
+				TrUserData).
+
+skip_length_delimited_ViewUser(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ViewUser(Rest, N + 7,
+				   X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ViewUser(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ViewUser(Rest2, 0, 0, F@_1,
+				TrUserData).
+
+skip_group_ViewUser(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ViewUser(Rest, 0, Z2, F@_1,
+				TrUserData).
+
+skip_32_ViewUser(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		 TrUserData) ->
+    dfp_read_field_def_ViewUser(Rest, Z1, Z2, F@_1,
+				TrUserData).
+
+skip_64_ViewUser(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		 TrUserData) ->
+    dfp_read_field_def_ViewUser(Rest, Z1, Z2, F@_1,
+				TrUserData).
+
+d_msg_ViewUserResp(Bin, TrUserData) ->
+    dfp_read_field_def_ViewUserResp(Bin, 0, 0,
+				    id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_ViewUserResp(<<8, Rest/binary>>, Z1,
+				Z2, F@_1, TrUserData) ->
+    d_field_ViewUserResp_success(Rest, Z1, Z2, F@_1,
+				 TrUserData);
+dfp_read_field_def_ViewUserResp(<<16, Rest/binary>>, Z1,
+				Z2, F@_1, TrUserData) ->
+    d_field_ViewUserResp_error_reason(Rest, Z1, Z2, F@_1,
+				      TrUserData);
+dfp_read_field_def_ViewUserResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_ViewUserResp(Other, Z1, Z2, F@_1,
+				TrUserData) ->
+    dg_read_field_def_ViewUserResp(Other, Z1, Z2, F@_1,
+				   TrUserData).
+
+dg_read_field_def_ViewUserResp(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ViewUserResp(Rest, N + 7,
+				   X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_ViewUserResp(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_ViewUserResp_success(Rest, 0, 0, F@_1,
+				       TrUserData);
+      16 ->
+	  d_field_ViewUserResp_error_reason(Rest, 0, 0, F@_1,
+					    TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ViewUserResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_ViewUserResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_ViewUserResp(Rest, 0, 0, F@_1,
+						   TrUserData);
+	    3 ->
+		skip_group_ViewUserResp(Rest, Key bsr 3, 0, F@_1,
+					TrUserData);
+	    5 -> skip_32_ViewUserResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_ViewUserResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_ViewUserResp_success(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewUserResp_success(Rest, N + 7, X bsl N + Acc,
+				 F@_1, TrUserData);
+d_field_ViewUserResp_success(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_ViewUserResp(RestF, 0, 0,
+				    {success, NewFValue}, TrUserData).
+
+d_field_ViewUserResp_error_reason(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewUserResp_error_reason(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+d_field_ViewUserResp_error_reason(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_ViewUserResp(RestF, 0, 0,
+				    {error_reason, NewFValue}, TrUserData).
+
+skip_varint_ViewUserResp(<<1:1, _:7, Rest/binary>>, Z1,
+			 Z2, F@_1, TrUserData) ->
+    skip_varint_ViewUserResp(Rest, Z1, Z2, F@_1,
+			     TrUserData);
+skip_varint_ViewUserResp(<<0:1, _:7, Rest/binary>>, Z1,
+			 Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ViewUserResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+skip_length_delimited_ViewUserResp(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ViewUserResp(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ViewUserResp(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ViewUserResp(Rest2, 0, 0, F@_1,
+				    TrUserData).
+
+skip_group_ViewUserResp(Bin, FNum, Z2, F@_1,
+			TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ViewUserResp(Rest, 0, Z2, F@_1,
+				    TrUserData).
+
+skip_32_ViewUserResp(<<_:32, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_ViewUserResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+skip_64_ViewUserResp(<<_:64, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_ViewUserResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+d_msg_BrowseCategories(Bin, TrUserData) ->
+    dfp_read_field_def_BrowseCategories(Bin, 0, 0,
+					TrUserData).
+
+dfp_read_field_def_BrowseCategories(<<>>, 0, 0, _) ->
+    #{};
+dfp_read_field_def_BrowseCategories(Other, Z1, Z2,
+				    TrUserData) ->
+    dg_read_field_def_BrowseCategories(Other, Z1, Z2,
+				       TrUserData).
+
+dg_read_field_def_BrowseCategories(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_BrowseCategories(Rest, N + 7,
+				       X bsl N + Acc, TrUserData);
+dg_read_field_def_BrowseCategories(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+      0 ->
+	  skip_varint_BrowseCategories(Rest, 0, 0, TrUserData);
+      1 -> skip_64_BrowseCategories(Rest, 0, 0, TrUserData);
+      2 ->
+	  skip_length_delimited_BrowseCategories(Rest, 0, 0,
+						 TrUserData);
+      3 ->
+	  skip_group_BrowseCategories(Rest, Key bsr 3, 0,
+				      TrUserData);
+      5 -> skip_32_BrowseCategories(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_BrowseCategories(<<>>, 0, 0, _) ->
+    #{}.
+
+skip_varint_BrowseCategories(<<1:1, _:7, Rest/binary>>,
+			     Z1, Z2, TrUserData) ->
+    skip_varint_BrowseCategories(Rest, Z1, Z2, TrUserData);
+skip_varint_BrowseCategories(<<0:1, _:7, Rest/binary>>,
+			     Z1, Z2, TrUserData) ->
+    dfp_read_field_def_BrowseCategories(Rest, Z1, Z2,
+					TrUserData).
+
+skip_length_delimited_BrowseCategories(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_BrowseCategories(Rest, N + 7,
+					   X bsl N + Acc, TrUserData);
+skip_length_delimited_BrowseCategories(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_BrowseCategories(Rest2, 0, 0,
+					TrUserData).
+
+skip_group_BrowseCategories(Bin, FNum, Z2,
+			    TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_BrowseCategories(Rest, 0, Z2,
+					TrUserData).
+
+skip_32_BrowseCategories(<<_:32, Rest/binary>>, Z1, Z2,
+			 TrUserData) ->
+    dfp_read_field_def_BrowseCategories(Rest, Z1, Z2,
+					TrUserData).
+
+skip_64_BrowseCategories(<<_:64, Rest/binary>>, Z1, Z2,
+			 TrUserData) ->
+    dfp_read_field_def_BrowseCategories(Rest, Z1, Z2,
+					TrUserData).
+
+d_msg_SearchByRegionResp(Bin, TrUserData) ->
+    dfp_read_field_def_SearchByRegionResp(Bin, 0, 0,
+					  id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_SearchByRegionResp(<<8,
+					Rest/binary>>,
+				      Z1, Z2, F@_1, TrUserData) ->
+    d_field_SearchByRegionResp_success(Rest, Z1, Z2, F@_1,
+				       TrUserData);
+dfp_read_field_def_SearchByRegionResp(<<16,
+					Rest/binary>>,
+				      Z1, Z2, F@_1, TrUserData) ->
+    d_field_SearchByRegionResp_error_reason(Rest, Z1, Z2,
+					    F@_1, TrUserData);
+dfp_read_field_def_SearchByRegionResp(<<>>, 0, 0, F@_1,
+				      _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_SearchByRegionResp(Other, Z1, Z2,
+				      F@_1, TrUserData) ->
+    dg_read_field_def_SearchByRegionResp(Other, Z1, Z2,
+					 F@_1, TrUserData).
+
+dg_read_field_def_SearchByRegionResp(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_SearchByRegionResp(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_SearchByRegionResp(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_SearchByRegionResp_success(Rest, 0, 0, F@_1,
+					     TrUserData);
+      16 ->
+	  d_field_SearchByRegionResp_error_reason(Rest, 0, 0,
+						  F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_SearchByRegionResp(Rest, 0, 0, F@_1,
+					       TrUserData);
+	    1 ->
+		skip_64_SearchByRegionResp(Rest, 0, 0, F@_1,
+					   TrUserData);
+	    2 ->
+		skip_length_delimited_SearchByRegionResp(Rest, 0, 0,
+							 F@_1, TrUserData);
+	    3 ->
+		skip_group_SearchByRegionResp(Rest, Key bsr 3, 0, F@_1,
+					      TrUserData);
+	    5 ->
+		skip_32_SearchByRegionResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_SearchByRegionResp(<<>>, 0, 0, F@_1,
+				     _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_SearchByRegionResp_success(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_SearchByRegionResp_success(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+d_field_SearchByRegionResp_success(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_SearchByRegionResp(RestF, 0, 0,
+					  {success, NewFValue}, TrUserData).
+
+d_field_SearchByRegionResp_error_reason(<<1:1, X:7,
+					  Rest/binary>>,
+					N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_SearchByRegionResp_error_reason(Rest, N + 7,
+					    X bsl N + Acc, F@_1, TrUserData);
+d_field_SearchByRegionResp_error_reason(<<0:1, X:7,
+					  Rest/binary>>,
+					N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_SearchByRegionResp(RestF, 0, 0,
+					  {error_reason, NewFValue},
+					  TrUserData).
+
+skip_varint_SearchByRegionResp(<<1:1, _:7,
+				 Rest/binary>>,
+			       Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_SearchByRegionResp(Rest, Z1, Z2, F@_1,
+				   TrUserData);
+skip_varint_SearchByRegionResp(<<0:1, _:7,
+				 Rest/binary>>,
+			       Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByRegionResp(Rest, Z1, Z2,
+					  F@_1, TrUserData).
+
+skip_length_delimited_SearchByRegionResp(<<1:1, X:7,
+					   Rest/binary>>,
+					 N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_SearchByRegionResp(Rest, N + 7,
+					     X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_SearchByRegionResp(<<0:1, X:7,
+					   Rest/binary>>,
+					 N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_SearchByRegionResp(Rest2, 0, 0, F@_1,
+					  TrUserData).
+
+skip_group_SearchByRegionResp(Bin, FNum, Z2, F@_1,
+			      TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_SearchByRegionResp(Rest, 0, Z2, F@_1,
+					  TrUserData).
+
+skip_32_SearchByRegionResp(<<_:32, Rest/binary>>, Z1,
+			   Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByRegionResp(Rest, Z1, Z2,
+					  F@_1, TrUserData).
+
+skip_64_SearchByRegionResp(<<_:64, Rest/binary>>, Z1,
+			   Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_SearchByRegionResp(Rest, Z1, Z2,
+					  F@_1, TrUserData).
+
+d_msg_StoreBuyNowResp(Bin, TrUserData) ->
+    dfp_read_field_def_StoreBuyNowResp(Bin, 0, 0,
+				       id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_StoreBuyNowResp(<<10, Rest/binary>>,
+				   Z1, Z2, F@_1, TrUserData) ->
+    d_field_StoreBuyNowResp_buy_now_id(Rest, Z1, Z2, F@_1,
+				       TrUserData);
+dfp_read_field_def_StoreBuyNowResp(<<16, Rest/binary>>,
+				   Z1, Z2, F@_1, TrUserData) ->
+    d_field_StoreBuyNowResp_error_reason(Rest, Z1, Z2, F@_1,
+					 TrUserData);
+dfp_read_field_def_StoreBuyNowResp(<<>>, 0, 0, F@_1,
+				   _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_StoreBuyNowResp(Other, Z1, Z2, F@_1,
+				   TrUserData) ->
+    dg_read_field_def_StoreBuyNowResp(Other, Z1, Z2, F@_1,
+				      TrUserData).
+
+dg_read_field_def_StoreBuyNowResp(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_StoreBuyNowResp(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_StoreBuyNowResp(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_StoreBuyNowResp_buy_now_id(Rest, 0, 0, F@_1,
+					     TrUserData);
+      16 ->
+	  d_field_StoreBuyNowResp_error_reason(Rest, 0, 0, F@_1,
+					       TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_StoreBuyNowResp(Rest, 0, 0, F@_1,
+					    TrUserData);
+	    1 ->
+		skip_64_StoreBuyNowResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_StoreBuyNowResp(Rest, 0, 0, F@_1,
+						      TrUserData);
+	    3 ->
+		skip_group_StoreBuyNowResp(Rest, Key bsr 3, 0, F@_1,
+					   TrUserData);
+	    5 ->
+		skip_32_StoreBuyNowResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_StoreBuyNowResp(<<>>, 0, 0, F@_1,
+				  _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_StoreBuyNowResp_buy_now_id(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_StoreBuyNowResp_buy_now_id(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+d_field_StoreBuyNowResp_buy_now_id(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreBuyNowResp(RestF, 0, 0,
+				       {buy_now_id, NewFValue}, TrUserData).
+
+d_field_StoreBuyNowResp_error_reason(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_StoreBuyNowResp_error_reason(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+d_field_StoreBuyNowResp_error_reason(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_StoreBuyNowResp(RestF, 0, 0,
+				       {error_reason, NewFValue}, TrUserData).
+
+skip_varint_StoreBuyNowResp(<<1:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
+				TrUserData);
+skip_varint_StoreBuyNowResp(<<0:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
+				       TrUserData).
+
+skip_length_delimited_StoreBuyNowResp(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_StoreBuyNowResp(Rest, N + 7,
+					  X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_StoreBuyNowResp(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StoreBuyNowResp(Rest2, 0, 0, F@_1,
+				       TrUserData).
+
+skip_group_StoreBuyNowResp(Bin, FNum, Z2, F@_1,
+			   TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StoreBuyNowResp(Rest, 0, Z2, F@_1,
+				       TrUserData).
+
+skip_32_StoreBuyNowResp(<<_:32, Rest/binary>>, Z1, Z2,
+			F@_1, TrUserData) ->
+    dfp_read_field_def_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
+				       TrUserData).
+
+skip_64_StoreBuyNowResp(<<_:64, Rest/binary>>, Z1, Z2,
+			F@_1, TrUserData) ->
+    dfp_read_field_def_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
+				       TrUserData).
+
+d_msg_StoreItemResp(Bin, TrUserData) ->
+    dfp_read_field_def_StoreItemResp(Bin, 0, 0,
+				     id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_StoreItemResp(<<10, Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    d_field_StoreItemResp_item_id(Rest, Z1, Z2, F@_1,
+				  TrUserData);
+dfp_read_field_def_StoreItemResp(<<16, Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    d_field_StoreItemResp_error_reason(Rest, Z1, Z2, F@_1,
+				       TrUserData);
+dfp_read_field_def_StoreItemResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_StoreItemResp(Other, Z1, Z2, F@_1,
+				 TrUserData) ->
+    dg_read_field_def_StoreItemResp(Other, Z1, Z2, F@_1,
+				    TrUserData).
+
+dg_read_field_def_StoreItemResp(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_StoreItemResp(Rest, N + 7,
+				    X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_StoreItemResp(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_StoreItemResp_item_id(Rest, 0, 0, F@_1,
+					TrUserData);
+      16 ->
+	  d_field_StoreItemResp_error_reason(Rest, 0, 0, F@_1,
+					     TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_StoreItemResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 ->
+		skip_64_StoreItemResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_StoreItemResp(Rest, 0, 0, F@_1,
+						    TrUserData);
+	    3 ->
+		skip_group_StoreItemResp(Rest, Key bsr 3, 0, F@_1,
+					 TrUserData);
+	    5 -> skip_32_StoreItemResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_StoreItemResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_StoreItemResp_item_id(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_StoreItemResp_item_id(Rest, N + 7,
+				  X bsl N + Acc, F@_1, TrUserData);
+d_field_StoreItemResp_item_id(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreItemResp(RestF, 0, 0,
+				     {item_id, NewFValue}, TrUserData).
+
+d_field_StoreItemResp_error_reason(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_StoreItemResp_error_reason(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+d_field_StoreItemResp_error_reason(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_StoreItemResp(RestF, 0, 0,
+				     {error_reason, NewFValue}, TrUserData).
+
+skip_varint_StoreItemResp(<<1:1, _:7, Rest/binary>>, Z1,
+			  Z2, F@_1, TrUserData) ->
+    skip_varint_StoreItemResp(Rest, Z1, Z2, F@_1,
+			      TrUserData);
+skip_varint_StoreItemResp(<<0:1, _:7, Rest/binary>>, Z1,
+			  Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_StoreItemResp(Rest, Z1, Z2, F@_1,
+				     TrUserData).
+
+skip_length_delimited_StoreItemResp(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_StoreItemResp(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_StoreItemResp(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StoreItemResp(Rest2, 0, 0, F@_1,
+				     TrUserData).
+
+skip_group_StoreItemResp(Bin, FNum, Z2, F@_1,
+			 TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StoreItemResp(Rest, 0, Z2, F@_1,
+				     TrUserData).
+
+skip_32_StoreItemResp(<<_:32, Rest/binary>>, Z1, Z2,
+		      F@_1, TrUserData) ->
+    dfp_read_field_def_StoreItemResp(Rest, Z1, Z2, F@_1,
+				     TrUserData).
+
+skip_64_StoreItemResp(<<_:64, Rest/binary>>, Z1, Z2,
+		      F@_1, TrUserData) ->
+    dfp_read_field_def_StoreItemResp(Rest, Z1, Z2, F@_1,
+				     TrUserData).
+
+d_msg_StoreBidResp(Bin, TrUserData) ->
+    dfp_read_field_def_StoreBidResp(Bin, 0, 0,
+				    id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_StoreBidResp(<<10, Rest/binary>>, Z1,
+				Z2, F@_1, TrUserData) ->
+    d_field_StoreBidResp_bid_id(Rest, Z1, Z2, F@_1,
+				TrUserData);
+dfp_read_field_def_StoreBidResp(<<16, Rest/binary>>, Z1,
+				Z2, F@_1, TrUserData) ->
+    d_field_StoreBidResp_error_reason(Rest, Z1, Z2, F@_1,
+				      TrUserData);
+dfp_read_field_def_StoreBidResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_StoreBidResp(Other, Z1, Z2, F@_1,
+				TrUserData) ->
+    dg_read_field_def_StoreBidResp(Other, Z1, Z2, F@_1,
+				   TrUserData).
+
+dg_read_field_def_StoreBidResp(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_StoreBidResp(Rest, N + 7,
+				   X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_StoreBidResp(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_StoreBidResp_bid_id(Rest, 0, 0, F@_1,
+				      TrUserData);
+      16 ->
+	  d_field_StoreBidResp_error_reason(Rest, 0, 0, F@_1,
+					    TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_StoreBidResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_StoreBidResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_StoreBidResp(Rest, 0, 0, F@_1,
+						   TrUserData);
+	    3 ->
+		skip_group_StoreBidResp(Rest, Key bsr 3, 0, F@_1,
+					TrUserData);
+	    5 -> skip_32_StoreBidResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_StoreBidResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_StoreBidResp_bid_id(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_StoreBidResp_bid_id(Rest, N + 7, X bsl N + Acc,
+				F@_1, TrUserData);
+d_field_StoreBidResp_bid_id(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreBidResp(RestF, 0, 0,
+				    {bid_id, NewFValue}, TrUserData).
+
+d_field_StoreBidResp_error_reason(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_StoreBidResp_error_reason(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+d_field_StoreBidResp_error_reason(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_StoreBidResp(RestF, 0, 0,
+				    {error_reason, NewFValue}, TrUserData).
+
+skip_varint_StoreBidResp(<<1:1, _:7, Rest/binary>>, Z1,
+			 Z2, F@_1, TrUserData) ->
+    skip_varint_StoreBidResp(Rest, Z1, Z2, F@_1,
+			     TrUserData);
+skip_varint_StoreBidResp(<<0:1, _:7, Rest/binary>>, Z1,
+			 Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_StoreBidResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+skip_length_delimited_StoreBidResp(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_StoreBidResp(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_StoreBidResp(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StoreBidResp(Rest2, 0, 0, F@_1,
+				    TrUserData).
+
+skip_group_StoreBidResp(Bin, FNum, Z2, F@_1,
+			TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StoreBidResp(Rest, 0, Z2, F@_1,
+				    TrUserData).
+
+skip_32_StoreBidResp(<<_:32, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_StoreBidResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+skip_64_StoreBidResp(<<_:64, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_StoreBidResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+d_msg_ViewItemResp(Bin, TrUserData) ->
+    dfp_read_field_def_ViewItemResp(Bin, 0, 0,
+				    id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_ViewItemResp(<<8, Rest/binary>>, Z1,
+				Z2, F@_1, TrUserData) ->
+    d_field_ViewItemResp_success(Rest, Z1, Z2, F@_1,
+				 TrUserData);
+dfp_read_field_def_ViewItemResp(<<16, Rest/binary>>, Z1,
+				Z2, F@_1, TrUserData) ->
+    d_field_ViewItemResp_error_reason(Rest, Z1, Z2, F@_1,
+				      TrUserData);
+dfp_read_field_def_ViewItemResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_ViewItemResp(Other, Z1, Z2, F@_1,
+				TrUserData) ->
+    dg_read_field_def_ViewItemResp(Other, Z1, Z2, F@_1,
+				   TrUserData).
+
+dg_read_field_def_ViewItemResp(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ViewItemResp(Rest, N + 7,
+				   X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_ViewItemResp(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_ViewItemResp_success(Rest, 0, 0, F@_1,
+				       TrUserData);
+      16 ->
+	  d_field_ViewItemResp_error_reason(Rest, 0, 0, F@_1,
+					    TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ViewItemResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_ViewItemResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_ViewItemResp(Rest, 0, 0, F@_1,
+						   TrUserData);
+	    3 ->
+		skip_group_ViewItemResp(Rest, Key bsr 3, 0, F@_1,
+					TrUserData);
+	    5 -> skip_32_ViewItemResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_ViewItemResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_ViewItemResp_success(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewItemResp_success(Rest, N + 7, X bsl N + Acc,
+				 F@_1, TrUserData);
+d_field_ViewItemResp_success(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_ViewItemResp(RestF, 0, 0,
+				    {success, NewFValue}, TrUserData).
+
+d_field_ViewItemResp_error_reason(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewItemResp_error_reason(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+d_field_ViewItemResp_error_reason(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_ViewItemResp(RestF, 0, 0,
+				    {error_reason, NewFValue}, TrUserData).
+
+skip_varint_ViewItemResp(<<1:1, _:7, Rest/binary>>, Z1,
+			 Z2, F@_1, TrUserData) ->
+    skip_varint_ViewItemResp(Rest, Z1, Z2, F@_1,
+			     TrUserData);
+skip_varint_ViewItemResp(<<0:1, _:7, Rest/binary>>, Z1,
+			 Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+skip_length_delimited_ViewItemResp(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ViewItemResp(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ViewItemResp(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ViewItemResp(Rest2, 0, 0, F@_1,
+				    TrUserData).
+
+skip_group_ViewItemResp(Bin, FNum, Z2, F@_1,
+			TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ViewItemResp(Rest, 0, Z2, F@_1,
+				    TrUserData).
+
+skip_32_ViewItemResp(<<_:32, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+skip_64_ViewItemResp(<<_:64, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemResp(Rest, Z1, Z2, F@_1,
+				    TrUserData).
+
+d_msg_PutRegionResp(Bin, TrUserData) ->
+    dfp_read_field_def_PutRegionResp(Bin, 0, 0,
+				     id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_PutRegionResp(<<10, Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    d_field_PutRegionResp_region_id(Rest, Z1, Z2, F@_1,
+				    TrUserData);
+dfp_read_field_def_PutRegionResp(<<16, Rest/binary>>,
+				 Z1, Z2, F@_1, TrUserData) ->
+    d_field_PutRegionResp_error_reason(Rest, Z1, Z2, F@_1,
+				       TrUserData);
+dfp_read_field_def_PutRegionResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_PutRegionResp(Other, Z1, Z2, F@_1,
+				 TrUserData) ->
+    dg_read_field_def_PutRegionResp(Other, Z1, Z2, F@_1,
+				    TrUserData).
+
+dg_read_field_def_PutRegionResp(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_PutRegionResp(Rest, N + 7,
+				    X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_PutRegionResp(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_PutRegionResp_region_id(Rest, 0, 0, F@_1,
+					  TrUserData);
+      16 ->
+	  d_field_PutRegionResp_error_reason(Rest, 0, 0, F@_1,
+					     TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_PutRegionResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 ->
+		skip_64_PutRegionResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_PutRegionResp(Rest, 0, 0, F@_1,
+						    TrUserData);
+	    3 ->
+		skip_group_PutRegionResp(Rest, Key bsr 3, 0, F@_1,
+					 TrUserData);
+	    5 -> skip_32_PutRegionResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_PutRegionResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_PutRegionResp_region_id(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_PutRegionResp_region_id(Rest, N + 7,
+				    X bsl N + Acc, F@_1, TrUserData);
+d_field_PutRegionResp_region_id(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_PutRegionResp(RestF, 0, 0,
+				     {region_id, NewFValue}, TrUserData).
+
+d_field_PutRegionResp_error_reason(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_PutRegionResp_error_reason(Rest, N + 7,
+				       X bsl N + Acc, F@_1, TrUserData);
+d_field_PutRegionResp_error_reason(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_PutRegionResp(RestF, 0, 0,
+				     {error_reason, NewFValue}, TrUserData).
+
+skip_varint_PutRegionResp(<<1:1, _:7, Rest/binary>>, Z1,
+			  Z2, F@_1, TrUserData) ->
+    skip_varint_PutRegionResp(Rest, Z1, Z2, F@_1,
+			      TrUserData);
+skip_varint_PutRegionResp(<<0:1, _:7, Rest/binary>>, Z1,
+			  Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_PutRegionResp(Rest, Z1, Z2, F@_1,
+				     TrUserData).
+
+skip_length_delimited_PutRegionResp(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_PutRegionResp(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_PutRegionResp(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PutRegionResp(Rest2, 0, 0, F@_1,
+				     TrUserData).
+
+skip_group_PutRegionResp(Bin, FNum, Z2, F@_1,
+			 TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PutRegionResp(Rest, 0, Z2, F@_1,
+				     TrUserData).
+
+skip_32_PutRegionResp(<<_:32, Rest/binary>>, Z1, Z2,
+		      F@_1, TrUserData) ->
+    dfp_read_field_def_PutRegionResp(Rest, Z1, Z2, F@_1,
+				     TrUserData).
+
+skip_64_PutRegionResp(<<_:64, Rest/binary>>, Z1, Z2,
+		      F@_1, TrUserData) ->
+    dfp_read_field_def_PutRegionResp(Rest, Z1, Z2, F@_1,
+				     TrUserData).
+
+d_msg_ViewItem(Bin, TrUserData) ->
+    dfp_read_field_def_ViewItem(Bin, 0, 0,
+				id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_ViewItem(<<10, Rest/binary>>, Z1, Z2,
+			    F@_1, TrUserData) ->
+    d_field_ViewItem_item_id(Rest, Z1, Z2, F@_1,
+			     TrUserData);
+dfp_read_field_def_ViewItem(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{item_id => F@_1}
+    end;
+dfp_read_field_def_ViewItem(Other, Z1, Z2, F@_1,
+			    TrUserData) ->
+    dg_read_field_def_ViewItem(Other, Z1, Z2, F@_1,
+			       TrUserData).
+
+dg_read_field_def_ViewItem(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ViewItem(Rest, N + 7, X bsl N + Acc,
+			       F@_1, TrUserData);
+dg_read_field_def_ViewItem(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_ViewItem_item_id(Rest, 0, 0, F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_ViewItem(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_ViewItem(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_ViewItem(Rest, 0, 0, F@_1,
+					       TrUserData);
+	    3 ->
+		skip_group_ViewItem(Rest, Key bsr 3, 0, F@_1,
+				    TrUserData);
+	    5 -> skip_32_ViewItem(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_ViewItem(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{item_id => F@_1}
+    end.
+
+d_field_ViewItem_item_id(<<1:1, X:7, Rest/binary>>, N,
+			 Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewItem_item_id(Rest, N + 7, X bsl N + Acc,
+			     F@_1, TrUserData);
+d_field_ViewItem_item_id(<<0:1, X:7, Rest/binary>>, N,
+			 Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_ViewItem(RestF, 0, 0, NewFValue,
+				TrUserData).
+
+skip_varint_ViewItem(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    skip_varint_ViewItem(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_ViewItem(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItem(Rest, Z1, Z2, F@_1,
+				TrUserData).
+
+skip_length_delimited_ViewItem(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ViewItem(Rest, N + 7,
+				   X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ViewItem(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ViewItem(Rest2, 0, 0, F@_1,
+				TrUserData).
+
+skip_group_ViewItem(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ViewItem(Rest, 0, Z2, F@_1,
+				TrUserData).
+
+skip_32_ViewItem(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		 TrUserData) ->
+    dfp_read_field_def_ViewItem(Rest, Z1, Z2, F@_1,
+				TrUserData).
+
+skip_64_ViewItem(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		 TrUserData) ->
+    dfp_read_field_def_ViewItem(Rest, Z1, Z2, F@_1,
+				TrUserData).
+
+d_msg_ViewItemBidHistResp(Bin, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHistResp(Bin, 0, 0,
+					   id('$undef', TrUserData),
+					   TrUserData).
+
+dfp_read_field_def_ViewItemBidHistResp(<<8,
+					 Rest/binary>>,
+				       Z1, Z2, F@_1, TrUserData) ->
+    d_field_ViewItemBidHistResp_success(Rest, Z1, Z2, F@_1,
+					TrUserData);
+dfp_read_field_def_ViewItemBidHistResp(<<16,
+					 Rest/binary>>,
+				       Z1, Z2, F@_1, TrUserData) ->
+    d_field_ViewItemBidHistResp_error_reason(Rest, Z1, Z2,
+					     F@_1, TrUserData);
+dfp_read_field_def_ViewItemBidHistResp(<<>>, 0, 0, F@_1,
+				       _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_ViewItemBidHistResp(Other, Z1, Z2,
+				       F@_1, TrUserData) ->
+    dg_read_field_def_ViewItemBidHistResp(Other, Z1, Z2,
+					  F@_1, TrUserData).
+
+dg_read_field_def_ViewItemBidHistResp(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ViewItemBidHistResp(Rest, N + 7,
+					  X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_ViewItemBidHistResp(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_ViewItemBidHistResp_success(Rest, 0, 0, F@_1,
+					      TrUserData);
+      16 ->
+	  d_field_ViewItemBidHistResp_error_reason(Rest, 0, 0,
+						   F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ViewItemBidHistResp(Rest, 0, 0, F@_1,
+						TrUserData);
+	    1 ->
+		skip_64_ViewItemBidHistResp(Rest, 0, 0, F@_1,
+					    TrUserData);
+	    2 ->
+		skip_length_delimited_ViewItemBidHistResp(Rest, 0, 0,
+							  F@_1, TrUserData);
+	    3 ->
+		skip_group_ViewItemBidHistResp(Rest, Key bsr 3, 0, F@_1,
+					       TrUserData);
+	    5 ->
+		skip_32_ViewItemBidHistResp(Rest, 0, 0, F@_1,
+					    TrUserData)
+	  end
+    end;
+dg_read_field_def_ViewItemBidHistResp(<<>>, 0, 0, F@_1,
+				      _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_ViewItemBidHistResp_success(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewItemBidHistResp_success(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+d_field_ViewItemBidHistResp_success(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_ViewItemBidHistResp(RestF, 0, 0,
+					   {success, NewFValue}, TrUserData).
+
+d_field_ViewItemBidHistResp_error_reason(<<1:1, X:7,
+					   Rest/binary>>,
+					 N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ViewItemBidHistResp_error_reason(Rest, N + 7,
+					     X bsl N + Acc, F@_1, TrUserData);
+d_field_ViewItemBidHistResp_error_reason(<<0:1, X:7,
+					   Rest/binary>>,
+					 N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_ViewItemBidHistResp(RestF, 0, 0,
+					   {error_reason, NewFValue},
+					   TrUserData).
+
+skip_varint_ViewItemBidHistResp(<<1:1, _:7,
+				  Rest/binary>>,
+				Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_ViewItemBidHistResp(Rest, Z1, Z2, F@_1,
+				    TrUserData);
+skip_varint_ViewItemBidHistResp(<<0:1, _:7,
+				  Rest/binary>>,
+				Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHistResp(Rest, Z1, Z2,
+					   F@_1, TrUserData).
+
+skip_length_delimited_ViewItemBidHistResp(<<1:1, X:7,
+					    Rest/binary>>,
+					  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ViewItemBidHistResp(Rest, N + 7,
+					      X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ViewItemBidHistResp(<<0:1, X:7,
+					    Rest/binary>>,
+					  N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ViewItemBidHistResp(Rest2, 0, 0,
+					   F@_1, TrUserData).
+
+skip_group_ViewItemBidHistResp(Bin, FNum, Z2, F@_1,
+			       TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ViewItemBidHistResp(Rest, 0, Z2,
+					   F@_1, TrUserData).
+
+skip_32_ViewItemBidHistResp(<<_:32, Rest/binary>>, Z1,
+			    Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHistResp(Rest, Z1, Z2,
+					   F@_1, TrUserData).
+
+skip_64_ViewItemBidHistResp(<<_:64, Rest/binary>>, Z1,
+			    Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ViewItemBidHistResp(Rest, Z1, Z2,
+					   F@_1, TrUserData).
 
 d_msg_RegisterUser(Bin, TrUserData) ->
     dfp_read_field_def_RegisterUser(Bin, 0, 0,
@@ -7901,1235 +4165,1248 @@ skip_64_BrowseRegions(<<_:64, Rest/binary>>, Z1, Z2,
     dfp_read_field_def_BrowseRegions(Rest, Z1, Z2,
 				     TrUserData).
 
-'d_msg_AboutMeResp.Wrap'(Bin, TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.Wrap'(Bin, 0, 0,
-					  id(<<>>, TrUserData),
-					  id(0, TrUserData), id([], TrUserData),
-					  id([], TrUserData),
-					  id([], TrUserData),
-					  id([], TrUserData), TrUserData).
+d_msg_PutCategoryResp(Bin, TrUserData) ->
+    dfp_read_field_def_PutCategoryResp(Bin, 0, 0,
+				       id('$undef', TrUserData), TrUserData).
 
-'dfp_read_field_def_AboutMeResp.Wrap'(<<10,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    'd_field_AboutMeResp.Wrap_username'(Rest, Z1, Z2, F@_1,
-					F@_2, F@_3, F@_4, F@_5, F@_6,
-					TrUserData);
-'dfp_read_field_def_AboutMeResp.Wrap'(<<21,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    'd_field_AboutMeResp.Wrap_rating'(Rest, Z1, Z2, F@_1,
-				      F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
-'dfp_read_field_def_AboutMeResp.Wrap'(<<26,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    'd_field_AboutMeResp.Wrap_sold_items'(Rest, Z1, Z2,
-					  F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData);
-'dfp_read_field_def_AboutMeResp.Wrap'(<<34,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    'd_field_AboutMeResp.Wrap_bought_items'(Rest, Z1, Z2,
-					    F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					    TrUserData);
-'dfp_read_field_def_AboutMeResp.Wrap'(<<42,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    'd_field_AboutMeResp.Wrap_placed_bids'(Rest, Z1, Z2,
-					   F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					   TrUserData);
-'dfp_read_field_def_AboutMeResp.Wrap'(<<50,
-					Rest/binary>>,
-				      Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    'd_field_AboutMeResp.Wrap_authored_comments'(Rest, Z1,
-						 Z2, F@_1, F@_2, F@_3, F@_4,
-						 F@_5, F@_6, TrUserData);
-'dfp_read_field_def_AboutMeResp.Wrap'(<<>>, 0, 0, F@_1,
-				      F@_2, R1, R2, R3, R4, TrUserData) ->
-    S1 = #{sold_items => lists_reverse(R1, TrUserData),
-	   bought_items => lists_reverse(R2, TrUserData),
-	   placed_bids => lists_reverse(R3, TrUserData),
-	   authored_comments => lists_reverse(R4, TrUserData)},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{username => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{rating => F@_2}
-    end;
-'dfp_read_field_def_AboutMeResp.Wrap'(Other, Z1, Z2,
-				      F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-				      TrUserData) ->
-    'dg_read_field_def_AboutMeResp.Wrap'(Other, Z1, Z2,
-					 F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					 TrUserData).
-
-'dg_read_field_def_AboutMeResp.Wrap'(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-				     TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_AboutMeResp.Wrap'(Rest, N + 7,
-					 X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
-					 F@_5, F@_6, TrUserData);
-'dg_read_field_def_AboutMeResp.Wrap'(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-				     TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_AboutMeResp.Wrap_username'(Rest, 0, 0, F@_1,
-					      F@_2, F@_3, F@_4, F@_5, F@_6,
-					      TrUserData);
-      21 ->
-	  'd_field_AboutMeResp.Wrap_rating'(Rest, 0, 0, F@_1,
-					    F@_2, F@_3, F@_4, F@_5, F@_6,
-					    TrUserData);
-      26 ->
-	  'd_field_AboutMeResp.Wrap_sold_items'(Rest, 0, 0, F@_1,
-						F@_2, F@_3, F@_4, F@_5, F@_6,
-						TrUserData);
-      34 ->
-	  'd_field_AboutMeResp.Wrap_bought_items'(Rest, 0, 0,
-						  F@_1, F@_2, F@_3, F@_4, F@_5,
-						  F@_6, TrUserData);
-      42 ->
-	  'd_field_AboutMeResp.Wrap_placed_bids'(Rest, 0, 0, F@_1,
-						 F@_2, F@_3, F@_4, F@_5, F@_6,
-						 TrUserData);
-      50 ->
-	  'd_field_AboutMeResp.Wrap_authored_comments'(Rest, 0, 0,
-						       F@_1, F@_2, F@_3, F@_4,
-						       F@_5, F@_6, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_AboutMeResp.Wrap'(Rest, 0, 0, F@_1, F@_2,
-					       F@_3, F@_4, F@_5, F@_6,
-					       TrUserData);
-	    1 ->
-		'skip_64_AboutMeResp.Wrap'(Rest, 0, 0, F@_1, F@_2, F@_3,
-					   F@_4, F@_5, F@_6, TrUserData);
-	    2 ->
-		'skip_length_delimited_AboutMeResp.Wrap'(Rest, 0, 0,
-							 F@_1, F@_2, F@_3, F@_4,
-							 F@_5, F@_6,
-							 TrUserData);
-	    3 ->
-		'skip_group_AboutMeResp.Wrap'(Rest, Key bsr 3, 0, F@_1,
-					      F@_2, F@_3, F@_4, F@_5, F@_6,
-					      TrUserData);
-	    5 ->
-		'skip_32_AboutMeResp.Wrap'(Rest, 0, 0, F@_1, F@_2, F@_3,
-					   F@_4, F@_5, F@_6, TrUserData)
-	  end
-    end;
-'dg_read_field_def_AboutMeResp.Wrap'(<<>>, 0, 0, F@_1,
-				     F@_2, R1, R2, R3, R4, TrUserData) ->
-    S1 = #{sold_items => lists_reverse(R1, TrUserData),
-	   bought_items => lists_reverse(R2, TrUserData),
-	   placed_bids => lists_reverse(R3, TrUserData),
-	   authored_comments => lists_reverse(R4, TrUserData)},
-    S2 = if F@_1 == '$undef' -> S1;
-	    true -> S1#{username => F@_1}
-	 end,
-    if F@_2 == '$undef' -> S2;
-       true -> S2#{rating => F@_2}
-    end.
-
-'d_field_AboutMeResp.Wrap_username'(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-				    TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.Wrap_username'(Rest, N + 7,
-					X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
-					F@_5, F@_6, TrUserData);
-'d_field_AboutMeResp.Wrap_username'(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, _, F@_2, F@_3, F@_4, F@_5, F@_6,
-				    TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.Wrap'(RestF, 0, 0,
-					  NewFValue, F@_2, F@_3, F@_4, F@_5,
-					  F@_6, TrUserData).
-
-'d_field_AboutMeResp.Wrap_rating'(<<Value:32/little-signed,
-				    Rest/binary>>,
-				  Z1, Z2, F@_1, _, F@_3, F@_4, F@_5, F@_6,
-				  TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.Wrap'(Rest, Z1, Z2,
-					  F@_1, Value, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData).
-
-'d_field_AboutMeResp.Wrap_sold_items'(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				      F@_6, TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.Wrap_sold_items'(Rest, N + 7,
-					  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
-					  F@_5, F@_6, TrUserData);
-'d_field_AboutMeResp.Wrap_sold_items'(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, F@_2, Prev, F@_4, F@_5,
-				      F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_Item(Bs, TrUserData), TrUserData), Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.Wrap'(RestF, 0, 0, F@_1,
-					  F@_2,
-					  cons(NewFValue, Prev, TrUserData),
-					  F@_4, F@_5, F@_6, TrUserData).
-
-'d_field_AboutMeResp.Wrap_bought_items'(<<1:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-					F@_6, TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.Wrap_bought_items'(Rest, N + 7,
-					    X bsl N + Acc, F@_1, F@_2, F@_3,
-					    F@_4, F@_5, F@_6, TrUserData);
-'d_field_AboutMeResp.Wrap_bought_items'(<<0:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, F@_2, F@_3, Prev, F@_5,
-					F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_AboutMeResp.BuyNowInfo'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.Wrap'(RestF, 0, 0, F@_1,
-					  F@_2, F@_3,
-					  cons(NewFValue, Prev, TrUserData),
-					  F@_5, F@_6, TrUserData).
-
-'d_field_AboutMeResp.Wrap_placed_bids'(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-				       F@_6, TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.Wrap_placed_bids'(Rest, N + 7,
-					   X bsl N + Acc, F@_1, F@_2, F@_3,
-					   F@_4, F@_5, F@_6, TrUserData);
-'d_field_AboutMeResp.Wrap_placed_bids'(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, F@_2, F@_3, F@_4, Prev,
-				       F@_6, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_AboutMeResp.AboutMeBid'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.Wrap'(RestF, 0, 0, F@_1,
-					  F@_2, F@_3, F@_4,
-					  cons(NewFValue, Prev, TrUserData),
-					  F@_6, TrUserData).
-
-'d_field_AboutMeResp.Wrap_authored_comments'(<<1:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, F@_3, F@_4,
-					     F@_5, F@_6, TrUserData)
-    when N < 57 ->
-    'd_field_AboutMeResp.Wrap_authored_comments'(Rest,
-						 N + 7, X bsl N + Acc, F@_1,
-						 F@_2, F@_3, F@_4, F@_5, F@_6,
-						 TrUserData);
-'d_field_AboutMeResp.Wrap_authored_comments'(<<0:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, F@_3, F@_4,
-					     F@_5, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id(d_msg_Comment(Bs, TrUserData), TrUserData),
-			    Rest2}
-			 end,
-    'dfp_read_field_def_AboutMeResp.Wrap'(RestF, 0, 0, F@_1,
-					  F@_2, F@_3, F@_4, F@_5,
-					  cons(NewFValue, Prev, TrUserData),
-					  TrUserData).
-
-'skip_varint_AboutMeResp.Wrap'(<<1:1, _:7,
-				 Rest/binary>>,
-			       Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-			       TrUserData) ->
-    'skip_varint_AboutMeResp.Wrap'(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, F@_4, F@_5, F@_6, TrUserData);
-'skip_varint_AboutMeResp.Wrap'(<<0:1, _:7,
-				 Rest/binary>>,
-			       Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-			       TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.Wrap'(Rest, Z1, Z2,
-					  F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData).
-
-'skip_length_delimited_AboutMeResp.Wrap'(<<1:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-					 F@_6, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_AboutMeResp.Wrap'(Rest, N + 7,
-					     X bsl N + Acc, F@_1, F@_2, F@_3,
-					     F@_4, F@_5, F@_6, TrUserData);
-'skip_length_delimited_AboutMeResp.Wrap'(<<0:1, X:7,
-					   Rest/binary>>,
-					 N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
-					 F@_6, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_AboutMeResp.Wrap'(Rest2, 0, 0, F@_1,
-					  F@_2, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData).
-
-'skip_group_AboutMeResp.Wrap'(Bin, FNum, Z2, F@_1, F@_2,
-			      F@_3, F@_4, F@_5, F@_6, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_AboutMeResp.Wrap'(Rest, 0, Z2, F@_1,
-					  F@_2, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData).
-
-'skip_32_AboutMeResp.Wrap'(<<_:32, Rest/binary>>, Z1,
-			   Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-			   TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.Wrap'(Rest, Z1, Z2,
-					  F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData).
-
-'skip_64_AboutMeResp.Wrap'(<<_:64, Rest/binary>>, Z1,
-			   Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-			   TrUserData) ->
-    'dfp_read_field_def_AboutMeResp.Wrap'(Rest, Z1, Z2,
-					  F@_1, F@_2, F@_3, F@_4, F@_5, F@_6,
-					  TrUserData).
-
-d_msg_AboutMeResp(Bin, TrUserData) ->
-    dfp_read_field_def_AboutMeResp(Bin, 0, 0,
-				   id('$undef', TrUserData), TrUserData).
-
-dfp_read_field_def_AboutMeResp(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, TrUserData) ->
-    d_field_AboutMeResp_content(Rest, Z1, Z2, F@_1,
-				TrUserData);
-dfp_read_field_def_AboutMeResp(<<16, Rest/binary>>, Z1,
-			       Z2, F@_1, TrUserData) ->
-    d_field_AboutMeResp_error_reason(Rest, Z1, Z2, F@_1,
-				     TrUserData);
-dfp_read_field_def_AboutMeResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end;
-dfp_read_field_def_AboutMeResp(Other, Z1, Z2, F@_1,
-			       TrUserData) ->
-    dg_read_field_def_AboutMeResp(Other, Z1, Z2, F@_1,
-				  TrUserData).
-
-dg_read_field_def_AboutMeResp(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_AboutMeResp(Rest, N + 7,
-				  X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_AboutMeResp(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_AboutMeResp_content(Rest, 0, 0, F@_1,
-				      TrUserData);
-      16 ->
-	  d_field_AboutMeResp_error_reason(Rest, 0, 0, F@_1,
-					   TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_AboutMeResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_AboutMeResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_AboutMeResp(Rest, 0, 0, F@_1,
-						  TrUserData);
-	    3 ->
-		skip_group_AboutMeResp(Rest, Key bsr 3, 0, F@_1,
-				       TrUserData);
-	    5 -> skip_32_AboutMeResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_AboutMeResp(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_AboutMeResp_content(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_AboutMeResp_content(Rest, N + 7, X bsl N + Acc,
-				F@_1, TrUserData);
-d_field_AboutMeResp_content(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_AboutMeResp.Wrap'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_AboutMeResp(RestF, 0, 0,
-				   case Prev of
-				     '$undef' -> {content, NewFValue};
-				     {content, MVPrev} ->
-					 {content,
-					  'merge_msg_AboutMeResp.Wrap'(MVPrev,
-								       NewFValue,
-								       TrUserData)};
-				     _ -> {content, NewFValue}
-				   end,
-				   TrUserData).
-
-d_field_AboutMeResp_error_reason(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_AboutMeResp_error_reason(Rest, N + 7,
-				     X bsl N + Acc, F@_1, TrUserData);
-d_field_AboutMeResp_error_reason(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_AboutMeResp(RestF, 0, 0,
-				   {error_reason, NewFValue}, TrUserData).
-
-skip_varint_AboutMeResp(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, TrUserData) ->
-    skip_varint_AboutMeResp(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_AboutMeResp(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_AboutMeResp(Rest, Z1, Z2, F@_1,
-				   TrUserData).
-
-skip_length_delimited_AboutMeResp(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_AboutMeResp(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_AboutMeResp(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_AboutMeResp(Rest2, 0, 0, F@_1,
-				   TrUserData).
-
-skip_group_AboutMeResp(Bin, FNum, Z2, F@_1,
-		       TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_AboutMeResp(Rest, 0, Z2, F@_1,
-				   TrUserData).
-
-skip_32_AboutMeResp(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    TrUserData) ->
-    dfp_read_field_def_AboutMeResp(Rest, Z1, Z2, F@_1,
-				   TrUserData).
-
-skip_64_AboutMeResp(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    TrUserData) ->
-    dfp_read_field_def_AboutMeResp(Rest, Z1, Z2, F@_1,
-				   TrUserData).
-
-d_msg_ViewItemBidHist(Bin, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHist(Bin, 0, 0,
-				       id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_ViewItemBidHist(<<10, Rest/binary>>,
+dfp_read_field_def_PutCategoryResp(<<10, Rest/binary>>,
 				   Z1, Z2, F@_1, TrUserData) ->
-    d_field_ViewItemBidHist_item_id(Rest, Z1, Z2, F@_1,
-				    TrUserData);
-dfp_read_field_def_ViewItemBidHist(<<>>, 0, 0, F@_1,
+    d_field_PutCategoryResp_category_id(Rest, Z1, Z2, F@_1,
+					TrUserData);
+dfp_read_field_def_PutCategoryResp(<<16, Rest/binary>>,
+				   Z1, Z2, F@_1, TrUserData) ->
+    d_field_PutCategoryResp_error_reason(Rest, Z1, Z2, F@_1,
+					 TrUserData);
+dfp_read_field_def_PutCategoryResp(<<>>, 0, 0, F@_1,
 				   _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
-       true -> S1#{item_id => F@_1}
+       true -> S1#{resp => F@_1}
     end;
-dfp_read_field_def_ViewItemBidHist(Other, Z1, Z2, F@_1,
+dfp_read_field_def_PutCategoryResp(Other, Z1, Z2, F@_1,
 				   TrUserData) ->
-    dg_read_field_def_ViewItemBidHist(Other, Z1, Z2, F@_1,
+    dg_read_field_def_PutCategoryResp(Other, Z1, Z2, F@_1,
 				      TrUserData).
 
-dg_read_field_def_ViewItemBidHist(<<1:1, X:7,
+dg_read_field_def_PutCategoryResp(<<1:1, X:7,
 				    Rest/binary>>,
 				  N, Acc, F@_1, TrUserData)
     when N < 32 - 7 ->
-    dg_read_field_def_ViewItemBidHist(Rest, N + 7,
+    dg_read_field_def_PutCategoryResp(Rest, N + 7,
 				      X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_ViewItemBidHist(<<0:1, X:7,
+dg_read_field_def_PutCategoryResp(<<0:1, X:7,
 				    Rest/binary>>,
 				  N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_ViewItemBidHist_item_id(Rest, 0, 0, F@_1,
-					  TrUserData);
+	  d_field_PutCategoryResp_category_id(Rest, 0, 0, F@_1,
+					      TrUserData);
+      16 ->
+	  d_field_PutCategoryResp_error_reason(Rest, 0, 0, F@_1,
+					       TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_ViewItemBidHist(Rest, 0, 0, F@_1,
+		skip_varint_PutCategoryResp(Rest, 0, 0, F@_1,
 					    TrUserData);
 	    1 ->
-		skip_64_ViewItemBidHist(Rest, 0, 0, F@_1, TrUserData);
+		skip_64_PutCategoryResp(Rest, 0, 0, F@_1, TrUserData);
 	    2 ->
-		skip_length_delimited_ViewItemBidHist(Rest, 0, 0, F@_1,
+		skip_length_delimited_PutCategoryResp(Rest, 0, 0, F@_1,
 						      TrUserData);
 	    3 ->
-		skip_group_ViewItemBidHist(Rest, Key bsr 3, 0, F@_1,
+		skip_group_PutCategoryResp(Rest, Key bsr 3, 0, F@_1,
 					   TrUserData);
 	    5 ->
-		skip_32_ViewItemBidHist(Rest, 0, 0, F@_1, TrUserData)
+		skip_32_PutCategoryResp(Rest, 0, 0, F@_1, TrUserData)
 	  end
     end;
-dg_read_field_def_ViewItemBidHist(<<>>, 0, 0, F@_1,
+dg_read_field_def_PutCategoryResp(<<>>, 0, 0, F@_1,
 				  _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
-       true -> S1#{item_id => F@_1}
+       true -> S1#{resp => F@_1}
     end.
 
-d_field_ViewItemBidHist_item_id(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData)
+d_field_PutCategoryResp_category_id(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
     when N < 57 ->
-    d_field_ViewItemBidHist_item_id(Rest, N + 7,
-				    X bsl N + Acc, F@_1, TrUserData);
-d_field_ViewItemBidHist_item_id(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, _, TrUserData) ->
+    d_field_PutCategoryResp_category_id(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+d_field_PutCategoryResp_category_id(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {binary:copy(Bytes), Rest2}
 			 end,
-    dfp_read_field_def_ViewItemBidHist(RestF, 0, 0,
-				       NewFValue, TrUserData).
+    dfp_read_field_def_PutCategoryResp(RestF, 0, 0,
+				       {category_id, NewFValue}, TrUserData).
 
-skip_varint_ViewItemBidHist(<<1:1, _:7, Rest/binary>>,
+d_field_PutCategoryResp_error_reason(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_PutCategoryResp_error_reason(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+d_field_PutCategoryResp_error_reason(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_PutCategoryResp(RestF, 0, 0,
+				       {error_reason, NewFValue}, TrUserData).
+
+skip_varint_PutCategoryResp(<<1:1, _:7, Rest/binary>>,
 			    Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+    skip_varint_PutCategoryResp(Rest, Z1, Z2, F@_1,
 				TrUserData);
-skip_varint_ViewItemBidHist(<<0:1, _:7, Rest/binary>>,
+skip_varint_PutCategoryResp(<<0:1, _:7, Rest/binary>>,
 			    Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+    dfp_read_field_def_PutCategoryResp(Rest, Z1, Z2, F@_1,
 				       TrUserData).
 
-skip_length_delimited_ViewItemBidHist(<<1:1, X:7,
+skip_length_delimited_PutCategoryResp(<<1:1, X:7,
 					Rest/binary>>,
 				      N, Acc, F@_1, TrUserData)
     when N < 57 ->
-    skip_length_delimited_ViewItemBidHist(Rest, N + 7,
+    skip_length_delimited_PutCategoryResp(Rest, N + 7,
 					  X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ViewItemBidHist(<<0:1, X:7,
+skip_length_delimited_PutCategoryResp(<<0:1, X:7,
 					Rest/binary>>,
 				      N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ViewItemBidHist(Rest2, 0, 0, F@_1,
+    dfp_read_field_def_PutCategoryResp(Rest2, 0, 0, F@_1,
 				       TrUserData).
 
-skip_group_ViewItemBidHist(Bin, FNum, Z2, F@_1,
+skip_group_PutCategoryResp(Bin, FNum, Z2, F@_1,
 			   TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ViewItemBidHist(Rest, 0, Z2, F@_1,
+    dfp_read_field_def_PutCategoryResp(Rest, 0, Z2, F@_1,
 				       TrUserData).
 
-skip_32_ViewItemBidHist(<<_:32, Rest/binary>>, Z1, Z2,
+skip_32_PutCategoryResp(<<_:32, Rest/binary>>, Z1, Z2,
 			F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+    dfp_read_field_def_PutCategoryResp(Rest, Z1, Z2, F@_1,
 				       TrUserData).
 
-skip_64_ViewItemBidHist(<<_:64, Rest/binary>>, Z1, Z2,
+skip_64_PutCategoryResp(<<_:64, Rest/binary>>, Z1, Z2,
 			F@_1, TrUserData) ->
-    dfp_read_field_def_ViewItemBidHist(Rest, Z1, Z2, F@_1,
+    dfp_read_field_def_PutCategoryResp(Rest, Z1, Z2, F@_1,
 				       TrUserData).
 
-d_msg_RegisterUserResp(Bin, TrUserData) ->
-    dfp_read_field_def_RegisterUserResp(Bin, 0, 0,
+d_msg_AboutMe(Bin, TrUserData) ->
+    dfp_read_field_def_AboutMe(Bin, 0, 0,
+			       id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_AboutMe(<<10, Rest/binary>>, Z1, Z2,
+			   F@_1, TrUserData) ->
+    d_field_AboutMe_user_id(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_AboutMe(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{user_id => F@_1}
+    end;
+dfp_read_field_def_AboutMe(Other, Z1, Z2, F@_1,
+			   TrUserData) ->
+    dg_read_field_def_AboutMe(Other, Z1, Z2, F@_1,
+			      TrUserData).
+
+dg_read_field_def_AboutMe(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_AboutMe(Rest, N + 7, X bsl N + Acc,
+			      F@_1, TrUserData);
+dg_read_field_def_AboutMe(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_AboutMe_user_id(Rest, 0, 0, F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_AboutMe(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_AboutMe(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_AboutMe(Rest, 0, 0, F@_1,
+					      TrUserData);
+	    3 ->
+		skip_group_AboutMe(Rest, Key bsr 3, 0, F@_1,
+				   TrUserData);
+	    5 -> skip_32_AboutMe(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_AboutMe(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{user_id => F@_1}
+    end.
+
+d_field_AboutMe_user_id(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_AboutMe_user_id(Rest, N + 7, X bsl N + Acc,
+			    F@_1, TrUserData);
+d_field_AboutMe_user_id(<<0:1, X:7, Rest/binary>>, N,
+			Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_AboutMe(RestF, 0, 0, NewFValue,
+			       TrUserData).
+
+skip_varint_AboutMe(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		    F@_1, TrUserData) ->
+    skip_varint_AboutMe(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_AboutMe(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		    F@_1, TrUserData) ->
+    dfp_read_field_def_AboutMe(Rest, Z1, Z2, F@_1,
+			       TrUserData).
+
+skip_length_delimited_AboutMe(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_AboutMe(Rest, N + 7,
+				  X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_AboutMe(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_AboutMe(Rest2, 0, 0, F@_1,
+			       TrUserData).
+
+skip_group_AboutMe(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_AboutMe(Rest, 0, Z2, F@_1,
+			       TrUserData).
+
+skip_32_AboutMe(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		TrUserData) ->
+    dfp_read_field_def_AboutMe(Rest, Z1, Z2, F@_1,
+			       TrUserData).
+
+skip_64_AboutMe(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		TrUserData) ->
+    dfp_read_field_def_AboutMe(Rest, Z1, Z2, F@_1,
+			       TrUserData).
+
+d_msg_PutRegion(Bin, TrUserData) ->
+    dfp_read_field_def_PutRegion(Bin, 0, 0,
+				 id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_PutRegion(<<10, Rest/binary>>, Z1,
+			     Z2, F@_1, TrUserData) ->
+    d_field_PutRegion_region_name(Rest, Z1, Z2, F@_1,
+				  TrUserData);
+dfp_read_field_def_PutRegion(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{region_name => F@_1}
+    end;
+dfp_read_field_def_PutRegion(Other, Z1, Z2, F@_1,
+			     TrUserData) ->
+    dg_read_field_def_PutRegion(Other, Z1, Z2, F@_1,
+				TrUserData).
+
+dg_read_field_def_PutRegion(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_PutRegion(Rest, N + 7, X bsl N + Acc,
+				F@_1, TrUserData);
+dg_read_field_def_PutRegion(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_PutRegion_region_name(Rest, 0, 0, F@_1,
+					TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_PutRegion(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_PutRegion(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_PutRegion(Rest, 0, 0, F@_1,
+						TrUserData);
+	    3 ->
+		skip_group_PutRegion(Rest, Key bsr 3, 0, F@_1,
+				     TrUserData);
+	    5 -> skip_32_PutRegion(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_PutRegion(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{region_name => F@_1}
+    end.
+
+d_field_PutRegion_region_name(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_PutRegion_region_name(Rest, N + 7,
+				  X bsl N + Acc, F@_1, TrUserData);
+d_field_PutRegion_region_name(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_PutRegion(RestF, 0, 0, NewFValue,
+				 TrUserData).
+
+skip_varint_PutRegion(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		      F@_1, TrUserData) ->
+    skip_varint_PutRegion(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_PutRegion(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		      F@_1, TrUserData) ->
+    dfp_read_field_def_PutRegion(Rest, Z1, Z2, F@_1,
+				 TrUserData).
+
+skip_length_delimited_PutRegion(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_PutRegion(Rest, N + 7,
+				    X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_PutRegion(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PutRegion(Rest2, 0, 0, F@_1,
+				 TrUserData).
+
+skip_group_PutRegion(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PutRegion(Rest, 0, Z2, F@_1,
+				 TrUserData).
+
+skip_32_PutRegion(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		  TrUserData) ->
+    dfp_read_field_def_PutRegion(Rest, Z1, Z2, F@_1,
+				 TrUserData).
+
+skip_64_PutRegion(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		  TrUserData) ->
+    dfp_read_field_def_PutRegion(Rest, Z1, Z2, F@_1,
+				 TrUserData).
+
+d_msg_StoreBid(Bin, TrUserData) ->
+    dfp_read_field_def_StoreBid(Bin, 0, 0,
+				id(<<>>, TrUserData), id(<<>>, TrUserData),
+				id(0, TrUserData), TrUserData).
+
+dfp_read_field_def_StoreBid(<<10, Rest/binary>>, Z1, Z2,
+			    F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_StoreBid_on_item_id(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, TrUserData);
+dfp_read_field_def_StoreBid(<<18, Rest/binary>>, Z1, Z2,
+			    F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_StoreBid_bidder_id(Rest, Z1, Z2, F@_1, F@_2,
+			       F@_3, TrUserData);
+dfp_read_field_def_StoreBid(<<24, Rest/binary>>, Z1, Z2,
+			    F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_StoreBid_value(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			   TrUserData);
+dfp_read_field_def_StoreBid(<<>>, 0, 0, F@_1, F@_2,
+			    F@_3, _) ->
+    S1 = #{},
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{on_item_id => F@_1}
+	 end,
+    S3 = if F@_2 == '$undef' -> S2;
+	    true -> S2#{bidder_id => F@_2}
+	 end,
+    if F@_3 == '$undef' -> S3;
+       true -> S3#{value => F@_3}
+    end;
+dfp_read_field_def_StoreBid(Other, Z1, Z2, F@_1, F@_2,
+			    F@_3, TrUserData) ->
+    dg_read_field_def_StoreBid(Other, Z1, Z2, F@_1, F@_2,
+			       F@_3, TrUserData).
+
+dg_read_field_def_StoreBid(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_StoreBid(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_StoreBid(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_StoreBid_on_item_id(Rest, 0, 0, F@_1, F@_2,
+				      F@_3, TrUserData);
+      18 ->
+	  d_field_StoreBid_bidder_id(Rest, 0, 0, F@_1, F@_2, F@_3,
+				     TrUserData);
+      24 ->
+	  d_field_StoreBid_value(Rest, 0, 0, F@_1, F@_2, F@_3,
+				 TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_StoreBid(Rest, 0, 0, F@_1, F@_2, F@_3,
+				     TrUserData);
+	    1 ->
+		skip_64_StoreBid(Rest, 0, 0, F@_1, F@_2, F@_3,
+				 TrUserData);
+	    2 ->
+		skip_length_delimited_StoreBid(Rest, 0, 0, F@_1, F@_2,
+					       F@_3, TrUserData);
+	    3 ->
+		skip_group_StoreBid(Rest, Key bsr 3, 0, F@_1, F@_2,
+				    F@_3, TrUserData);
+	    5 ->
+		skip_32_StoreBid(Rest, 0, 0, F@_1, F@_2, F@_3,
+				 TrUserData)
+	  end
+    end;
+dg_read_field_def_StoreBid(<<>>, 0, 0, F@_1, F@_2, F@_3,
+			   _) ->
+    S1 = #{},
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{on_item_id => F@_1}
+	 end,
+    S3 = if F@_2 == '$undef' -> S2;
+	    true -> S2#{bidder_id => F@_2}
+	 end,
+    if F@_3 == '$undef' -> S3;
+       true -> S3#{value => F@_3}
+    end.
+
+d_field_StoreBid_on_item_id(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_StoreBid_on_item_id(Rest, N + 7, X bsl N + Acc,
+				F@_1, F@_2, F@_3, TrUserData);
+d_field_StoreBid_on_item_id(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreBid(RestF, 0, 0, NewFValue,
+				F@_2, F@_3, TrUserData).
+
+d_field_StoreBid_bidder_id(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_StoreBid_bidder_id(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, F@_3, TrUserData);
+d_field_StoreBid_bidder_id(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreBid(RestF, 0, 0, F@_1,
+				NewFValue, F@_3, TrUserData).
+
+d_field_StoreBid_value(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_StoreBid_value(Rest, N + 7, X bsl N + Acc, F@_1,
+			   F@_2, F@_3, TrUserData);
+d_field_StoreBid_value(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_StoreBid(RestF, 0, 0, F@_1, F@_2,
+				NewFValue, TrUserData).
+
+skip_varint_StoreBid(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, F@_2, F@_3, TrUserData) ->
+    skip_varint_StoreBid(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			 TrUserData);
+skip_varint_StoreBid(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_StoreBid(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, TrUserData).
+
+skip_length_delimited_StoreBid(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_StoreBid(Rest, N + 7,
+				   X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+skip_length_delimited_StoreBid(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StoreBid(Rest2, 0, 0, F@_1, F@_2,
+				F@_3, TrUserData).
+
+skip_group_StoreBid(Bin, FNum, Z2, F@_1, F@_2, F@_3,
+		    TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StoreBid(Rest, 0, Z2, F@_1, F@_2,
+				F@_3, TrUserData).
+
+skip_32_StoreBid(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		 F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_StoreBid(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, TrUserData).
+
+skip_64_StoreBid(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		 F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_StoreBid(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, TrUserData).
+
+d_msg_StoreCommentResp(Bin, TrUserData) ->
+    dfp_read_field_def_StoreCommentResp(Bin, 0, 0,
 					id('$undef', TrUserData), TrUserData).
 
-dfp_read_field_def_RegisterUserResp(<<10, Rest/binary>>,
+dfp_read_field_def_StoreCommentResp(<<10, Rest/binary>>,
 				    Z1, Z2, F@_1, TrUserData) ->
-    d_field_RegisterUserResp_user_id(Rest, Z1, Z2, F@_1,
-				     TrUserData);
-dfp_read_field_def_RegisterUserResp(<<16, Rest/binary>>,
+    d_field_StoreCommentResp_comment_id(Rest, Z1, Z2, F@_1,
+					TrUserData);
+dfp_read_field_def_StoreCommentResp(<<16, Rest/binary>>,
 				    Z1, Z2, F@_1, TrUserData) ->
-    d_field_RegisterUserResp_error_reason(Rest, Z1, Z2,
+    d_field_StoreCommentResp_error_reason(Rest, Z1, Z2,
 					  F@_1, TrUserData);
-dfp_read_field_def_RegisterUserResp(<<>>, 0, 0, F@_1,
+dfp_read_field_def_StoreCommentResp(<<>>, 0, 0, F@_1,
 				    _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
        true -> S1#{resp => F@_1}
     end;
-dfp_read_field_def_RegisterUserResp(Other, Z1, Z2, F@_1,
+dfp_read_field_def_StoreCommentResp(Other, Z1, Z2, F@_1,
 				    TrUserData) ->
-    dg_read_field_def_RegisterUserResp(Other, Z1, Z2, F@_1,
+    dg_read_field_def_StoreCommentResp(Other, Z1, Z2, F@_1,
 				       TrUserData).
 
-dg_read_field_def_RegisterUserResp(<<1:1, X:7,
+dg_read_field_def_StoreCommentResp(<<1:1, X:7,
 				     Rest/binary>>,
 				   N, Acc, F@_1, TrUserData)
     when N < 32 - 7 ->
-    dg_read_field_def_RegisterUserResp(Rest, N + 7,
+    dg_read_field_def_StoreCommentResp(Rest, N + 7,
 				       X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_RegisterUserResp(<<0:1, X:7,
+dg_read_field_def_StoreCommentResp(<<0:1, X:7,
 				     Rest/binary>>,
 				   N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_RegisterUserResp_user_id(Rest, 0, 0, F@_1,
-					   TrUserData);
+	  d_field_StoreCommentResp_comment_id(Rest, 0, 0, F@_1,
+					      TrUserData);
       16 ->
-	  d_field_RegisterUserResp_error_reason(Rest, 0, 0, F@_1,
+	  d_field_StoreCommentResp_error_reason(Rest, 0, 0, F@_1,
 						TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_RegisterUserResp(Rest, 0, 0, F@_1,
+		skip_varint_StoreCommentResp(Rest, 0, 0, F@_1,
 					     TrUserData);
 	    1 ->
-		skip_64_RegisterUserResp(Rest, 0, 0, F@_1, TrUserData);
+		skip_64_StoreCommentResp(Rest, 0, 0, F@_1, TrUserData);
 	    2 ->
-		skip_length_delimited_RegisterUserResp(Rest, 0, 0, F@_1,
+		skip_length_delimited_StoreCommentResp(Rest, 0, 0, F@_1,
 						       TrUserData);
 	    3 ->
-		skip_group_RegisterUserResp(Rest, Key bsr 3, 0, F@_1,
+		skip_group_StoreCommentResp(Rest, Key bsr 3, 0, F@_1,
 					    TrUserData);
 	    5 ->
-		skip_32_RegisterUserResp(Rest, 0, 0, F@_1, TrUserData)
+		skip_32_StoreCommentResp(Rest, 0, 0, F@_1, TrUserData)
 	  end
     end;
-dg_read_field_def_RegisterUserResp(<<>>, 0, 0, F@_1,
+dg_read_field_def_StoreCommentResp(<<>>, 0, 0, F@_1,
 				   _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
        true -> S1#{resp => F@_1}
     end.
 
-d_field_RegisterUserResp_user_id(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, TrUserData)
+d_field_StoreCommentResp_comment_id(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
     when N < 57 ->
-    d_field_RegisterUserResp_user_id(Rest, N + 7,
-				     X bsl N + Acc, F@_1, TrUserData);
-d_field_RegisterUserResp_user_id(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, _, TrUserData) ->
+    d_field_StoreCommentResp_comment_id(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+d_field_StoreCommentResp_comment_id(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {binary:copy(Bytes), Rest2}
 			 end,
-    dfp_read_field_def_RegisterUserResp(RestF, 0, 0,
-					{user_id, NewFValue}, TrUserData).
+    dfp_read_field_def_StoreCommentResp(RestF, 0, 0,
+					{comment_id, NewFValue}, TrUserData).
 
-d_field_RegisterUserResp_error_reason(<<1:1, X:7,
+d_field_StoreCommentResp_error_reason(<<1:1, X:7,
 					Rest/binary>>,
 				      N, Acc, F@_1, TrUserData)
     when N < 57 ->
-    d_field_RegisterUserResp_error_reason(Rest, N + 7,
+    d_field_StoreCommentResp_error_reason(Rest, N + 7,
 					  X bsl N + Acc, F@_1, TrUserData);
-d_field_RegisterUserResp_error_reason(<<0:1, X:7,
+d_field_StoreCommentResp_error_reason(<<0:1, X:7,
 					Rest/binary>>,
 				      N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_RegisterUserResp(RestF, 0, 0,
+    dfp_read_field_def_StoreCommentResp(RestF, 0, 0,
 					{error_reason, NewFValue}, TrUserData).
 
-skip_varint_RegisterUserResp(<<1:1, _:7, Rest/binary>>,
+skip_varint_StoreCommentResp(<<1:1, _:7, Rest/binary>>,
 			     Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_RegisterUserResp(Rest, Z1, Z2, F@_1,
+    skip_varint_StoreCommentResp(Rest, Z1, Z2, F@_1,
 				 TrUserData);
-skip_varint_RegisterUserResp(<<0:1, _:7, Rest/binary>>,
+skip_varint_StoreCommentResp(<<0:1, _:7, Rest/binary>>,
 			     Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_RegisterUserResp(Rest, Z1, Z2, F@_1,
+    dfp_read_field_def_StoreCommentResp(Rest, Z1, Z2, F@_1,
 					TrUserData).
 
-skip_length_delimited_RegisterUserResp(<<1:1, X:7,
+skip_length_delimited_StoreCommentResp(<<1:1, X:7,
 					 Rest/binary>>,
 				       N, Acc, F@_1, TrUserData)
     when N < 57 ->
-    skip_length_delimited_RegisterUserResp(Rest, N + 7,
+    skip_length_delimited_StoreCommentResp(Rest, N + 7,
 					   X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_RegisterUserResp(<<0:1, X:7,
+skip_length_delimited_StoreCommentResp(<<0:1, X:7,
 					 Rest/binary>>,
 				       N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_RegisterUserResp(Rest2, 0, 0, F@_1,
+    dfp_read_field_def_StoreCommentResp(Rest2, 0, 0, F@_1,
 					TrUserData).
 
-skip_group_RegisterUserResp(Bin, FNum, Z2, F@_1,
+skip_group_StoreCommentResp(Bin, FNum, Z2, F@_1,
 			    TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_RegisterUserResp(Rest, 0, Z2, F@_1,
+    dfp_read_field_def_StoreCommentResp(Rest, 0, Z2, F@_1,
 					TrUserData).
 
-skip_32_RegisterUserResp(<<_:32, Rest/binary>>, Z1, Z2,
+skip_32_StoreCommentResp(<<_:32, Rest/binary>>, Z1, Z2,
 			 F@_1, TrUserData) ->
-    dfp_read_field_def_RegisterUserResp(Rest, Z1, Z2, F@_1,
+    dfp_read_field_def_StoreCommentResp(Rest, Z1, Z2, F@_1,
 					TrUserData).
 
-skip_64_RegisterUserResp(<<_:64, Rest/binary>>, Z1, Z2,
+skip_64_StoreCommentResp(<<_:64, Rest/binary>>, Z1, Z2,
 			 F@_1, TrUserData) ->
-    dfp_read_field_def_RegisterUserResp(Rest, Z1, Z2, F@_1,
+    dfp_read_field_def_StoreCommentResp(Rest, Z1, Z2, F@_1,
 					TrUserData).
 
-d_msg_StoreBuyNowResp(Bin, TrUserData) ->
-    dfp_read_field_def_StoreBuyNowResp(Bin, 0, 0,
-				       id('$undef', TrUserData), TrUserData).
+d_msg_StoreItem(Bin, TrUserData) ->
+    dfp_read_field_def_StoreItem(Bin, 0, 0,
+				 id(<<>>, TrUserData), id(<<>>, TrUserData),
+				 id(0, TrUserData), id(<<>>, TrUserData),
+				 id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_StoreBuyNowResp(<<10, Rest/binary>>,
-				   Z1, Z2, F@_1, TrUserData) ->
-    d_field_StoreBuyNowResp_buy_now_id(Rest, Z1, Z2, F@_1,
-				       TrUserData);
-dfp_read_field_def_StoreBuyNowResp(<<16, Rest/binary>>,
-				   Z1, Z2, F@_1, TrUserData) ->
-    d_field_StoreBuyNowResp_error_reason(Rest, Z1, Z2, F@_1,
-					 TrUserData);
-dfp_read_field_def_StoreBuyNowResp(<<>>, 0, 0, F@_1,
-				   _) ->
+dfp_read_field_def_StoreItem(<<10, Rest/binary>>, Z1,
+			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    d_field_StoreItem_item_name(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StoreItem(<<18, Rest/binary>>, Z1,
+			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    d_field_StoreItem_description(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StoreItem(<<24, Rest/binary>>, Z1,
+			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    d_field_StoreItem_quantity(Rest, Z1, Z2, F@_1, F@_2,
+			       F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StoreItem(<<34, Rest/binary>>, Z1,
+			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    d_field_StoreItem_category_id(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StoreItem(<<42, Rest/binary>>, Z1,
+			     Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    d_field_StoreItem_seller_id(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_StoreItem(<<>>, 0, 0, F@_1, F@_2,
+			     F@_3, F@_4, F@_5, _) ->
+    S1 = #{},
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{item_name => F@_1}
+	 end,
+    S3 = if F@_2 == '$undef' -> S2;
+	    true -> S2#{description => F@_2}
+	 end,
+    S4 = if F@_3 == '$undef' -> S3;
+	    true -> S3#{quantity => F@_3}
+	 end,
+    S5 = if F@_4 == '$undef' -> S4;
+	    true -> S4#{category_id => F@_4}
+	 end,
+    if F@_5 == '$undef' -> S5;
+       true -> S5#{seller_id => F@_5}
+    end;
+dfp_read_field_def_StoreItem(Other, Z1, Z2, F@_1, F@_2,
+			     F@_3, F@_4, F@_5, TrUserData) ->
+    dg_read_field_def_StoreItem(Other, Z1, Z2, F@_1, F@_2,
+				F@_3, F@_4, F@_5, TrUserData).
+
+dg_read_field_def_StoreItem(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_StoreItem(Rest, N + 7, X bsl N + Acc,
+				F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dg_read_field_def_StoreItem(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_StoreItem_item_name(Rest, 0, 0, F@_1, F@_2,
+				      F@_3, F@_4, F@_5, TrUserData);
+      18 ->
+	  d_field_StoreItem_description(Rest, 0, 0, F@_1, F@_2,
+					F@_3, F@_4, F@_5, TrUserData);
+      24 ->
+	  d_field_StoreItem_quantity(Rest, 0, 0, F@_1, F@_2, F@_3,
+				     F@_4, F@_5, TrUserData);
+      34 ->
+	  d_field_StoreItem_category_id(Rest, 0, 0, F@_1, F@_2,
+					F@_3, F@_4, F@_5, TrUserData);
+      42 ->
+	  d_field_StoreItem_seller_id(Rest, 0, 0, F@_1, F@_2,
+				      F@_3, F@_4, F@_5, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_StoreItem(Rest, 0, 0, F@_1, F@_2, F@_3,
+				      F@_4, F@_5, TrUserData);
+	    1 ->
+		skip_64_StoreItem(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
+				  F@_5, TrUserData);
+	    2 ->
+		skip_length_delimited_StoreItem(Rest, 0, 0, F@_1, F@_2,
+						F@_3, F@_4, F@_5, TrUserData);
+	    3 ->
+		skip_group_StoreItem(Rest, Key bsr 3, 0, F@_1, F@_2,
+				     F@_3, F@_4, F@_5, TrUserData);
+	    5 ->
+		skip_32_StoreItem(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
+				  F@_5, TrUserData)
+	  end
+    end;
+dg_read_field_def_StoreItem(<<>>, 0, 0, F@_1, F@_2,
+			    F@_3, F@_4, F@_5, _) ->
+    S1 = #{},
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{item_name => F@_1}
+	 end,
+    S3 = if F@_2 == '$undef' -> S2;
+	    true -> S2#{description => F@_2}
+	 end,
+    S4 = if F@_3 == '$undef' -> S3;
+	    true -> S3#{quantity => F@_3}
+	 end,
+    S5 = if F@_4 == '$undef' -> S4;
+	    true -> S4#{category_id => F@_4}
+	 end,
+    if F@_5 == '$undef' -> S5;
+       true -> S5#{seller_id => F@_5}
+    end.
+
+d_field_StoreItem_item_name(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+    when N < 57 ->
+    d_field_StoreItem_item_name(Rest, N + 7, X bsl N + Acc,
+				F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StoreItem_item_name(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, _, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreItem(RestF, 0, 0, NewFValue,
+				 F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+d_field_StoreItem_description(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+    when N < 57 ->
+    d_field_StoreItem_description(Rest, N + 7,
+				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
+				  TrUserData);
+d_field_StoreItem_description(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, _, F@_3, F@_4, F@_5, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1,
+				 NewFValue, F@_3, F@_4, F@_5, TrUserData).
+
+d_field_StoreItem_quantity(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+    when N < 57 ->
+    d_field_StoreItem_quantity(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StoreItem_quantity(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, _, F@_4, F@_5, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1, F@_2,
+				 NewFValue, F@_4, F@_5, TrUserData).
+
+d_field_StoreItem_category_id(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+    when N < 57 ->
+    d_field_StoreItem_category_id(Rest, N + 7,
+				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
+				  TrUserData);
+d_field_StoreItem_category_id(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, _, F@_5, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1, F@_2,
+				 F@_3, NewFValue, F@_5, TrUserData).
+
+d_field_StoreItem_seller_id(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
+    when N < 57 ->
+    d_field_StoreItem_seller_id(Rest, N + 7, X bsl N + Acc,
+				F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_StoreItem_seller_id(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, F@_4, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_StoreItem(RestF, 0, 0, F@_1, F@_2,
+				 F@_3, F@_4, NewFValue, TrUserData).
+
+skip_varint_StoreItem(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		      F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    skip_varint_StoreItem(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			  F@_4, F@_5, TrUserData);
+skip_varint_StoreItem(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		      F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    dfp_read_field_def_StoreItem(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, F@_4, F@_5, TrUserData).
+
+skip_length_delimited_StoreItem(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
+				TrUserData)
+    when N < 57 ->
+    skip_length_delimited_StoreItem(Rest, N + 7,
+				    X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
+				    TrUserData);
+skip_length_delimited_StoreItem(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5,
+				TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_StoreItem(Rest2, 0, 0, F@_1, F@_2,
+				 F@_3, F@_4, F@_5, TrUserData).
+
+skip_group_StoreItem(Bin, FNum, Z2, F@_1, F@_2, F@_3,
+		     F@_4, F@_5, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_StoreItem(Rest, 0, Z2, F@_1, F@_2,
+				 F@_3, F@_4, F@_5, TrUserData).
+
+skip_32_StoreItem(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		  F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    dfp_read_field_def_StoreItem(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, F@_4, F@_5, TrUserData).
+
+skip_64_StoreItem(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		  F@_2, F@_3, F@_4, F@_5, TrUserData) ->
+    dfp_read_field_def_StoreItem(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, F@_4, F@_5, TrUserData).
+
+d_msg_PutCategory(Bin, TrUserData) ->
+    dfp_read_field_def_PutCategory(Bin, 0, 0,
+				   id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_PutCategory(<<10, Rest/binary>>, Z1,
+			       Z2, F@_1, TrUserData) ->
+    d_field_PutCategory_category_name(Rest, Z1, Z2, F@_1,
+				      TrUserData);
+dfp_read_field_def_PutCategory(<<>>, 0, 0, F@_1, _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
+       true -> S1#{category_name => F@_1}
     end;
-dfp_read_field_def_StoreBuyNowResp(Other, Z1, Z2, F@_1,
-				   TrUserData) ->
-    dg_read_field_def_StoreBuyNowResp(Other, Z1, Z2, F@_1,
-				      TrUserData).
+dfp_read_field_def_PutCategory(Other, Z1, Z2, F@_1,
+			       TrUserData) ->
+    dg_read_field_def_PutCategory(Other, Z1, Z2, F@_1,
+				  TrUserData).
 
-dg_read_field_def_StoreBuyNowResp(<<1:1, X:7,
+dg_read_field_def_PutCategory(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_PutCategory(Rest, N + 7,
+				  X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_PutCategory(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_PutCategory_category_name(Rest, 0, 0, F@_1,
+					    TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_PutCategory(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_PutCategory(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_PutCategory(Rest, 0, 0, F@_1,
+						  TrUserData);
+	    3 ->
+		skip_group_PutCategory(Rest, Key bsr 3, 0, F@_1,
+				       TrUserData);
+	    5 -> skip_32_PutCategory(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_PutCategory(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{category_name => F@_1}
+    end.
+
+d_field_PutCategory_category_name(<<1:1, X:7,
 				    Rest/binary>>,
 				  N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_StoreBuyNowResp(Rest, N + 7,
+    when N < 57 ->
+    d_field_PutCategory_category_name(Rest, N + 7,
 				      X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_StoreBuyNowResp(<<0:1, X:7,
+d_field_PutCategory_category_name(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_PutCategory(RestF, 0, 0, NewFValue,
+				   TrUserData).
+
+skip_varint_PutCategory(<<1:1, _:7, Rest/binary>>, Z1,
+			Z2, F@_1, TrUserData) ->
+    skip_varint_PutCategory(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_PutCategory(<<0:1, _:7, Rest/binary>>, Z1,
+			Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_PutCategory(Rest, Z1, Z2, F@_1,
+				   TrUserData).
+
+skip_length_delimited_PutCategory(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_PutCategory(Rest, N + 7,
+				      X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_PutCategory(<<0:1, X:7,
 				    Rest/binary>>,
 				  N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_StoreBuyNowResp_buy_now_id(Rest, 0, 0, F@_1,
-					     TrUserData);
-      16 ->
-	  d_field_StoreBuyNowResp_error_reason(Rest, 0, 0, F@_1,
-					       TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_StoreBuyNowResp(Rest, 0, 0, F@_1,
-					    TrUserData);
-	    1 ->
-		skip_64_StoreBuyNowResp(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_StoreBuyNowResp(Rest, 0, 0, F@_1,
-						      TrUserData);
-	    3 ->
-		skip_group_StoreBuyNowResp(Rest, Key bsr 3, 0, F@_1,
-					   TrUserData);
-	    5 ->
-		skip_32_StoreBuyNowResp(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_StoreBuyNowResp(<<>>, 0, 0, F@_1,
-				  _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_StoreBuyNowResp_buy_now_id(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreBuyNowResp_buy_now_id(Rest, N + 7,
-				       X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreBuyNowResp_buy_now_id(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_StoreBuyNowResp(RestF, 0, 0,
-				       {buy_now_id, NewFValue}, TrUserData).
-
-d_field_StoreBuyNowResp_error_reason(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_StoreBuyNowResp_error_reason(Rest, N + 7,
-					 X bsl N + Acc, F@_1, TrUserData);
-d_field_StoreBuyNowResp_error_reason(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_StoreBuyNowResp(RestF, 0, 0,
-				       {error_reason, NewFValue}, TrUserData).
-
-skip_varint_StoreBuyNowResp(<<1:1, _:7, Rest/binary>>,
-			    Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
-				TrUserData);
-skip_varint_StoreBuyNowResp(<<0:1, _:7, Rest/binary>>,
-			    Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
-				       TrUserData).
-
-skip_length_delimited_StoreBuyNowResp(<<1:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_StoreBuyNowResp(Rest, N + 7,
-					  X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_StoreBuyNowResp(<<0:1, X:7,
-					Rest/binary>>,
-				      N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StoreBuyNowResp(Rest2, 0, 0, F@_1,
-				       TrUserData).
+    dfp_read_field_def_PutCategory(Rest2, 0, 0, F@_1,
+				   TrUserData).
 
-skip_group_StoreBuyNowResp(Bin, FNum, Z2, F@_1,
-			   TrUserData) ->
+skip_group_PutCategory(Bin, FNum, Z2, F@_1,
+		       TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StoreBuyNowResp(Rest, 0, Z2, F@_1,
-				       TrUserData).
+    dfp_read_field_def_PutCategory(Rest, 0, Z2, F@_1,
+				   TrUserData).
 
-skip_32_StoreBuyNowResp(<<_:32, Rest/binary>>, Z1, Z2,
-			F@_1, TrUserData) ->
-    dfp_read_field_def_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
-				       TrUserData).
+skip_32_PutCategory(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		    TrUserData) ->
+    dfp_read_field_def_PutCategory(Rest, Z1, Z2, F@_1,
+				   TrUserData).
 
-skip_64_StoreBuyNowResp(<<_:64, Rest/binary>>, Z1, Z2,
-			F@_1, TrUserData) ->
-    dfp_read_field_def_StoreBuyNowResp(Rest, Z1, Z2, F@_1,
-				       TrUserData).
+skip_64_PutCategory(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		    TrUserData) ->
+    dfp_read_field_def_PutCategory(Rest, Z1, Z2, F@_1,
+				   TrUserData).
 
-d_msg_SearchByCategoryResp(Bin, TrUserData) ->
-    dfp_read_field_def_SearchByCategoryResp(Bin, 0, 0,
-					    id('$undef', TrUserData),
-					    TrUserData).
+d_msg_AuthUser(Bin, TrUserData) ->
+    dfp_read_field_def_AuthUser(Bin, 0, 0,
+				id(<<>>, TrUserData), id(<<>>, TrUserData),
+				TrUserData).
 
-dfp_read_field_def_SearchByCategoryResp(<<10,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    d_field_SearchByCategoryResp_content(Rest, Z1, Z2, F@_1,
-					 TrUserData);
-dfp_read_field_def_SearchByCategoryResp(<<16,
-					  Rest/binary>>,
-					Z1, Z2, F@_1, TrUserData) ->
-    d_field_SearchByCategoryResp_error_reason(Rest, Z1, Z2,
-					      F@_1, TrUserData);
-dfp_read_field_def_SearchByCategoryResp(<<>>, 0, 0,
-					F@_1, _) ->
+dfp_read_field_def_AuthUser(<<10, Rest/binary>>, Z1, Z2,
+			    F@_1, F@_2, TrUserData) ->
+    d_field_AuthUser_username(Rest, Z1, Z2, F@_1, F@_2,
+			      TrUserData);
+dfp_read_field_def_AuthUser(<<18, Rest/binary>>, Z1, Z2,
+			    F@_1, F@_2, TrUserData) ->
+    d_field_AuthUser_password(Rest, Z1, Z2, F@_1, F@_2,
+			      TrUserData);
+dfp_read_field_def_AuthUser(<<>>, 0, 0, F@_1, F@_2,
+			    _) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{username => F@_1}
+	 end,
+    if F@_2 == '$undef' -> S2;
+       true -> S2#{password => F@_2}
     end;
-dfp_read_field_def_SearchByCategoryResp(Other, Z1, Z2,
-					F@_1, TrUserData) ->
-    dg_read_field_def_SearchByCategoryResp(Other, Z1, Z2,
-					   F@_1, TrUserData).
-
-dg_read_field_def_SearchByCategoryResp(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_SearchByCategoryResp(Rest, N + 7,
-					   X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_SearchByCategoryResp(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_SearchByCategoryResp_content(Rest, 0, 0, F@_1,
-					       TrUserData);
-      16 ->
-	  d_field_SearchByCategoryResp_error_reason(Rest, 0, 0,
-						    F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_SearchByCategoryResp(Rest, 0, 0, F@_1,
-						 TrUserData);
-	    1 ->
-		skip_64_SearchByCategoryResp(Rest, 0, 0, F@_1,
-					     TrUserData);
-	    2 ->
-		skip_length_delimited_SearchByCategoryResp(Rest, 0, 0,
-							   F@_1, TrUserData);
-	    3 ->
-		skip_group_SearchByCategoryResp(Rest, Key bsr 3, 0,
-						F@_1, TrUserData);
-	    5 ->
-		skip_32_SearchByCategoryResp(Rest, 0, 0, F@_1,
-					     TrUserData)
-	  end
-    end;
-dg_read_field_def_SearchByCategoryResp(<<>>, 0, 0, F@_1,
-				       _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
-    end.
-
-d_field_SearchByCategoryResp_content(<<1:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_SearchByCategoryResp_content(Rest, N + 7,
-					 X bsl N + Acc, F@_1, TrUserData);
-d_field_SearchByCategoryResp_content(<<0:1, X:7,
-				       Rest/binary>>,
-				     N, Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_SearchByCategoryResp.Wrap'(Bs,
-								 TrUserData),
-			       TrUserData),
-			    Rest2}
-			 end,
-    dfp_read_field_def_SearchByCategoryResp(RestF, 0, 0,
-					    case Prev of
-					      '$undef' -> {content, NewFValue};
-					      {content, MVPrev} ->
-						  {content,
-						   'merge_msg_SearchByCategoryResp.Wrap'(MVPrev,
-											 NewFValue,
-											 TrUserData)};
-					      _ -> {content, NewFValue}
-					    end,
-					    TrUserData).
-
-d_field_SearchByCategoryResp_error_reason(<<1:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_SearchByCategoryResp_error_reason(Rest, N + 7,
-					      X bsl N + Acc, F@_1, TrUserData);
-d_field_SearchByCategoryResp_error_reason(<<0:1, X:7,
-					    Rest/binary>>,
-					  N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_SearchByCategoryResp(RestF, 0, 0,
-					    {error_reason, NewFValue},
-					    TrUserData).
-
-skip_varint_SearchByCategoryResp(<<1:1, _:7,
-				   Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_SearchByCategoryResp(Rest, Z1, Z2, F@_1,
-				     TrUserData);
-skip_varint_SearchByCategoryResp(<<0:1, _:7,
-				   Rest/binary>>,
-				 Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByCategoryResp(Rest, Z1, Z2,
-					    F@_1, TrUserData).
-
-skip_length_delimited_SearchByCategoryResp(<<1:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_SearchByCategoryResp(Rest, N + 7,
-					       X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_SearchByCategoryResp(<<0:1, X:7,
-					     Rest/binary>>,
-					   N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_SearchByCategoryResp(Rest2, 0, 0,
-					    F@_1, TrUserData).
-
-skip_group_SearchByCategoryResp(Bin, FNum, Z2, F@_1,
-				TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_SearchByCategoryResp(Rest, 0, Z2,
-					    F@_1, TrUserData).
-
-skip_32_SearchByCategoryResp(<<_:32, Rest/binary>>, Z1,
-			     Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByCategoryResp(Rest, Z1, Z2,
-					    F@_1, TrUserData).
-
-skip_64_SearchByCategoryResp(<<_:64, Rest/binary>>, Z1,
-			     Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_SearchByCategoryResp(Rest, Z1, Z2,
-					    F@_1, TrUserData).
-
-d_msg_ViewUser(Bin, TrUserData) ->
-    dfp_read_field_def_ViewUser(Bin, 0, 0,
-				id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_ViewUser(<<10, Rest/binary>>, Z1, Z2,
-			    F@_1, TrUserData) ->
-    d_field_ViewUser_user_id(Rest, Z1, Z2, F@_1,
-			     TrUserData);
-dfp_read_field_def_ViewUser(<<>>, 0, 0, F@_1, _) ->
-    S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{user_id => F@_1}
-    end;
-dfp_read_field_def_ViewUser(Other, Z1, Z2, F@_1,
+dfp_read_field_def_AuthUser(Other, Z1, Z2, F@_1, F@_2,
 			    TrUserData) ->
-    dg_read_field_def_ViewUser(Other, Z1, Z2, F@_1,
+    dg_read_field_def_AuthUser(Other, Z1, Z2, F@_1, F@_2,
 			       TrUserData).
 
-dg_read_field_def_ViewUser(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, TrUserData)
+dg_read_field_def_AuthUser(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, TrUserData)
     when N < 32 - 7 ->
-    dg_read_field_def_ViewUser(Rest, N + 7, X bsl N + Acc,
-			       F@_1, TrUserData);
-dg_read_field_def_ViewUser(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, TrUserData) ->
+    dg_read_field_def_AuthUser(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, TrUserData);
+dg_read_field_def_AuthUser(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_ViewUser_user_id(Rest, 0, 0, F@_1, TrUserData);
+	  d_field_AuthUser_username(Rest, 0, 0, F@_1, F@_2,
+				    TrUserData);
+      18 ->
+	  d_field_AuthUser_password(Rest, 0, 0, F@_1, F@_2,
+				    TrUserData);
       _ ->
 	  case Key band 7 of
-	    0 -> skip_varint_ViewUser(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_ViewUser(Rest, 0, 0, F@_1, TrUserData);
+	    0 ->
+		skip_varint_AuthUser(Rest, 0, 0, F@_1, F@_2,
+				     TrUserData);
+	    1 ->
+		skip_64_AuthUser(Rest, 0, 0, F@_1, F@_2, TrUserData);
 	    2 ->
-		skip_length_delimited_ViewUser(Rest, 0, 0, F@_1,
+		skip_length_delimited_AuthUser(Rest, 0, 0, F@_1, F@_2,
 					       TrUserData);
 	    3 ->
-		skip_group_ViewUser(Rest, Key bsr 3, 0, F@_1,
+		skip_group_AuthUser(Rest, Key bsr 3, 0, F@_1, F@_2,
 				    TrUserData);
-	    5 -> skip_32_ViewUser(Rest, 0, 0, F@_1, TrUserData)
+	    5 ->
+		skip_32_AuthUser(Rest, 0, 0, F@_1, F@_2, TrUserData)
 	  end
     end;
-dg_read_field_def_ViewUser(<<>>, 0, 0, F@_1, _) ->
+dg_read_field_def_AuthUser(<<>>, 0, 0, F@_1, F@_2, _) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{user_id => F@_1}
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{username => F@_1}
+	 end,
+    if F@_2 == '$undef' -> S2;
+       true -> S2#{password => F@_2}
     end.
 
-d_field_ViewUser_user_id(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, TrUserData)
+d_field_AuthUser_username(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
-    d_field_ViewUser_user_id(Rest, N + 7, X bsl N + Acc,
-			     F@_1, TrUserData);
-d_field_ViewUser_user_id(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, _, TrUserData) ->
+    d_field_AuthUser_username(Rest, N + 7, X bsl N + Acc,
+			      F@_1, F@_2, TrUserData);
+d_field_AuthUser_username(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, _, F@_2, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {binary:copy(Bytes), Rest2}
 			 end,
-    dfp_read_field_def_ViewUser(RestF, 0, 0, NewFValue,
-				TrUserData).
+    dfp_read_field_def_AuthUser(RestF, 0, 0, NewFValue,
+				F@_2, TrUserData).
 
-skip_varint_ViewUser(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    skip_varint_ViewUser(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_ViewUser(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		     F@_1, TrUserData) ->
-    dfp_read_field_def_ViewUser(Rest, Z1, Z2, F@_1,
-				TrUserData).
-
-skip_length_delimited_ViewUser(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData)
+d_field_AuthUser_password(<<1:1, X:7, Rest/binary>>, N,
+			  Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
-    skip_length_delimited_ViewUser(Rest, N + 7,
-				   X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ViewUser(<<0:1, X:7,
+    d_field_AuthUser_password(Rest, N + 7, X bsl N + Acc,
+			      F@_1, F@_2, TrUserData);
+d_field_AuthUser_password(<<0:1, X:7, Rest/binary>>, N,
+			  Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_AuthUser(RestF, 0, 0, F@_1,
+				NewFValue, TrUserData).
+
+skip_varint_AuthUser(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, F@_2, TrUserData) ->
+    skip_varint_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
+			 TrUserData);
+skip_varint_AuthUser(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		     F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
+				TrUserData).
+
+skip_length_delimited_AuthUser(<<1:1, X:7,
 				 Rest/binary>>,
-			       N, Acc, F@_1, TrUserData) ->
+			       N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_AuthUser(Rest, N + 7,
+				   X bsl N + Acc, F@_1, F@_2, TrUserData);
+skip_length_delimited_AuthUser(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ViewUser(Rest2, 0, 0, F@_1,
+    dfp_read_field_def_AuthUser(Rest2, 0, 0, F@_1, F@_2,
 				TrUserData).
 
-skip_group_ViewUser(Bin, FNum, Z2, F@_1, TrUserData) ->
+skip_group_AuthUser(Bin, FNum, Z2, F@_1, F@_2,
+		    TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ViewUser(Rest, 0, Z2, F@_1,
+    dfp_read_field_def_AuthUser(Rest, 0, Z2, F@_1, F@_2,
 				TrUserData).
 
-skip_32_ViewUser(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		 TrUserData) ->
-    dfp_read_field_def_ViewUser(Rest, Z1, Z2, F@_1,
+skip_32_AuthUser(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		 F@_2, TrUserData) ->
+    dfp_read_field_def_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
 				TrUserData).
 
-skip_64_ViewUser(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		 TrUserData) ->
-    dfp_read_field_def_ViewUser(Rest, Z1, Z2, F@_1,
+skip_64_AuthUser(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		 F@_2, TrUserData) ->
+    dfp_read_field_def_AuthUser(Rest, Z1, Z2, F@_1, F@_2,
 				TrUserData).
 
-d_msg_BrowseRegionsResp(Bin, TrUserData) ->
-    dfp_read_field_def_BrowseRegionsResp(Bin, 0, 0,
-					 id('$undef', TrUserData), TrUserData).
+d_msg_SearchByRegion(Bin, TrUserData) ->
+    dfp_read_field_def_SearchByRegion(Bin, 0, 0,
+				      id(<<>>, TrUserData),
+				      id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_BrowseRegionsResp(<<10,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, TrUserData) ->
-    d_field_BrowseRegionsResp_content(Rest, Z1, Z2, F@_1,
-				      TrUserData);
-dfp_read_field_def_BrowseRegionsResp(<<16,
-				       Rest/binary>>,
-				     Z1, Z2, F@_1, TrUserData) ->
-    d_field_BrowseRegionsResp_error_reason(Rest, Z1, Z2,
-					   F@_1, TrUserData);
-dfp_read_field_def_BrowseRegionsResp(<<>>, 0, 0, F@_1,
-				     _) ->
+dfp_read_field_def_SearchByRegion(<<10, Rest/binary>>,
+				  Z1, Z2, F@_1, F@_2, TrUserData) ->
+    d_field_SearchByRegion_category_id(Rest, Z1, Z2, F@_1,
+				       F@_2, TrUserData);
+dfp_read_field_def_SearchByRegion(<<18, Rest/binary>>,
+				  Z1, Z2, F@_1, F@_2, TrUserData) ->
+    d_field_SearchByRegion_region_id(Rest, Z1, Z2, F@_1,
+				     F@_2, TrUserData);
+dfp_read_field_def_SearchByRegion(<<>>, 0, 0, F@_1,
+				  F@_2, _) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{category_id => F@_1}
+	 end,
+    if F@_2 == '$undef' -> S2;
+       true -> S2#{region_id => F@_2}
     end;
-dfp_read_field_def_BrowseRegionsResp(Other, Z1, Z2,
-				     F@_1, TrUserData) ->
-    dg_read_field_def_BrowseRegionsResp(Other, Z1, Z2, F@_1,
-					TrUserData).
+dfp_read_field_def_SearchByRegion(Other, Z1, Z2, F@_1,
+				  F@_2, TrUserData) ->
+    dg_read_field_def_SearchByRegion(Other, Z1, Z2, F@_1,
+				     F@_2, TrUserData).
 
-dg_read_field_def_BrowseRegionsResp(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData)
+dg_read_field_def_SearchByRegion(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, F@_2, TrUserData)
     when N < 32 - 7 ->
-    dg_read_field_def_BrowseRegionsResp(Rest, N + 7,
-					X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_BrowseRegionsResp(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, TrUserData) ->
+    dg_read_field_def_SearchByRegion(Rest, N + 7,
+				     X bsl N + Acc, F@_1, F@_2, TrUserData);
+dg_read_field_def_SearchByRegion(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_BrowseRegionsResp_content(Rest, 0, 0, F@_1,
-					    TrUserData);
-      16 ->
-	  d_field_BrowseRegionsResp_error_reason(Rest, 0, 0, F@_1,
-						 TrUserData);
+	  d_field_SearchByRegion_category_id(Rest, 0, 0, F@_1,
+					     F@_2, TrUserData);
+      18 ->
+	  d_field_SearchByRegion_region_id(Rest, 0, 0, F@_1, F@_2,
+					   TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_BrowseRegionsResp(Rest, 0, 0, F@_1,
-					      TrUserData);
+		skip_varint_SearchByRegion(Rest, 0, 0, F@_1, F@_2,
+					   TrUserData);
 	    1 ->
-		skip_64_BrowseRegionsResp(Rest, 0, 0, F@_1, TrUserData);
+		skip_64_SearchByRegion(Rest, 0, 0, F@_1, F@_2,
+				       TrUserData);
 	    2 ->
-		skip_length_delimited_BrowseRegionsResp(Rest, 0, 0,
-							F@_1, TrUserData);
+		skip_length_delimited_SearchByRegion(Rest, 0, 0, F@_1,
+						     F@_2, TrUserData);
 	    3 ->
-		skip_group_BrowseRegionsResp(Rest, Key bsr 3, 0, F@_1,
-					     TrUserData);
+		skip_group_SearchByRegion(Rest, Key bsr 3, 0, F@_1,
+					  F@_2, TrUserData);
 	    5 ->
-		skip_32_BrowseRegionsResp(Rest, 0, 0, F@_1, TrUserData)
+		skip_32_SearchByRegion(Rest, 0, 0, F@_1, F@_2,
+				       TrUserData)
 	  end
     end;
-dg_read_field_def_BrowseRegionsResp(<<>>, 0, 0, F@_1,
-				    _) ->
+dg_read_field_def_SearchByRegion(<<>>, 0, 0, F@_1, F@_2,
+				 _) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{category_id => F@_1}
+	 end,
+    if F@_2 == '$undef' -> S2;
+       true -> S2#{region_id => F@_2}
     end.
 
-d_field_BrowseRegionsResp_content(<<1:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
+d_field_SearchByRegion_category_id(<<1:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
-    d_field_BrowseRegionsResp_content(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
-d_field_BrowseRegionsResp_content(<<0:1, X:7,
-				    Rest/binary>>,
-				  N, Acc, Prev, TrUserData) ->
+    d_field_SearchByRegion_category_id(Rest, N + 7,
+				       X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_SearchByRegion_category_id(<<0:1, X:7,
+				     Rest/binary>>,
+				   N, Acc, _, F@_2, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_BrowseRegionsResp.Wrap'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
 			 end,
-    dfp_read_field_def_BrowseRegionsResp(RestF, 0, 0,
-					 case Prev of
-					   '$undef' -> {content, NewFValue};
-					   {content, MVPrev} ->
-					       {content,
-						'merge_msg_BrowseRegionsResp.Wrap'(MVPrev,
-										   NewFValue,
-										   TrUserData)};
-					   _ -> {content, NewFValue}
-					 end,
-					 TrUserData).
+    dfp_read_field_def_SearchByRegion(RestF, 0, 0,
+				      NewFValue, F@_2, TrUserData).
 
-d_field_BrowseRegionsResp_error_reason(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, TrUserData)
+d_field_SearchByRegion_region_id(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
-    d_field_BrowseRegionsResp_error_reason(Rest, N + 7,
-					   X bsl N + Acc, F@_1, TrUserData);
-d_field_BrowseRegionsResp_error_reason(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_BrowseRegionsResp(RestF, 0, 0,
-					 {error_reason, NewFValue}, TrUserData).
+    d_field_SearchByRegion_region_id(Rest, N + 7,
+				     X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_SearchByRegion_region_id(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_SearchByRegion(RestF, 0, 0, F@_1,
+				      NewFValue, TrUserData).
 
-skip_varint_BrowseRegionsResp(<<1:1, _:7, Rest/binary>>,
-			      Z1, Z2, F@_1, TrUserData) ->
-    skip_varint_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
-				  TrUserData);
-skip_varint_BrowseRegionsResp(<<0:1, _:7, Rest/binary>>,
-			      Z1, Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
-					 TrUserData).
+skip_varint_SearchByRegion(<<1:1, _:7, Rest/binary>>,
+			   Z1, Z2, F@_1, F@_2, TrUserData) ->
+    skip_varint_SearchByRegion(Rest, Z1, Z2, F@_1, F@_2,
+			       TrUserData);
+skip_varint_SearchByRegion(<<0:1, _:7, Rest/binary>>,
+			   Z1, Z2, F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_SearchByRegion(Rest, Z1, Z2, F@_1,
+				      F@_2, TrUserData).
 
-skip_length_delimited_BrowseRegionsResp(<<1:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, TrUserData)
+skip_length_delimited_SearchByRegion(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
-    skip_length_delimited_BrowseRegionsResp(Rest, N + 7,
-					    X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_BrowseRegionsResp(<<0:1, X:7,
-					  Rest/binary>>,
-					N, Acc, F@_1, TrUserData) ->
+    skip_length_delimited_SearchByRegion(Rest, N + 7,
+					 X bsl N + Acc, F@_1, F@_2, TrUserData);
+skip_length_delimited_SearchByRegion(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_BrowseRegionsResp(Rest2, 0, 0, F@_1,
-					 TrUserData).
+    dfp_read_field_def_SearchByRegion(Rest2, 0, 0, F@_1,
+				      F@_2, TrUserData).
 
-skip_group_BrowseRegionsResp(Bin, FNum, Z2, F@_1,
-			     TrUserData) ->
+skip_group_SearchByRegion(Bin, FNum, Z2, F@_1, F@_2,
+			  TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_BrowseRegionsResp(Rest, 0, Z2, F@_1,
-					 TrUserData).
+    dfp_read_field_def_SearchByRegion(Rest, 0, Z2, F@_1,
+				      F@_2, TrUserData).
 
-skip_32_BrowseRegionsResp(<<_:32, Rest/binary>>, Z1, Z2,
-			  F@_1, TrUserData) ->
-    dfp_read_field_def_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
-					 TrUserData).
+skip_32_SearchByRegion(<<_:32, Rest/binary>>, Z1, Z2,
+		       F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_SearchByRegion(Rest, Z1, Z2, F@_1,
+				      F@_2, TrUserData).
 
-skip_64_BrowseRegionsResp(<<_:64, Rest/binary>>, Z1, Z2,
-			  F@_1, TrUserData) ->
-    dfp_read_field_def_BrowseRegionsResp(Rest, Z1, Z2, F@_1,
-					 TrUserData).
+skip_64_SearchByRegion(<<_:64, Rest/binary>>, Z1, Z2,
+		       F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_SearchByRegion(Rest, Z1, Z2, F@_1,
+				      F@_2, TrUserData).
 
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
@@ -9195,116 +5472,121 @@ merge_msgs(Prev, New, MsgName) ->
 merge_msgs(Prev, New, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-      'AboutMeResp.BuyNowInfo' ->
-	  'merge_msg_AboutMeResp.BuyNowInfo'(Prev, New,
-					     TrUserData);
-      'StoreBidResp' ->
-	  merge_msg_StoreBidResp(Prev, New, TrUserData);
-      'AboutMe' -> merge_msg_AboutMe(Prev, New, TrUserData);
-      'Item' -> merge_msg_Item(Prev, New, TrUserData);
-      'ItemDetails' ->
-	  merge_msg_ItemDetails(Prev, New, TrUserData);
-      'ViewItemResp.Wrap' ->
-	  'merge_msg_ViewItemResp.Wrap'(Prev, New, TrUserData);
-      'Comment' -> merge_msg_Comment(Prev, New, TrUserData);
-      'ViewUserResp.Wrap.UserInfo' ->
-	  'merge_msg_ViewUserResp.Wrap.UserInfo'(Prev, New,
-						 TrUserData);
-      'BrowseCategoriesResp.Wrap' ->
-	  'merge_msg_BrowseCategoriesResp.Wrap'(Prev, New,
-						TrUserData);
-      'BidInfo' -> merge_msg_BidInfo(Prev, New, TrUserData);
-      'ViewItemBidHistResp.Wrap' ->
-	  'merge_msg_ViewItemBidHistResp.Wrap'(Prev, New,
-					       TrUserData);
-      'ViewItemBidHistResp' ->
-	  merge_msg_ViewItemBidHistResp(Prev, New, TrUserData);
-      'PutCategoryResp' ->
-	  merge_msg_PutCategoryResp(Prev, New, TrUserData);
-      'ViewItem' -> merge_msg_ViewItem(Prev, New, TrUserData);
-      'SearchByRegionResp.Wrap' ->
-	  'merge_msg_SearchByRegionResp.Wrap'(Prev, New,
-					      TrUserData);
-      'SearchByRegionResp' ->
-	  merge_msg_SearchByRegionResp(Prev, New, TrUserData);
-      'PutRegionResp' ->
-	  merge_msg_PutRegionResp(Prev, New, TrUserData);
-      'PutRegion' ->
-	  merge_msg_PutRegion(Prev, New, TrUserData);
       'AuthUserResp' ->
 	  merge_msg_AuthUserResp(Prev, New, TrUserData);
-      'StoreBid' -> merge_msg_StoreBid(Prev, New, TrUserData);
-      'BrowseRegionsResp.Wrap' ->
-	  'merge_msg_BrowseRegionsResp.Wrap'(Prev, New,
-					     TrUserData);
-      'AboutMeResp.AboutMeBid' ->
-	  'merge_msg_AboutMeResp.AboutMeBid'(Prev, New,
-					     TrUserData);
-      'StoreItemResp' ->
-	  merge_msg_StoreItemResp(Prev, New, TrUserData);
-      'AuthUser' -> merge_msg_AuthUser(Prev, New, TrUserData);
-      'BrowseCategories' ->
-	  merge_msg_BrowseCategories(Prev, New, TrUserData);
-      'PutCategory' ->
-	  merge_msg_PutCategory(Prev, New, TrUserData);
-      'StoreItem' ->
-	  merge_msg_StoreItem(Prev, New, TrUserData);
-      'BrowseCategoriesResp' ->
-	  merge_msg_BrowseCategoriesResp(Prev, New, TrUserData);
-      'ViewUserResp.Wrap' ->
-	  'merge_msg_ViewUserResp.Wrap'(Prev, New, TrUserData);
-      'ViewUserResp' ->
-	  merge_msg_ViewUserResp(Prev, New, TrUserData);
-      'ViewItemResp' ->
-	  merge_msg_ViewItemResp(Prev, New, TrUserData);
-      'SearchByCategory' ->
-	  merge_msg_SearchByCategory(Prev, New, TrUserData);
-      'SearchByRegion' ->
-	  merge_msg_SearchByRegion(Prev, New, TrUserData);
-      'StoreCommentResp' ->
-	  merge_msg_StoreCommentResp(Prev, New, TrUserData);
-      'StoreBuyNow' ->
-	  merge_msg_StoreBuyNow(Prev, New, TrUserData);
-      'SearchByCategoryResp.Wrap' ->
-	  'merge_msg_SearchByCategoryResp.Wrap'(Prev, New,
-						TrUserData);
       'StoreComment' ->
 	  merge_msg_StoreComment(Prev, New, TrUserData);
+      'StoreBuyNow' ->
+	  merge_msg_StoreBuyNow(Prev, New, TrUserData);
+      'AboutMeResp' ->
+	  merge_msg_AboutMeResp(Prev, New, TrUserData);
+      'SearchByCategoryResp' ->
+	  merge_msg_SearchByCategoryResp(Prev, New, TrUserData);
+      'BrowseCategoriesResp' ->
+	  merge_msg_BrowseCategoriesResp(Prev, New, TrUserData);
+      'ViewItemBidHist' ->
+	  merge_msg_ViewItemBidHist(Prev, New, TrUserData);
+      'SearchByCategory' ->
+	  merge_msg_SearchByCategory(Prev, New, TrUserData);
+      'RegisterUserResp' ->
+	  merge_msg_RegisterUserResp(Prev, New, TrUserData);
+      'BrowseRegionsResp' ->
+	  merge_msg_BrowseRegionsResp(Prev, New, TrUserData);
+      'ViewUser' -> merge_msg_ViewUser(Prev, New, TrUserData);
+      'ViewUserResp' ->
+	  merge_msg_ViewUserResp(Prev, New, TrUserData);
+      'BrowseCategories' ->
+	  merge_msg_BrowseCategories(Prev, New, TrUserData);
+      'SearchByRegionResp' ->
+	  merge_msg_SearchByRegionResp(Prev, New, TrUserData);
+      'StoreBuyNowResp' ->
+	  merge_msg_StoreBuyNowResp(Prev, New, TrUserData);
+      'StoreItemResp' ->
+	  merge_msg_StoreItemResp(Prev, New, TrUserData);
+      'StoreBidResp' ->
+	  merge_msg_StoreBidResp(Prev, New, TrUserData);
+      'ViewItemResp' ->
+	  merge_msg_ViewItemResp(Prev, New, TrUserData);
+      'PutRegionResp' ->
+	  merge_msg_PutRegionResp(Prev, New, TrUserData);
+      'ViewItem' -> merge_msg_ViewItem(Prev, New, TrUserData);
+      'ViewItemBidHistResp' ->
+	  merge_msg_ViewItemBidHistResp(Prev, New, TrUserData);
       'RegisterUser' ->
 	  merge_msg_RegisterUser(Prev, New, TrUserData);
       'BrowseRegions' ->
 	  merge_msg_BrowseRegions(Prev, New, TrUserData);
-      'AboutMeResp.Wrap' ->
-	  'merge_msg_AboutMeResp.Wrap'(Prev, New, TrUserData);
-      'AboutMeResp' ->
-	  merge_msg_AboutMeResp(Prev, New, TrUserData);
-      'ViewItemBidHist' ->
-	  merge_msg_ViewItemBidHist(Prev, New, TrUserData);
-      'RegisterUserResp' ->
-	  merge_msg_RegisterUserResp(Prev, New, TrUserData);
-      'StoreBuyNowResp' ->
-	  merge_msg_StoreBuyNowResp(Prev, New, TrUserData);
-      'SearchByCategoryResp' ->
-	  merge_msg_SearchByCategoryResp(Prev, New, TrUserData);
-      'ViewUser' -> merge_msg_ViewUser(Prev, New, TrUserData);
-      'BrowseRegionsResp' ->
-	  merge_msg_BrowseRegionsResp(Prev, New, TrUserData)
+      'PutCategoryResp' ->
+	  merge_msg_PutCategoryResp(Prev, New, TrUserData);
+      'AboutMe' -> merge_msg_AboutMe(Prev, New, TrUserData);
+      'PutRegion' ->
+	  merge_msg_PutRegion(Prev, New, TrUserData);
+      'StoreBid' -> merge_msg_StoreBid(Prev, New, TrUserData);
+      'StoreCommentResp' ->
+	  merge_msg_StoreCommentResp(Prev, New, TrUserData);
+      'StoreItem' ->
+	  merge_msg_StoreItem(Prev, New, TrUserData);
+      'PutCategory' ->
+	  merge_msg_PutCategory(Prev, New, TrUserData);
+      'AuthUser' -> merge_msg_AuthUser(Prev, New, TrUserData);
+      'SearchByRegion' ->
+	  merge_msg_SearchByRegion(Prev, New, TrUserData)
     end.
 
-'merge_msg_AboutMeResp.BuyNowInfo'(PMsg, NMsg, _) ->
+merge_msg_AuthUserResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_StoreComment(PMsg, NMsg, _) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
-	   {_, #{on_item_name := NFon_item_name}} ->
-	       S1#{on_item_name => NFon_item_name};
-	   {#{on_item_name := PFon_item_name}, _} ->
-	       S1#{on_item_name => PFon_item_name};
+	   {_, #{on_item_id := NFon_item_id}} ->
+	       S1#{on_item_id => NFon_item_id};
+	   {#{on_item_id := PFon_item_id}, _} ->
+	       S1#{on_item_id => PFon_item_id};
 	   _ -> S1
 	 end,
     S3 = case {PMsg, NMsg} of
-	   {_, #{seller_username := NFseller_username}} ->
-	       S2#{seller_username => NFseller_username};
-	   {#{seller_username := PFseller_username}, _} ->
-	       S2#{seller_username => PFseller_username};
+	   {_, #{from_id := NFfrom_id}} ->
+	       S2#{from_id => NFfrom_id};
+	   {#{from_id := PFfrom_id}, _} ->
+	       S2#{from_id => PFfrom_id};
+	   _ -> S2
+	 end,
+    S4 = case {PMsg, NMsg} of
+	   {_, #{to_id := NFto_id}} -> S3#{to_id => NFto_id};
+	   {#{to_id := PFto_id}, _} -> S3#{to_id => PFto_id};
+	   _ -> S3
+	 end,
+    S5 = case {PMsg, NMsg} of
+	   {_, #{rating := NFrating}} -> S4#{rating => NFrating};
+	   {#{rating := PFrating}, _} -> S4#{rating => PFrating};
+	   _ -> S4
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{body := NFbody}} -> S5#{body => NFbody};
+      {#{body := PFbody}, _} -> S5#{body => PFbody};
+      _ -> S5
+    end.
+
+merge_msg_StoreBuyNow(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{on_item_id := NFon_item_id}} ->
+	       S1#{on_item_id => NFon_item_id};
+	   {#{on_item_id := PFon_item_id}, _} ->
+	       S1#{on_item_id => PFon_item_id};
+	   _ -> S1
+	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{buyer_id := NFbuyer_id}} ->
+	       S2#{buyer_id => NFbuyer_id};
+	   {#{buyer_id := PFbuyer_id}, _} ->
+	       S2#{buyer_id => PFbuyer_id};
 	   _ -> S2
 	 end,
     case {PMsg, NMsg} of
@@ -9315,7 +5597,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
       _ -> S3
     end.
 
-merge_msg_StoreBidResp(PMsg, NMsg, _) ->
+merge_msg_AboutMeResp(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
@@ -9323,7 +5605,59 @@ merge_msg_StoreBidResp(PMsg, NMsg, _) ->
       _ -> S1
     end.
 
-merge_msg_AboutMe(PMsg, NMsg, _) ->
+merge_msg_SearchByCategoryResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_BrowseCategoriesResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_ViewItemBidHist(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{item_id := NFitem_id}} ->
+	  S1#{item_id => NFitem_id};
+      {#{item_id := PFitem_id}, _} ->
+	  S1#{item_id => PFitem_id};
+      _ -> S1
+    end.
+
+merge_msg_SearchByCategory(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{category_id := NFcategory_id}} ->
+	  S1#{category_id => NFcategory_id};
+      {#{category_id := PFcategory_id}, _} ->
+	  S1#{category_id => PFcategory_id};
+      _ -> S1
+    end.
+
+merge_msg_RegisterUserResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_BrowseRegionsResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_ViewUser(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
       {_, #{user_id := NFuser_id}} ->
@@ -9333,203 +5667,58 @@ merge_msg_AboutMe(PMsg, NMsg, _) ->
       _ -> S1
     end.
 
-merge_msg_Item(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{item_name := NFitem_name}} ->
-	       S1#{item_name => NFitem_name};
-	   {#{item_name := PFitem_name}, _} ->
-	       S1#{item_name => PFitem_name};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{description := NFdescription}} ->
-	       S2#{description => NFdescription};
-	   {#{description := PFdescription}, _} ->
-	       S2#{description => PFdescription};
-	   _ -> S2
-	 end,
-    S4 = case {PMsg, NMsg} of
-	   {_, #{num_bids := NFnum_bids}} ->
-	       S3#{num_bids => NFnum_bids};
-	   {#{num_bids := PFnum_bids}, _} ->
-	       S3#{num_bids => PFnum_bids};
-	   _ -> S3
-	 end,
-    S5 = case {PMsg, NMsg} of
-	   {_, #{quantity := NFquantity}} ->
-	       S4#{quantity => NFquantity};
-	   {#{quantity := PFquantity}, _} ->
-	       S4#{quantity => PFquantity};
-	   _ -> S4
-	 end,
-    S6 = case {PMsg, NMsg} of
-	   {_, #{end_date := NFend_date}} ->
-	       S5#{end_date => NFend_date};
-	   {#{end_date := PFend_date}, _} ->
-	       S5#{end_date => PFend_date};
-	   _ -> S5
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{category_id := NFcategory_id}} ->
-	  S6#{category_id => NFcategory_id};
-      {#{category_id := PFcategory_id}, _} ->
-	  S6#{category_id => PFcategory_id};
-      _ -> S6
-    end.
-
-merge_msg_ItemDetails(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {#{item := PFitem}, #{item := NFitem}} ->
-	       S1#{item => merge_msg_Item(PFitem, NFitem, TrUserData)};
-	   {_, #{item := NFitem}} -> S1#{item => NFitem};
-	   {#{item := PFitem}, _} -> S1#{item => PFitem};
-	   {_, _} -> S1
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{seller_name := NFseller_name}} ->
-	  S2#{seller_name => NFseller_name};
-      {#{seller_name := PFseller_name}, _} ->
-	  S2#{seller_name => PFseller_name};
-      _ -> S2
-    end.
-
-'merge_msg_ViewItemResp.Wrap'(PMsg, NMsg, TrUserData) ->
+merge_msg_ViewUserResp(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
-      {#{items := PFitems}, #{items := NFitems}} ->
-	  S1#{items => 'erlang_++'(PFitems, NFitems, TrUserData)};
-      {_, #{items := NFitems}} -> S1#{items => NFitems};
-      {#{items := PFitems}, _} -> S1#{items => PFitems};
-      {_, _} -> S1
-    end.
-
-merge_msg_Comment(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{on_item_id := NFon_item_id}} ->
-	       S1#{on_item_id => NFon_item_id};
-	   {#{on_item_id := PFon_item_id}, _} ->
-	       S1#{on_item_id => PFon_item_id};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{rating := NFrating}} -> S2#{rating => NFrating};
-	   {#{rating := PFrating}, _} -> S2#{rating => PFrating};
-	   _ -> S2
-	 end,
-    S4 = case {PMsg, NMsg} of
-	   {_, #{body := NFbody}} -> S3#{body => NFbody};
-	   {#{body := PFbody}, _} -> S3#{body => PFbody};
-	   _ -> S3
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{from_to := NFfrom_to}} ->
-	  S4#{from_to => NFfrom_to};
-      {#{from_to := PFfrom_to}, _} ->
-	  S4#{from_to => PFfrom_to};
-      _ -> S4
-    end.
-
-'merge_msg_ViewUserResp.Wrap.UserInfo'(PMsg, NMsg,
-				       TrUserData) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{username := NFusername}} ->
-	       S1#{username => NFusername};
-	   {#{username := PFusername}, _} ->
-	       S1#{username => PFusername};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{rating := NFrating}} -> S2#{rating => NFrating};
-	   {#{rating := PFrating}, _} -> S2#{rating => PFrating};
-	   _ -> S2
-	 end,
-    case {PMsg, NMsg} of
-      {#{comments := PFcomments},
-       #{comments := NFcomments}} ->
-	  S3#{comments =>
-		  'erlang_++'(PFcomments, NFcomments, TrUserData)};
-      {_, #{comments := NFcomments}} ->
-	  S3#{comments => NFcomments};
-      {#{comments := PFcomments}, _} ->
-	  S3#{comments => PFcomments};
-      {_, _} -> S3
-    end.
-
-'merge_msg_BrowseCategoriesResp.Wrap'(PMsg, NMsg,
-				      TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{category_names := PFcategory_names},
-       #{category_names := NFcategory_names}} ->
-	  S1#{category_names =>
-		  'erlang_++'(PFcategory_names, NFcategory_names,
-			      TrUserData)};
-      {_, #{category_names := NFcategory_names}} ->
-	  S1#{category_names => NFcategory_names};
-      {#{category_names := PFcategory_names}, _} ->
-	  S1#{category_names => PFcategory_names};
-      {_, _} -> S1
-    end.
-
-merge_msg_BidInfo(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{on_item_id := NFon_item_id}} ->
-	       S1#{on_item_id => NFon_item_id};
-	   {#{on_item_id := PFon_item_id}, _} ->
-	       S1#{on_item_id => PFon_item_id};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{price := NFprice}} -> S2#{price => NFprice};
-	   {#{price := PFprice}, _} -> S2#{price => PFprice};
-	   _ -> S2
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{bidder_name := NFbidder_name}} ->
-	  S3#{bidder_name => NFbidder_name};
-      {#{bidder_name := PFbidder_name}, _} ->
-	  S3#{bidder_name => PFbidder_name};
-      _ -> S3
-    end.
-
-'merge_msg_ViewItemBidHistResp.Wrap'(PMsg, NMsg,
-				     TrUserData) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{item_name := NFitem_name}} ->
-	       S1#{item_name => NFitem_name};
-	   {#{item_name := PFitem_name}, _} ->
-	       S1#{item_name => PFitem_name};
-	   _ -> S1
-	 end,
-    case {PMsg, NMsg} of
-      {#{bids := PFbids}, #{bids := NFbids}} ->
-	  S2#{bids => 'erlang_++'(PFbids, NFbids, TrUserData)};
-      {_, #{bids := NFbids}} -> S2#{bids => NFbids};
-      {#{bids := PFbids}, _} -> S2#{bids => PFbids};
-      {_, _} -> S2
-    end.
-
-merge_msg_ViewItemBidHistResp(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_ViewItemBidHistResp.Wrap'(OPFresp, ONFresp,
-							TrUserData)}};
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
       {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
+      _ -> S1
     end.
 
-merge_msg_PutCategoryResp(PMsg, NMsg, _) ->
+merge_msg_BrowseCategories(_Prev, New, _TrUserData) ->
+    New.
+
+merge_msg_SearchByRegionResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_StoreBuyNowResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_StoreItemResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_StoreBidResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_ViewItemResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_PutRegionResp(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
@@ -9547,36 +5736,55 @@ merge_msg_ViewItem(PMsg, NMsg, _) ->
       _ -> S1
     end.
 
-'merge_msg_SearchByRegionResp.Wrap'(PMsg, NMsg,
-				    TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{items := PFitems}, #{items := NFitems}} ->
-	  S1#{items => 'erlang_++'(PFitems, NFitems, TrUserData)};
-      {_, #{items := NFitems}} -> S1#{items => NFitems};
-      {#{items := PFitems}, _} -> S1#{items => PFitems};
-      {_, _} -> S1
-    end.
-
-merge_msg_SearchByRegionResp(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_SearchByRegionResp.Wrap'(OPFresp, ONFresp,
-						       TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
-merge_msg_PutRegionResp(PMsg, NMsg, _) ->
+merge_msg_ViewItemBidHistResp(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
       {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_RegisterUser(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{username := NFusername}} ->
+	       S1#{username => NFusername};
+	   {#{username := PFusername}, _} ->
+	       S1#{username => PFusername};
+	   _ -> S1
+	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{password := NFpassword}} ->
+	       S2#{password => NFpassword};
+	   {#{password := PFpassword}, _} ->
+	       S2#{password => PFpassword};
+	   _ -> S2
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{region_id := NFregion_id}} ->
+	  S3#{region_id => NFregion_id};
+      {#{region_id := PFregion_id}, _} ->
+	  S3#{region_id => PFregion_id};
+      _ -> S3
+    end.
+
+merge_msg_BrowseRegions(_Prev, New, _TrUserData) -> New.
+
+merge_msg_PutCategoryResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_AboutMe(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{user_id := NFuser_id}} ->
+	  S1#{user_id => NFuser_id};
+      {#{user_id := PFuser_id}, _} ->
+	  S1#{user_id => PFuser_id};
       _ -> S1
     end.
 
@@ -9587,14 +5795,6 @@ merge_msg_PutRegion(PMsg, NMsg, _) ->
 	  S1#{region_name => NFregion_name};
       {#{region_name := PFregion_name}, _} ->
 	  S1#{region_name => PFregion_name};
-      _ -> S1
-    end.
-
-merge_msg_AuthUserResp(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
       _ -> S1
     end.
 
@@ -9620,79 +5820,11 @@ merge_msg_StoreBid(PMsg, NMsg, _) ->
       _ -> S3
     end.
 
-'merge_msg_BrowseRegionsResp.Wrap'(PMsg, NMsg,
-				   TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{region_names := PFregion_names},
-       #{region_names := NFregion_names}} ->
-	  S1#{region_names =>
-		  'erlang_++'(PFregion_names, NFregion_names,
-			      TrUserData)};
-      {_, #{region_names := NFregion_names}} ->
-	  S1#{region_names => NFregion_names};
-      {#{region_names := PFregion_names}, _} ->
-	  S1#{region_names => PFregion_names};
-      {_, _} -> S1
-    end.
-
-'merge_msg_AboutMeResp.AboutMeBid'(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{on_item_name := NFon_item_name}} ->
-	       S1#{on_item_name => NFon_item_name};
-	   {#{on_item_name := PFon_item_name}, _} ->
-	       S1#{on_item_name => PFon_item_name};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{seller_username := NFseller_username}} ->
-	       S2#{seller_username => NFseller_username};
-	   {#{seller_username := PFseller_username}, _} ->
-	       S2#{seller_username => PFseller_username};
-	   _ -> S2
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{price := NFprice}} -> S3#{price => NFprice};
-      {#{price := PFprice}, _} -> S3#{price => PFprice};
-      _ -> S3
-    end.
-
-merge_msg_StoreItemResp(PMsg, NMsg, _) ->
+merge_msg_StoreCommentResp(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
       {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      _ -> S1
-    end.
-
-merge_msg_AuthUser(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{username := NFusername}} ->
-	       S1#{username => NFusername};
-	   {#{username := PFusername}, _} ->
-	       S1#{username => PFusername};
-	   _ -> S1
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{password := NFpassword}} ->
-	  S2#{password => NFpassword};
-      {#{password := PFpassword}, _} ->
-	  S2#{password => PFpassword};
-      _ -> S2
-    end.
-
-merge_msg_BrowseCategories(_Prev, New, _TrUserData) ->
-    New.
-
-merge_msg_PutCategory(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{category_name := NFcategory_name}} ->
-	  S1#{category_name => NFcategory_name};
-      {#{category_name := PFcategory_name}, _} ->
-	  S1#{category_name => PFcategory_name};
       _ -> S1
     end.
 
@@ -9734,73 +5866,31 @@ merge_msg_StoreItem(PMsg, NMsg, _) ->
       _ -> S5
     end.
 
-merge_msg_BrowseCategoriesResp(PMsg, NMsg,
-			       TrUserData) ->
+merge_msg_PutCategory(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_BrowseCategoriesResp.Wrap'(OPFresp, ONFresp,
-							 TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
-'merge_msg_ViewUserResp.Wrap'(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{user_details := PFuser_details},
-       #{user_details := NFuser_details}} ->
-	  S1#{user_details =>
-		  'merge_msg_ViewUserResp.Wrap.UserInfo'(PFuser_details,
-							 NFuser_details,
-							 TrUserData)};
-      {_, #{user_details := NFuser_details}} ->
-	  S1#{user_details => NFuser_details};
-      {#{user_details := PFuser_details}, _} ->
-	  S1#{user_details => PFuser_details};
-      {_, _} -> S1
-    end.
-
-merge_msg_ViewUserResp(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_ViewUserResp.Wrap'(OPFresp, ONFresp,
-						 TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
-merge_msg_ViewItemResp(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_ViewItemResp.Wrap'(OPFresp, ONFresp,
-						 TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
-merge_msg_SearchByCategory(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{category_id := NFcategory_id}} ->
-	  S1#{category_id => NFcategory_id};
-      {#{category_id := PFcategory_id}, _} ->
-	  S1#{category_id => PFcategory_id};
+      {_, #{category_name := NFcategory_name}} ->
+	  S1#{category_name => NFcategory_name};
+      {#{category_name := PFcategory_name}, _} ->
+	  S1#{category_name => PFcategory_name};
       _ -> S1
+    end.
+
+merge_msg_AuthUser(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{username := NFusername}} ->
+	       S1#{username => NFusername};
+	   {#{username := PFusername}, _} ->
+	       S1#{username => PFusername};
+	   _ -> S1
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{password := NFpassword}} ->
+	  S2#{password => NFpassword};
+      {#{password := PFpassword}, _} ->
+	  S2#{password => PFpassword};
+      _ -> S2
     end.
 
 merge_msg_SearchByRegion(PMsg, NMsg, _) ->
@@ -9820,247 +5910,6 @@ merge_msg_SearchByRegion(PMsg, NMsg, _) ->
       _ -> S2
     end.
 
-merge_msg_StoreCommentResp(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      _ -> S1
-    end.
-
-merge_msg_StoreBuyNow(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{on_item_id := NFon_item_id}} ->
-	       S1#{on_item_id => NFon_item_id};
-	   {#{on_item_id := PFon_item_id}, _} ->
-	       S1#{on_item_id => PFon_item_id};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{buyer_id := NFbuyer_id}} ->
-	       S2#{buyer_id => NFbuyer_id};
-	   {#{buyer_id := PFbuyer_id}, _} ->
-	       S2#{buyer_id => PFbuyer_id};
-	   _ -> S2
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{quantity := NFquantity}} ->
-	  S3#{quantity => NFquantity};
-      {#{quantity := PFquantity}, _} ->
-	  S3#{quantity => PFquantity};
-      _ -> S3
-    end.
-
-'merge_msg_SearchByCategoryResp.Wrap'(PMsg, NMsg,
-				      TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{items := PFitems}, #{items := NFitems}} ->
-	  S1#{items => 'erlang_++'(PFitems, NFitems, TrUserData)};
-      {_, #{items := NFitems}} -> S1#{items => NFitems};
-      {#{items := PFitems}, _} -> S1#{items => PFitems};
-      {_, _} -> S1
-    end.
-
-merge_msg_StoreComment(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{on_item_id := NFon_item_id}} ->
-	       S1#{on_item_id => NFon_item_id};
-	   {#{on_item_id := PFon_item_id}, _} ->
-	       S1#{on_item_id => PFon_item_id};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{from_id := NFfrom_id}} ->
-	       S2#{from_id => NFfrom_id};
-	   {#{from_id := PFfrom_id}, _} ->
-	       S2#{from_id => PFfrom_id};
-	   _ -> S2
-	 end,
-    S4 = case {PMsg, NMsg} of
-	   {_, #{to_id := NFto_id}} -> S3#{to_id => NFto_id};
-	   {#{to_id := PFto_id}, _} -> S3#{to_id => PFto_id};
-	   _ -> S3
-	 end,
-    S5 = case {PMsg, NMsg} of
-	   {_, #{rating := NFrating}} -> S4#{rating => NFrating};
-	   {#{rating := PFrating}, _} -> S4#{rating => PFrating};
-	   _ -> S4
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{body := NFbody}} -> S5#{body => NFbody};
-      {#{body := PFbody}, _} -> S5#{body => PFbody};
-      _ -> S5
-    end.
-
-merge_msg_RegisterUser(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{username := NFusername}} ->
-	       S1#{username => NFusername};
-	   {#{username := PFusername}, _} ->
-	       S1#{username => PFusername};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{password := NFpassword}} ->
-	       S2#{password => NFpassword};
-	   {#{password := PFpassword}, _} ->
-	       S2#{password => PFpassword};
-	   _ -> S2
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{region_id := NFregion_id}} ->
-	  S3#{region_id => NFregion_id};
-      {#{region_id := PFregion_id}, _} ->
-	  S3#{region_id => PFregion_id};
-      _ -> S3
-    end.
-
-merge_msg_BrowseRegions(_Prev, New, _TrUserData) -> New.
-
-'merge_msg_AboutMeResp.Wrap'(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{username := NFusername}} ->
-	       S1#{username => NFusername};
-	   {#{username := PFusername}, _} ->
-	       S1#{username => PFusername};
-	   _ -> S1
-	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{rating := NFrating}} -> S2#{rating => NFrating};
-	   {#{rating := PFrating}, _} -> S2#{rating => PFrating};
-	   _ -> S2
-	 end,
-    S4 = case {PMsg, NMsg} of
-	   {#{sold_items := PFsold_items},
-	    #{sold_items := NFsold_items}} ->
-	       S3#{sold_items =>
-		       'erlang_++'(PFsold_items, NFsold_items, TrUserData)};
-	   {_, #{sold_items := NFsold_items}} ->
-	       S3#{sold_items => NFsold_items};
-	   {#{sold_items := PFsold_items}, _} ->
-	       S3#{sold_items => PFsold_items};
-	   {_, _} -> S3
-	 end,
-    S5 = case {PMsg, NMsg} of
-	   {#{bought_items := PFbought_items},
-	    #{bought_items := NFbought_items}} ->
-	       S4#{bought_items =>
-		       'erlang_++'(PFbought_items, NFbought_items,
-				   TrUserData)};
-	   {_, #{bought_items := NFbought_items}} ->
-	       S4#{bought_items => NFbought_items};
-	   {#{bought_items := PFbought_items}, _} ->
-	       S4#{bought_items => PFbought_items};
-	   {_, _} -> S4
-	 end,
-    S6 = case {PMsg, NMsg} of
-	   {#{placed_bids := PFplaced_bids},
-	    #{placed_bids := NFplaced_bids}} ->
-	       S5#{placed_bids =>
-		       'erlang_++'(PFplaced_bids, NFplaced_bids, TrUserData)};
-	   {_, #{placed_bids := NFplaced_bids}} ->
-	       S5#{placed_bids => NFplaced_bids};
-	   {#{placed_bids := PFplaced_bids}, _} ->
-	       S5#{placed_bids => PFplaced_bids};
-	   {_, _} -> S5
-	 end,
-    case {PMsg, NMsg} of
-      {#{authored_comments := PFauthored_comments},
-       #{authored_comments := NFauthored_comments}} ->
-	  S6#{authored_comments =>
-		  'erlang_++'(PFauthored_comments, NFauthored_comments,
-			      TrUserData)};
-      {_, #{authored_comments := NFauthored_comments}} ->
-	  S6#{authored_comments => NFauthored_comments};
-      {#{authored_comments := PFauthored_comments}, _} ->
-	  S6#{authored_comments => PFauthored_comments};
-      {_, _} -> S6
-    end.
-
-merge_msg_AboutMeResp(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_AboutMeResp.Wrap'(OPFresp, ONFresp,
-						TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
-merge_msg_ViewItemBidHist(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{item_id := NFitem_id}} ->
-	  S1#{item_id => NFitem_id};
-      {#{item_id := PFitem_id}, _} ->
-	  S1#{item_id => PFitem_id};
-      _ -> S1
-    end.
-
-merge_msg_RegisterUserResp(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      _ -> S1
-    end.
-
-merge_msg_StoreBuyNowResp(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      _ -> S1
-    end.
-
-merge_msg_SearchByCategoryResp(PMsg, NMsg,
-			       TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_SearchByCategoryResp.Wrap'(OPFresp, ONFresp,
-							 TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
-merge_msg_ViewUser(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {_, #{user_id := NFuser_id}} ->
-	  S1#{user_id => NFuser_id};
-      {#{user_id := PFuser_id}, _} ->
-	  S1#{user_id => PFuser_id};
-      _ -> S1
-    end.
-
-merge_msg_BrowseRegionsResp(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{resp := {content, OPFresp}},
-       #{resp := {content, ONFresp}}} ->
-	  S1#{resp =>
-		  {content,
-		   'merge_msg_BrowseRegionsResp.Wrap'(OPFresp, ONFresp,
-						      TrUserData)}};
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      {_, _} -> S1
-    end.
-
 
 verify_msg(Msg, MsgName) ->
     verify_msg(Msg, MsgName, []).
@@ -10068,675 +5917,86 @@ verify_msg(Msg, MsgName) ->
 verify_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-      'AboutMeResp.BuyNowInfo' ->
-	  'v_msg_AboutMeResp.BuyNowInfo'(Msg,
-					 ['AboutMeResp.BuyNowInfo'],
-					 TrUserData);
-      'StoreBidResp' ->
-	  v_msg_StoreBidResp(Msg, ['StoreBidResp'], TrUserData);
-      'AboutMe' ->
-	  v_msg_AboutMe(Msg, ['AboutMe'], TrUserData);
-      'Item' -> v_msg_Item(Msg, ['Item'], TrUserData);
-      'ItemDetails' ->
-	  v_msg_ItemDetails(Msg, ['ItemDetails'], TrUserData);
-      'ViewItemResp.Wrap' ->
-	  'v_msg_ViewItemResp.Wrap'(Msg, ['ViewItemResp.Wrap'],
-				    TrUserData);
-      'Comment' ->
-	  v_msg_Comment(Msg, ['Comment'], TrUserData);
-      'ViewUserResp.Wrap.UserInfo' ->
-	  'v_msg_ViewUserResp.Wrap.UserInfo'(Msg,
-					     ['ViewUserResp.Wrap.UserInfo'],
-					     TrUserData);
-      'BrowseCategoriesResp.Wrap' ->
-	  'v_msg_BrowseCategoriesResp.Wrap'(Msg,
-					    ['BrowseCategoriesResp.Wrap'],
-					    TrUserData);
-      'BidInfo' ->
-	  v_msg_BidInfo(Msg, ['BidInfo'], TrUserData);
-      'ViewItemBidHistResp.Wrap' ->
-	  'v_msg_ViewItemBidHistResp.Wrap'(Msg,
-					   ['ViewItemBidHistResp.Wrap'],
-					   TrUserData);
-      'ViewItemBidHistResp' ->
-	  v_msg_ViewItemBidHistResp(Msg, ['ViewItemBidHistResp'],
-				    TrUserData);
-      'PutCategoryResp' ->
-	  v_msg_PutCategoryResp(Msg, ['PutCategoryResp'],
-				TrUserData);
-      'ViewItem' ->
-	  v_msg_ViewItem(Msg, ['ViewItem'], TrUserData);
-      'SearchByRegionResp.Wrap' ->
-	  'v_msg_SearchByRegionResp.Wrap'(Msg,
-					  ['SearchByRegionResp.Wrap'],
-					  TrUserData);
-      'SearchByRegionResp' ->
-	  v_msg_SearchByRegionResp(Msg, ['SearchByRegionResp'],
-				   TrUserData);
-      'PutRegionResp' ->
-	  v_msg_PutRegionResp(Msg, ['PutRegionResp'], TrUserData);
-      'PutRegion' ->
-	  v_msg_PutRegion(Msg, ['PutRegion'], TrUserData);
       'AuthUserResp' ->
 	  v_msg_AuthUserResp(Msg, ['AuthUserResp'], TrUserData);
-      'StoreBid' ->
-	  v_msg_StoreBid(Msg, ['StoreBid'], TrUserData);
-      'BrowseRegionsResp.Wrap' ->
-	  'v_msg_BrowseRegionsResp.Wrap'(Msg,
-					 ['BrowseRegionsResp.Wrap'],
-					 TrUserData);
-      'AboutMeResp.AboutMeBid' ->
-	  'v_msg_AboutMeResp.AboutMeBid'(Msg,
-					 ['AboutMeResp.AboutMeBid'],
-					 TrUserData);
-      'StoreItemResp' ->
-	  v_msg_StoreItemResp(Msg, ['StoreItemResp'], TrUserData);
-      'AuthUser' ->
-	  v_msg_AuthUser(Msg, ['AuthUser'], TrUserData);
-      'BrowseCategories' ->
-	  v_msg_BrowseCategories(Msg, ['BrowseCategories'],
-				 TrUserData);
-      'PutCategory' ->
-	  v_msg_PutCategory(Msg, ['PutCategory'], TrUserData);
-      'StoreItem' ->
-	  v_msg_StoreItem(Msg, ['StoreItem'], TrUserData);
+      'StoreComment' ->
+	  v_msg_StoreComment(Msg, ['StoreComment'], TrUserData);
+      'StoreBuyNow' ->
+	  v_msg_StoreBuyNow(Msg, ['StoreBuyNow'], TrUserData);
+      'AboutMeResp' ->
+	  v_msg_AboutMeResp(Msg, ['AboutMeResp'], TrUserData);
+      'SearchByCategoryResp' ->
+	  v_msg_SearchByCategoryResp(Msg,
+				     ['SearchByCategoryResp'], TrUserData);
       'BrowseCategoriesResp' ->
 	  v_msg_BrowseCategoriesResp(Msg,
 				     ['BrowseCategoriesResp'], TrUserData);
-      'ViewUserResp.Wrap' ->
-	  'v_msg_ViewUserResp.Wrap'(Msg, ['ViewUserResp.Wrap'],
-				    TrUserData);
-      'ViewUserResp' ->
-	  v_msg_ViewUserResp(Msg, ['ViewUserResp'], TrUserData);
-      'ViewItemResp' ->
-	  v_msg_ViewItemResp(Msg, ['ViewItemResp'], TrUserData);
+      'ViewItemBidHist' ->
+	  v_msg_ViewItemBidHist(Msg, ['ViewItemBidHist'],
+				TrUserData);
       'SearchByCategory' ->
 	  v_msg_SearchByCategory(Msg, ['SearchByCategory'],
 				 TrUserData);
-      'SearchByRegion' ->
-	  v_msg_SearchByRegion(Msg, ['SearchByRegion'],
-			       TrUserData);
-      'StoreCommentResp' ->
-	  v_msg_StoreCommentResp(Msg, ['StoreCommentResp'],
+      'RegisterUserResp' ->
+	  v_msg_RegisterUserResp(Msg, ['RegisterUserResp'],
 				 TrUserData);
-      'StoreBuyNow' ->
-	  v_msg_StoreBuyNow(Msg, ['StoreBuyNow'], TrUserData);
-      'SearchByCategoryResp.Wrap' ->
-	  'v_msg_SearchByCategoryResp.Wrap'(Msg,
-					    ['SearchByCategoryResp.Wrap'],
-					    TrUserData);
-      'StoreComment' ->
-	  v_msg_StoreComment(Msg, ['StoreComment'], TrUserData);
+      'BrowseRegionsResp' ->
+	  v_msg_BrowseRegionsResp(Msg, ['BrowseRegionsResp'],
+				  TrUserData);
+      'ViewUser' ->
+	  v_msg_ViewUser(Msg, ['ViewUser'], TrUserData);
+      'ViewUserResp' ->
+	  v_msg_ViewUserResp(Msg, ['ViewUserResp'], TrUserData);
+      'BrowseCategories' ->
+	  v_msg_BrowseCategories(Msg, ['BrowseCategories'],
+				 TrUserData);
+      'SearchByRegionResp' ->
+	  v_msg_SearchByRegionResp(Msg, ['SearchByRegionResp'],
+				   TrUserData);
+      'StoreBuyNowResp' ->
+	  v_msg_StoreBuyNowResp(Msg, ['StoreBuyNowResp'],
+				TrUserData);
+      'StoreItemResp' ->
+	  v_msg_StoreItemResp(Msg, ['StoreItemResp'], TrUserData);
+      'StoreBidResp' ->
+	  v_msg_StoreBidResp(Msg, ['StoreBidResp'], TrUserData);
+      'ViewItemResp' ->
+	  v_msg_ViewItemResp(Msg, ['ViewItemResp'], TrUserData);
+      'PutRegionResp' ->
+	  v_msg_PutRegionResp(Msg, ['PutRegionResp'], TrUserData);
+      'ViewItem' ->
+	  v_msg_ViewItem(Msg, ['ViewItem'], TrUserData);
+      'ViewItemBidHistResp' ->
+	  v_msg_ViewItemBidHistResp(Msg, ['ViewItemBidHistResp'],
+				    TrUserData);
       'RegisterUser' ->
 	  v_msg_RegisterUser(Msg, ['RegisterUser'], TrUserData);
       'BrowseRegions' ->
 	  v_msg_BrowseRegions(Msg, ['BrowseRegions'], TrUserData);
-      'AboutMeResp.Wrap' ->
-	  'v_msg_AboutMeResp.Wrap'(Msg, ['AboutMeResp.Wrap'],
-				   TrUserData);
-      'AboutMeResp' ->
-	  v_msg_AboutMeResp(Msg, ['AboutMeResp'], TrUserData);
-      'ViewItemBidHist' ->
-	  v_msg_ViewItemBidHist(Msg, ['ViewItemBidHist'],
+      'PutCategoryResp' ->
+	  v_msg_PutCategoryResp(Msg, ['PutCategoryResp'],
 				TrUserData);
-      'RegisterUserResp' ->
-	  v_msg_RegisterUserResp(Msg, ['RegisterUserResp'],
+      'AboutMe' ->
+	  v_msg_AboutMe(Msg, ['AboutMe'], TrUserData);
+      'PutRegion' ->
+	  v_msg_PutRegion(Msg, ['PutRegion'], TrUserData);
+      'StoreBid' ->
+	  v_msg_StoreBid(Msg, ['StoreBid'], TrUserData);
+      'StoreCommentResp' ->
+	  v_msg_StoreCommentResp(Msg, ['StoreCommentResp'],
 				 TrUserData);
-      'StoreBuyNowResp' ->
-	  v_msg_StoreBuyNowResp(Msg, ['StoreBuyNowResp'],
-				TrUserData);
-      'SearchByCategoryResp' ->
-	  v_msg_SearchByCategoryResp(Msg,
-				     ['SearchByCategoryResp'], TrUserData);
-      'ViewUser' ->
-	  v_msg_ViewUser(Msg, ['ViewUser'], TrUserData);
-      'BrowseRegionsResp' ->
-	  v_msg_BrowseRegionsResp(Msg, ['BrowseRegionsResp'],
-				  TrUserData);
+      'StoreItem' ->
+	  v_msg_StoreItem(Msg, ['StoreItem'], TrUserData);
+      'PutCategory' ->
+	  v_msg_PutCategory(Msg, ['PutCategory'], TrUserData);
+      'AuthUser' ->
+	  v_msg_AuthUser(Msg, ['AuthUser'], TrUserData);
+      'SearchByRegion' ->
+	  v_msg_SearchByRegion(Msg, ['SearchByRegion'],
+			       TrUserData);
       _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
 
-
--dialyzer({nowarn_function,'v_msg_AboutMeResp.BuyNowInfo'/3}).
-'v_msg_AboutMeResp.BuyNowInfo'(#{} = M, Path, _) ->
-    case M of
-      #{on_item_name := F1} ->
-	  v_type_bytes(F1, [on_item_name | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{seller_username := F2} ->
-	  v_type_bytes(F2, [seller_username | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{quantity := F3} ->
-	  v_type_uint32(F3, [quantity | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (on_item_name) -> ok;
-		      (seller_username) -> ok;
-		      (quantity) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_AboutMeResp.BuyNowInfo'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'AboutMeResp.BuyNowInfo'},
-		  M, Path);
-'v_msg_AboutMeResp.BuyNowInfo'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'AboutMeResp.BuyNowInfo'},
-		  X, Path).
-
--dialyzer({nowarn_function,v_msg_StoreBidResp/3}).
-v_msg_StoreBidResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {bid_id, OF1}} ->
-	  v_type_bytes(OF1, [bid_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreBidResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreBidResp'},
-		  M, Path);
-v_msg_StoreBidResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreBidResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_AboutMe/3}).
-v_msg_AboutMe(#{} = M, Path, _) ->
-    case M of
-      #{user_id := F1} -> v_type_bytes(F1, [user_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (user_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_AboutMe(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'AboutMe'},
-		  M, Path);
-v_msg_AboutMe(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'AboutMe'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_Item/3}).
-v_msg_Item(#{} = M, Path, _) ->
-    case M of
-      #{item_name := F1} ->
-	  v_type_bytes(F1, [item_name | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{description := F2} ->
-	  v_type_bytes(F2, [description | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{num_bids := F3} ->
-	  v_type_uint32(F3, [num_bids | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{quantity := F4} ->
-	  v_type_uint32(F4, [quantity | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{end_date := F5} ->
-	  v_type_int64(F5, [end_date | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{category_id := F6} ->
-	  v_type_bytes(F6, [category_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (item_name) -> ok;
-		      (description) -> ok;
-		      (num_bids) -> ok;
-		      (quantity) -> ok;
-		      (end_date) -> ok;
-		      (category_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_Item(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'Item'},
-		  M, Path);
-v_msg_Item(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'Item'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_ItemDetails/3}).
-v_msg_ItemDetails(#{} = M, Path, TrUserData) ->
-    case M of
-      #{item := F1} ->
-	  v_msg_Item(F1, [item | Path], TrUserData);
-      _ -> ok
-    end,
-    case M of
-      #{seller_name := F2} ->
-	  v_type_bytes(F2, [seller_name | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (item) -> ok;
-		      (seller_name) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ItemDetails(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ItemDetails'},
-		  M, Path);
-v_msg_ItemDetails(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ItemDetails'}, X, Path).
-
--dialyzer({nowarn_function,'v_msg_ViewItemResp.Wrap'/3}).
-'v_msg_ViewItemResp.Wrap'(#{} = M, Path, TrUserData) ->
-    case M of
-      #{items := F1} ->
-	  if is_list(F1) ->
-		 _ = [v_msg_ItemDetails(Elem, [items | Path], TrUserData)
-		      || Elem <- F1],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'ItemDetails'}},
-			       F1, [items | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (items) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_ViewItemResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewItemResp.Wrap'},
-		  M, Path);
-'v_msg_ViewItemResp.Wrap'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewItemResp.Wrap'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_Comment/3}).
-v_msg_Comment(#{} = M, Path, _) ->
-    case M of
-      #{on_item_id := F1} ->
-	  v_type_bytes(F1, [on_item_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{rating := F2} -> v_type_sfixed32(F2, [rating | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{body := F3} -> v_type_bytes(F3, [body | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{from_to := {from_username, OF4}} ->
-	  v_type_bytes(OF4, [from_username, from_to | Path]);
-      #{from_to := {to_id, OF4}} ->
-	  v_type_bytes(OF4, [to_id, from_to | Path]);
-      #{from_to := F4} ->
-	  mk_type_error(invalid_oneof, F4, [from_to | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (on_item_id) -> ok;
-		      (rating) -> ok;
-		      (body) -> ok;
-		      (from_to) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_Comment(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'Comment'},
-		  M, Path);
-v_msg_Comment(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'Comment'}, X, Path).
-
--dialyzer({nowarn_function,'v_msg_ViewUserResp.Wrap.UserInfo'/3}).
-'v_msg_ViewUserResp.Wrap.UserInfo'(#{} = M, Path,
-				   TrUserData) ->
-    case M of
-      #{username := F1} ->
-	  v_type_bytes(F1, [username | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{rating := F2} -> v_type_sfixed32(F2, [rating | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{comments := F3} ->
-	  if is_list(F3) ->
-		 _ = [v_msg_Comment(Elem, [comments | Path], TrUserData)
-		      || Elem <- F3],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'Comment'}}, F3,
-			       [comments | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (username) -> ok;
-		      (rating) -> ok;
-		      (comments) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_ViewUserResp.Wrap.UserInfo'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewUserResp.Wrap.UserInfo'},
-		  M, Path);
-'v_msg_ViewUserResp.Wrap.UserInfo'(X, Path,
-				   _TrUserData) ->
-    mk_type_error({expected_msg,
-		   'ViewUserResp.Wrap.UserInfo'},
-		  X, Path).
-
--dialyzer({nowarn_function,'v_msg_BrowseCategoriesResp.Wrap'/3}).
-'v_msg_BrowseCategoriesResp.Wrap'(#{} = M, Path, _) ->
-    case M of
-      #{category_names := F1} ->
-	  if is_list(F1) ->
-		 _ = [v_type_bytes(Elem, [category_names | Path])
-		      || Elem <- F1],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, bytes}, F1,
-			       [category_names | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (category_names) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_BrowseCategoriesResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'BrowseCategoriesResp.Wrap'},
-		  M, Path);
-'v_msg_BrowseCategoriesResp.Wrap'(X, Path,
-				  _TrUserData) ->
-    mk_type_error({expected_msg,
-		   'BrowseCategoriesResp.Wrap'},
-		  X, Path).
-
--dialyzer({nowarn_function,v_msg_BidInfo/3}).
-v_msg_BidInfo(#{} = M, Path, _) ->
-    case M of
-      #{on_item_id := F1} ->
-	  v_type_bytes(F1, [on_item_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{price := F2} -> v_type_uint32(F2, [price | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{bidder_name := F3} ->
-	  v_type_bytes(F3, [bidder_name | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (on_item_id) -> ok;
-		      (price) -> ok;
-		      (bidder_name) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_BidInfo(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'BidInfo'},
-		  M, Path);
-v_msg_BidInfo(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'BidInfo'}, X, Path).
-
--dialyzer({nowarn_function,'v_msg_ViewItemBidHistResp.Wrap'/3}).
-'v_msg_ViewItemBidHistResp.Wrap'(#{} = M, Path,
-				 TrUserData) ->
-    case M of
-      #{item_name := F1} ->
-	  v_type_bytes(F1, [item_name | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{bids := F2} ->
-	  if is_list(F2) ->
-		 _ = [v_msg_BidInfo(Elem, [bids | Path], TrUserData)
-		      || Elem <- F2],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'BidInfo'}}, F2,
-			       [bids | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (item_name) -> ok;
-		      (bids) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_ViewItemBidHistResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewItemBidHistResp.Wrap'},
-		  M, Path);
-'v_msg_ViewItemBidHistResp.Wrap'(X, Path,
-				 _TrUserData) ->
-    mk_type_error({expected_msg,
-		   'ViewItemBidHistResp.Wrap'},
-		  X, Path).
-
--dialyzer({nowarn_function,v_msg_ViewItemBidHistResp/3}).
-v_msg_ViewItemBidHistResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_ViewItemBidHistResp.Wrap'(OF1,
-					   [content, resp | Path], TrUserData);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ViewItemBidHistResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewItemBidHistResp'},
-		  M, Path);
-v_msg_ViewItemBidHistResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewItemBidHistResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_PutCategoryResp/3}).
-v_msg_PutCategoryResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {category_id, OF1}} ->
-	  v_type_bytes(OF1, [category_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_PutCategoryResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'PutCategoryResp'},
-		  M, Path);
-v_msg_PutCategoryResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'PutCategoryResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_ViewItem/3}).
-v_msg_ViewItem(#{} = M, Path, _) ->
-    case M of
-      #{item_id := F1} -> v_type_bytes(F1, [item_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (item_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ViewItem(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewItem'},
-		  M, Path);
-v_msg_ViewItem(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewItem'}, X, Path).
-
--dialyzer({nowarn_function,'v_msg_SearchByRegionResp.Wrap'/3}).
-'v_msg_SearchByRegionResp.Wrap'(#{} = M, Path,
-				TrUserData) ->
-    case M of
-      #{items := F1} ->
-	  if is_list(F1) ->
-		 _ = [v_msg_ItemDetails(Elem, [items | Path], TrUserData)
-		      || Elem <- F1],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'ItemDetails'}},
-			       F1, [items | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (items) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_SearchByRegionResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'SearchByRegionResp.Wrap'},
-		  M, Path);
-'v_msg_SearchByRegionResp.Wrap'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'SearchByRegionResp.Wrap'},
-		  X, Path).
-
--dialyzer({nowarn_function,v_msg_SearchByRegionResp/3}).
-v_msg_SearchByRegionResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_SearchByRegionResp.Wrap'(OF1,
-					  [content, resp | Path], TrUserData);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_SearchByRegionResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'SearchByRegionResp'},
-		  M, Path);
-v_msg_SearchByRegionResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'SearchByRegionResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_PutRegionResp/3}).
-v_msg_PutRegionResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {region_id, OF1}} ->
-	  v_type_bytes(OF1, [region_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_PutRegionResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'PutRegionResp'},
-		  M, Path);
-v_msg_PutRegionResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'PutRegionResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_PutRegion/3}).
-v_msg_PutRegion(#{} = M, Path, _) ->
-    case M of
-      #{region_name := F1} ->
-	  v_type_bytes(F1, [region_name | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (region_name) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_PutRegion(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'PutRegion'},
-		  M, Path);
-v_msg_PutRegion(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'PutRegion'}, X, Path).
 
 -dialyzer({nowarn_function,v_msg_AuthUserResp/3}).
 v_msg_AuthUserResp(#{} = M, Path, _) ->
@@ -10762,474 +6022,6 @@ v_msg_AuthUserResp(M, Path, _TrUserData)
 		  M, Path);
 v_msg_AuthUserResp(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'AuthUserResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_StoreBid/3}).
-v_msg_StoreBid(#{} = M, Path, _) ->
-    case M of
-      #{on_item_id := F1} ->
-	  v_type_bytes(F1, [on_item_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{bidder_id := F2} ->
-	  v_type_bytes(F2, [bidder_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{value := F3} -> v_type_uint32(F3, [value | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (on_item_id) -> ok;
-		      (bidder_id) -> ok;
-		      (value) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreBid(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreBid'},
-		  M, Path);
-v_msg_StoreBid(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreBid'}, X, Path).
-
--dialyzer({nowarn_function,'v_msg_BrowseRegionsResp.Wrap'/3}).
-'v_msg_BrowseRegionsResp.Wrap'(#{} = M, Path, _) ->
-    case M of
-      #{region_names := F1} ->
-	  if is_list(F1) ->
-		 _ = [v_type_bytes(Elem, [region_names | Path])
-		      || Elem <- F1],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, bytes}, F1,
-			       [region_names | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (region_names) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_BrowseRegionsResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'BrowseRegionsResp.Wrap'},
-		  M, Path);
-'v_msg_BrowseRegionsResp.Wrap'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'BrowseRegionsResp.Wrap'},
-		  X, Path).
-
--dialyzer({nowarn_function,'v_msg_AboutMeResp.AboutMeBid'/3}).
-'v_msg_AboutMeResp.AboutMeBid'(#{} = M, Path, _) ->
-    case M of
-      #{on_item_name := F1} ->
-	  v_type_bytes(F1, [on_item_name | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{seller_username := F2} ->
-	  v_type_bytes(F2, [seller_username | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{price := F3} -> v_type_uint32(F3, [price | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (on_item_name) -> ok;
-		      (seller_username) -> ok;
-		      (price) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_AboutMeResp.AboutMeBid'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'AboutMeResp.AboutMeBid'},
-		  M, Path);
-'v_msg_AboutMeResp.AboutMeBid'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'AboutMeResp.AboutMeBid'},
-		  X, Path).
-
--dialyzer({nowarn_function,v_msg_StoreItemResp/3}).
-v_msg_StoreItemResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {item_id, OF1}} ->
-	  v_type_bytes(OF1, [item_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreItemResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreItemResp'},
-		  M, Path);
-v_msg_StoreItemResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreItemResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_AuthUser/3}).
-v_msg_AuthUser(#{} = M, Path, _) ->
-    case M of
-      #{username := F1} ->
-	  v_type_bytes(F1, [username | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{password := F2} ->
-	  v_type_bytes(F2, [password | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (username) -> ok;
-		      (password) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_AuthUser(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'AuthUser'},
-		  M, Path);
-v_msg_AuthUser(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'AuthUser'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_BrowseCategories/3}).
-v_msg_BrowseCategories(#{} = M, Path, _) ->
-    lists:foreach(fun (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_BrowseCategories(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'BrowseCategories'},
-		  M, Path);
-v_msg_BrowseCategories(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'BrowseCategories'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_PutCategory/3}).
-v_msg_PutCategory(#{} = M, Path, _) ->
-    case M of
-      #{category_name := F1} ->
-	  v_type_bytes(F1, [category_name | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (category_name) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_PutCategory(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'PutCategory'},
-		  M, Path);
-v_msg_PutCategory(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'PutCategory'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_StoreItem/3}).
-v_msg_StoreItem(#{} = M, Path, _) ->
-    case M of
-      #{item_name := F1} ->
-	  v_type_bytes(F1, [item_name | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{description := F2} ->
-	  v_type_bytes(F2, [description | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{quantity := F3} ->
-	  v_type_uint32(F3, [quantity | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{category_id := F4} ->
-	  v_type_bytes(F4, [category_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{seller_id := F5} ->
-	  v_type_bytes(F5, [seller_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (item_name) -> ok;
-		      (description) -> ok;
-		      (quantity) -> ok;
-		      (category_id) -> ok;
-		      (seller_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreItem(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreItem'},
-		  M, Path);
-v_msg_StoreItem(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreItem'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_BrowseCategoriesResp/3}).
-v_msg_BrowseCategoriesResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_BrowseCategoriesResp.Wrap'(OF1,
-					    [content, resp | Path], TrUserData);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_BrowseCategoriesResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'BrowseCategoriesResp'},
-		  M, Path);
-v_msg_BrowseCategoriesResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'BrowseCategoriesResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,'v_msg_ViewUserResp.Wrap'/3}).
-'v_msg_ViewUserResp.Wrap'(#{} = M, Path, TrUserData) ->
-    case M of
-      #{user_details := F1} ->
-	  'v_msg_ViewUserResp.Wrap.UserInfo'(F1,
-					     [user_details | Path], TrUserData);
-      _ -> ok
-    end,
-    lists:foreach(fun (user_details) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_ViewUserResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewUserResp.Wrap'},
-		  M, Path);
-'v_msg_ViewUserResp.Wrap'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewUserResp.Wrap'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_ViewUserResp/3}).
-v_msg_ViewUserResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_ViewUserResp.Wrap'(OF1, [content, resp | Path],
-				    TrUserData);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ViewUserResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewUserResp'},
-		  M, Path);
-v_msg_ViewUserResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewUserResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_ViewItemResp/3}).
-v_msg_ViewItemResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_ViewItemResp.Wrap'(OF1, [content, resp | Path],
-				    TrUserData);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ViewItemResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewItemResp'},
-		  M, Path);
-v_msg_ViewItemResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewItemResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_SearchByCategory/3}).
-v_msg_SearchByCategory(#{} = M, Path, _) ->
-    case M of
-      #{category_id := F1} ->
-	  v_type_bytes(F1, [category_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (category_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_SearchByCategory(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'SearchByCategory'},
-		  M, Path);
-v_msg_SearchByCategory(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'SearchByCategory'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_SearchByRegion/3}).
-v_msg_SearchByRegion(#{} = M, Path, _) ->
-    case M of
-      #{category_id := F1} ->
-	  v_type_bytes(F1, [category_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{region_id := F2} ->
-	  v_type_bytes(F2, [region_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (category_id) -> ok;
-		      (region_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_SearchByRegion(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'SearchByRegion'},
-		  M, Path);
-v_msg_SearchByRegion(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'SearchByRegion'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_StoreCommentResp/3}).
-v_msg_StoreCommentResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {comment_id, OF1}} ->
-	  v_type_bytes(OF1, [comment_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreCommentResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreCommentResp'},
-		  M, Path);
-v_msg_StoreCommentResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreCommentResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_StoreBuyNow/3}).
-v_msg_StoreBuyNow(#{} = M, Path, _) ->
-    case M of
-      #{on_item_id := F1} ->
-	  v_type_bytes(F1, [on_item_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{buyer_id := F2} ->
-	  v_type_bytes(F2, [buyer_id | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{quantity := F3} ->
-	  v_type_uint32(F3, [quantity | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (on_item_id) -> ok;
-		      (buyer_id) -> ok;
-		      (quantity) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreBuyNow(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreBuyNow'},
-		  M, Path);
-v_msg_StoreBuyNow(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreBuyNow'}, X, Path).
-
--dialyzer({nowarn_function,'v_msg_SearchByCategoryResp.Wrap'/3}).
-'v_msg_SearchByCategoryResp.Wrap'(#{} = M, Path,
-				  TrUserData) ->
-    case M of
-      #{items := F1} ->
-	  if is_list(F1) ->
-		 _ = [v_msg_Item(Elem, [items | Path], TrUserData)
-		      || Elem <- F1],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'Item'}}, F1,
-			       [items | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (items) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_SearchByCategoryResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'SearchByCategoryResp.Wrap'},
-		  M, Path);
-'v_msg_SearchByCategoryResp.Wrap'(X, Path,
-				  _TrUserData) ->
-    mk_type_error({expected_msg,
-		   'SearchByCategoryResp.Wrap'},
-		  X, Path).
 
 -dialyzer({nowarn_function,v_msg_StoreComment/3}).
 v_msg_StoreComment(#{} = M, Path, _) ->
@@ -11271,6 +6063,468 @@ v_msg_StoreComment(M, Path, _TrUserData)
 		  M, Path);
 v_msg_StoreComment(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'StoreComment'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_StoreBuyNow/3}).
+v_msg_StoreBuyNow(#{} = M, Path, _) ->
+    case M of
+      #{on_item_id := F1} ->
+	  v_type_bytes(F1, [on_item_id | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{buyer_id := F2} ->
+	  v_type_bytes(F2, [buyer_id | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{quantity := F3} ->
+	  v_type_uint32(F3, [quantity | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (on_item_id) -> ok;
+		      (buyer_id) -> ok;
+		      (quantity) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_StoreBuyNow(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'StoreBuyNow'},
+		  M, Path);
+v_msg_StoreBuyNow(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreBuyNow'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_AboutMeResp/3}).
+v_msg_AboutMeResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_AboutMeResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'AboutMeResp'},
+		  M, Path);
+v_msg_AboutMeResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'AboutMeResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_SearchByCategoryResp/3}).
+v_msg_SearchByCategoryResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_SearchByCategoryResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'SearchByCategoryResp'},
+		  M, Path);
+v_msg_SearchByCategoryResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'SearchByCategoryResp'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_BrowseCategoriesResp/3}).
+v_msg_BrowseCategoriesResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_BrowseCategoriesResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'BrowseCategoriesResp'},
+		  M, Path);
+v_msg_BrowseCategoriesResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'BrowseCategoriesResp'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_ViewItemBidHist/3}).
+v_msg_ViewItemBidHist(#{} = M, Path, _) ->
+    case M of
+      #{item_id := F1} -> v_type_bytes(F1, [item_id | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (item_id) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ViewItemBidHist(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ViewItemBidHist'},
+		  M, Path);
+v_msg_ViewItemBidHist(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ViewItemBidHist'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_SearchByCategory/3}).
+v_msg_SearchByCategory(#{} = M, Path, _) ->
+    case M of
+      #{category_id := F1} ->
+	  v_type_bytes(F1, [category_id | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (category_id) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_SearchByCategory(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'SearchByCategory'},
+		  M, Path);
+v_msg_SearchByCategory(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'SearchByCategory'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_RegisterUserResp/3}).
+v_msg_RegisterUserResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {user_id, OF1}} ->
+	  v_type_bytes(OF1, [user_id, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_RegisterUserResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'RegisterUserResp'},
+		  M, Path);
+v_msg_RegisterUserResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'RegisterUserResp'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_BrowseRegionsResp/3}).
+v_msg_BrowseRegionsResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_BrowseRegionsResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'BrowseRegionsResp'},
+		  M, Path);
+v_msg_BrowseRegionsResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'BrowseRegionsResp'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_ViewUser/3}).
+v_msg_ViewUser(#{} = M, Path, _) ->
+    case M of
+      #{user_id := F1} -> v_type_bytes(F1, [user_id | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (user_id) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ViewUser(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ViewUser'},
+		  M, Path);
+v_msg_ViewUser(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ViewUser'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_ViewUserResp/3}).
+v_msg_ViewUserResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ViewUserResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ViewUserResp'},
+		  M, Path);
+v_msg_ViewUserResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ViewUserResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_BrowseCategories/3}).
+v_msg_BrowseCategories(#{} = M, Path, _) ->
+    lists:foreach(fun (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_BrowseCategories(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'BrowseCategories'},
+		  M, Path);
+v_msg_BrowseCategories(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'BrowseCategories'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_SearchByRegionResp/3}).
+v_msg_SearchByRegionResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_SearchByRegionResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'SearchByRegionResp'},
+		  M, Path);
+v_msg_SearchByRegionResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'SearchByRegionResp'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_StoreBuyNowResp/3}).
+v_msg_StoreBuyNowResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {buy_now_id, OF1}} ->
+	  v_type_bytes(OF1, [buy_now_id, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_StoreBuyNowResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'StoreBuyNowResp'},
+		  M, Path);
+v_msg_StoreBuyNowResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreBuyNowResp'}, X,
+		  Path).
+
+-dialyzer({nowarn_function,v_msg_StoreItemResp/3}).
+v_msg_StoreItemResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {item_id, OF1}} ->
+	  v_type_bytes(OF1, [item_id, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_StoreItemResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'StoreItemResp'},
+		  M, Path);
+v_msg_StoreItemResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreItemResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_StoreBidResp/3}).
+v_msg_StoreBidResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {bid_id, OF1}} ->
+	  v_type_bytes(OF1, [bid_id, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_StoreBidResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'StoreBidResp'},
+		  M, Path);
+v_msg_StoreBidResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreBidResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_ViewItemResp/3}).
+v_msg_ViewItemResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ViewItemResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ViewItemResp'},
+		  M, Path);
+v_msg_ViewItemResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ViewItemResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_PutRegionResp/3}).
+v_msg_PutRegionResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {region_id, OF1}} ->
+	  v_type_bytes(OF1, [region_id, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_PutRegionResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'PutRegionResp'},
+		  M, Path);
+v_msg_PutRegionResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'PutRegionResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_ViewItem/3}).
+v_msg_ViewItem(#{} = M, Path, _) ->
+    case M of
+      #{item_id := F1} -> v_type_bytes(F1, [item_id | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (item_id) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ViewItem(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ViewItem'},
+		  M, Path);
+v_msg_ViewItem(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ViewItem'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_ViewItemBidHistResp/3}).
+v_msg_ViewItemBidHistResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ViewItemBidHistResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ViewItemBidHistResp'},
+		  M, Path);
+v_msg_ViewItemBidHistResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ViewItemBidHistResp'}, X,
+		  Path).
 
 -dialyzer({nowarn_function,v_msg_RegisterUser/3}).
 v_msg_RegisterUser(#{} = M, Path, _) ->
@@ -11320,98 +6574,11 @@ v_msg_BrowseRegions(M, Path, _TrUserData)
 v_msg_BrowseRegions(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'BrowseRegions'}, X, Path).
 
--dialyzer({nowarn_function,'v_msg_AboutMeResp.Wrap'/3}).
-'v_msg_AboutMeResp.Wrap'(#{} = M, Path, TrUserData) ->
+-dialyzer({nowarn_function,v_msg_PutCategoryResp/3}).
+v_msg_PutCategoryResp(#{} = M, Path, _) ->
     case M of
-      #{username := F1} ->
-	  v_type_bytes(F1, [username | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{rating := F2} -> v_type_sfixed32(F2, [rating | Path]);
-      _ -> ok
-    end,
-    case M of
-      #{sold_items := F3} ->
-	  if is_list(F3) ->
-		 _ = [v_msg_Item(Elem, [sold_items | Path], TrUserData)
-		      || Elem <- F3],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'Item'}}, F3,
-			       [sold_items | Path])
-	  end;
-      _ -> ok
-    end,
-    case M of
-      #{bought_items := F4} ->
-	  if is_list(F4) ->
-		 _ = ['v_msg_AboutMeResp.BuyNowInfo'(Elem,
-						     [bought_items | Path],
-						     TrUserData)
-		      || Elem <- F4],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of,
-				{msg, 'AboutMeResp.BuyNowInfo'}},
-			       F4, [bought_items | Path])
-	  end;
-      _ -> ok
-    end,
-    case M of
-      #{placed_bids := F5} ->
-	  if is_list(F5) ->
-		 _ = ['v_msg_AboutMeResp.AboutMeBid'(Elem,
-						     [placed_bids | Path],
-						     TrUserData)
-		      || Elem <- F5],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of,
-				{msg, 'AboutMeResp.AboutMeBid'}},
-			       F5, [placed_bids | Path])
-	  end;
-      _ -> ok
-    end,
-    case M of
-      #{authored_comments := F6} ->
-	  if is_list(F6) ->
-		 _ = [v_msg_Comment(Elem, [authored_comments | Path],
-				    TrUserData)
-		      || Elem <- F6],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'Comment'}}, F6,
-			       [authored_comments | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (username) -> ok;
-		      (rating) -> ok;
-		      (sold_items) -> ok;
-		      (bought_items) -> ok;
-		      (placed_bids) -> ok;
-		      (authored_comments) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_AboutMeResp.Wrap'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'AboutMeResp.Wrap'},
-		  M, Path);
-'v_msg_AboutMeResp.Wrap'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'AboutMeResp.Wrap'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_AboutMeResp/3}).
-v_msg_AboutMeResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_AboutMeResp.Wrap'(OF1, [content, resp | Path],
-				   TrUserData);
+      #{resp := {category_id, OF1}} ->
+	  v_type_bytes(OF1, [category_id, resp | Path]);
       #{resp := {error_reason, OF1}} ->
 	  v_type_uint32(OF1, [error_reason, resp | Path]);
       #{resp := F1} ->
@@ -11424,116 +6591,17 @@ v_msg_AboutMeResp(#{} = M, Path, TrUserData) ->
 		  end,
 		  maps:keys(M)),
     ok;
-v_msg_AboutMeResp(M, Path, _TrUserData)
+v_msg_PutCategoryResp(M, Path, _TrUserData)
     when is_map(M) ->
     mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'AboutMeResp'},
+		   'PutCategoryResp'},
 		  M, Path);
-v_msg_AboutMeResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'AboutMeResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_ViewItemBidHist/3}).
-v_msg_ViewItemBidHist(#{} = M, Path, _) ->
-    case M of
-      #{item_id := F1} -> v_type_bytes(F1, [item_id | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (item_id) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ViewItemBidHist(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewItemBidHist'},
-		  M, Path);
-v_msg_ViewItemBidHist(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewItemBidHist'}, X,
+v_msg_PutCategoryResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'PutCategoryResp'}, X,
 		  Path).
 
--dialyzer({nowarn_function,v_msg_RegisterUserResp/3}).
-v_msg_RegisterUserResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {user_id, OF1}} ->
-	  v_type_bytes(OF1, [user_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_RegisterUserResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'RegisterUserResp'},
-		  M, Path);
-v_msg_RegisterUserResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'RegisterUserResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_StoreBuyNowResp/3}).
-v_msg_StoreBuyNowResp(#{} = M, Path, _) ->
-    case M of
-      #{resp := {buy_now_id, OF1}} ->
-	  v_type_bytes(OF1, [buy_now_id, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_StoreBuyNowResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'StoreBuyNowResp'},
-		  M, Path);
-v_msg_StoreBuyNowResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'StoreBuyNowResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_SearchByCategoryResp/3}).
-v_msg_SearchByCategoryResp(#{} = M, Path, TrUserData) ->
-    case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_SearchByCategoryResp.Wrap'(OF1,
-					    [content, resp | Path], TrUserData);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
-      _ -> ok
-    end,
-    lists:foreach(fun (resp) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_SearchByCategoryResp(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'SearchByCategoryResp'},
-		  M, Path);
-v_msg_SearchByCategoryResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'SearchByCategoryResp'}, X,
-		  Path).
-
--dialyzer({nowarn_function,v_msg_ViewUser/3}).
-v_msg_ViewUser(#{} = M, Path, _) ->
+-dialyzer({nowarn_function,v_msg_AboutMe/3}).
+v_msg_AboutMe(#{} = M, Path, _) ->
     case M of
       #{user_id := F1} -> v_type_bytes(F1, [user_id | Path]);
       _ -> ok
@@ -11544,19 +6612,69 @@ v_msg_ViewUser(#{} = M, Path, _) ->
 		  end,
 		  maps:keys(M)),
     ok;
-v_msg_ViewUser(M, Path, _TrUserData) when is_map(M) ->
+v_msg_AboutMe(M, Path, _TrUserData) when is_map(M) ->
     mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ViewUser'},
+		   'AboutMe'},
 		  M, Path);
-v_msg_ViewUser(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ViewUser'}, X, Path).
+v_msg_AboutMe(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'AboutMe'}, X, Path).
 
--dialyzer({nowarn_function,v_msg_BrowseRegionsResp/3}).
-v_msg_BrowseRegionsResp(#{} = M, Path, TrUserData) ->
+-dialyzer({nowarn_function,v_msg_PutRegion/3}).
+v_msg_PutRegion(#{} = M, Path, _) ->
     case M of
-      #{resp := {content, OF1}} ->
-	  'v_msg_BrowseRegionsResp.Wrap'(OF1,
-					 [content, resp | Path], TrUserData);
+      #{region_name := F1} ->
+	  v_type_bytes(F1, [region_name | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (region_name) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_PutRegion(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'PutRegion'},
+		  M, Path);
+v_msg_PutRegion(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'PutRegion'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_StoreBid/3}).
+v_msg_StoreBid(#{} = M, Path, _) ->
+    case M of
+      #{on_item_id := F1} ->
+	  v_type_bytes(F1, [on_item_id | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{bidder_id := F2} ->
+	  v_type_bytes(F2, [bidder_id | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{value := F3} -> v_type_uint32(F3, [value | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (on_item_id) -> ok;
+		      (bidder_id) -> ok;
+		      (value) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_StoreBid(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'StoreBid'},
+		  M, Path);
+v_msg_StoreBid(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreBid'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_StoreCommentResp/3}).
+v_msg_StoreCommentResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {comment_id, OF1}} ->
+	  v_type_bytes(OF1, [comment_id, resp | Path]);
       #{resp := {error_reason, OF1}} ->
 	  v_type_uint32(OF1, [error_reason, resp | Path]);
       #{resp := F1} ->
@@ -11569,25 +6687,132 @@ v_msg_BrowseRegionsResp(#{} = M, Path, TrUserData) ->
 		  end,
 		  maps:keys(M)),
     ok;
-v_msg_BrowseRegionsResp(M, Path, _TrUserData)
+v_msg_StoreCommentResp(M, Path, _TrUserData)
     when is_map(M) ->
     mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'BrowseRegionsResp'},
+		   'StoreCommentResp'},
 		  M, Path);
-v_msg_BrowseRegionsResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'BrowseRegionsResp'}, X,
+v_msg_StoreCommentResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreCommentResp'}, X,
 		  Path).
 
--dialyzer({nowarn_function,v_type_int64/2}).
-v_type_int64(N, _Path)
-    when -9223372036854775808 =< N,
-	 N =< 9223372036854775807 ->
+-dialyzer({nowarn_function,v_msg_StoreItem/3}).
+v_msg_StoreItem(#{} = M, Path, _) ->
+    case M of
+      #{item_name := F1} ->
+	  v_type_bytes(F1, [item_name | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{description := F2} ->
+	  v_type_bytes(F2, [description | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{quantity := F3} ->
+	  v_type_uint32(F3, [quantity | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{category_id := F4} ->
+	  v_type_bytes(F4, [category_id | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{seller_id := F5} ->
+	  v_type_bytes(F5, [seller_id | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (item_name) -> ok;
+		      (description) -> ok;
+		      (quantity) -> ok;
+		      (category_id) -> ok;
+		      (seller_id) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
     ok;
-v_type_int64(N, Path) when is_integer(N) ->
-    mk_type_error({value_out_of_range, int64, signed, 64},
-		  N, Path);
-v_type_int64(X, Path) ->
-    mk_type_error({bad_integer, int64, signed, 64}, X,
+v_msg_StoreItem(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'StoreItem'},
+		  M, Path);
+v_msg_StoreItem(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'StoreItem'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_PutCategory/3}).
+v_msg_PutCategory(#{} = M, Path, _) ->
+    case M of
+      #{category_name := F1} ->
+	  v_type_bytes(F1, [category_name | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (category_name) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_PutCategory(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'PutCategory'},
+		  M, Path);
+v_msg_PutCategory(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'PutCategory'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_AuthUser/3}).
+v_msg_AuthUser(#{} = M, Path, _) ->
+    case M of
+      #{username := F1} ->
+	  v_type_bytes(F1, [username | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{password := F2} ->
+	  v_type_bytes(F2, [password | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (username) -> ok;
+		      (password) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_AuthUser(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'AuthUser'},
+		  M, Path);
+v_msg_AuthUser(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'AuthUser'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_SearchByRegion/3}).
+v_msg_SearchByRegion(#{} = M, Path, _) ->
+    case M of
+      #{category_id := F1} ->
+	  v_type_bytes(F1, [category_id | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{region_id := F2} ->
+	  v_type_bytes(F2, [region_id | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (category_id) -> ok;
+		      (region_id) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_SearchByRegion(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'SearchByRegion'},
+		  M, Path);
+v_msg_SearchByRegion(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'SearchByRegion'}, X,
 		  Path).
 
 -dialyzer({nowarn_function,v_type_uint32/2}).
@@ -11637,237 +6862,15 @@ prettify_path(PathR) ->
 -compile({inline,id/2}).
 id(X, _TrUserData) -> X.
 
--compile({inline,cons/3}).
-cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
-
--compile({inline,lists_reverse/2}).
-'lists_reverse'(L, _TrUserData) -> lists:reverse(L).
--compile({inline,'erlang_++'/3}).
-'erlang_++'(A, B, _TrUserData) -> A ++ B.
 
 get_msg_defs() ->
-    [{{msg, 'AboutMeResp.BuyNowInfo'},
-      [#{name => on_item_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => seller_username, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => quantity, fnum => 3, rnum => 4,
-	 type => uint32, occurrence => optional, opts => []}]},
-     {{msg, 'StoreBidResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => bid_id, fnum => 1, rnum => 2, type => bytes,
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'AboutMe'},
-      [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
-	 occurrence => optional, opts => []}]},
-     {{msg, 'Item'},
-      [#{name => item_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => description, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => num_bids, fnum => 3, rnum => 4,
-	 type => uint32, occurrence => optional, opts => []},
-       #{name => quantity, fnum => 4, rnum => 5,
-	 type => uint32, occurrence => optional, opts => []},
-       #{name => end_date, fnum => 5, rnum => 6, type => int64,
-	 occurrence => optional, opts => []},
-       #{name => category_id, fnum => 6, rnum => 7,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'ItemDetails'},
-      [#{name => item, fnum => 1, rnum => 2,
-	 type => {msg, 'Item'}, occurrence => optional,
-	 opts => []},
-       #{name => seller_name, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'ViewItemResp.Wrap'},
-      [#{name => items, fnum => 1, rnum => 2,
-	 type => {msg, 'ItemDetails'}, occurrence => repeated,
-	 opts => []}]},
-     {{msg, 'Comment'},
-      [#{name => on_item_id, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => rating, fnum => 2, rnum => 3,
-	 type => sfixed32, occurrence => optional, opts => []},
-       #{name => body, fnum => 3, rnum => 4, type => bytes,
-	 occurrence => optional, opts => []},
-       #{name => from_to, rnum => 5,
-	 fields =>
-	     [#{name => from_username, fnum => 4, rnum => 5,
-		type => bytes, occurrence => optional, opts => []},
-	      #{name => to_id, fnum => 5, rnum => 5, type => bytes,
-		occurrence => optional, opts => []}]}]},
-     {{msg, 'ViewUserResp.Wrap.UserInfo'},
-      [#{name => username, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => rating, fnum => 2, rnum => 3,
-	 type => sfixed32, occurrence => optional, opts => []},
-       #{name => comments, fnum => 3, rnum => 4,
-	 type => {msg, 'Comment'}, occurrence => repeated,
-	 opts => []}]},
-     {{msg, 'BrowseCategoriesResp.Wrap'},
-      [#{name => category_names, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => repeated, opts => []}]},
-     {{msg, 'BidInfo'},
-      [#{name => on_item_id, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => price, fnum => 2, rnum => 3, type => uint32,
-	 occurrence => optional, opts => []},
-       #{name => bidder_name, fnum => 3, rnum => 4,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'ViewItemBidHistResp.Wrap'},
-      [#{name => item_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => bids, fnum => 2, rnum => 3,
-	 type => {msg, 'BidInfo'}, occurrence => repeated,
-	 opts => []}]},
-     {{msg, 'ViewItemBidHistResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'ViewItemBidHistResp.Wrap'},
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'PutCategoryResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => category_id, fnum => 1, rnum => 2,
-		type => bytes, occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'ViewItem'},
-      [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
-	 occurrence => optional, opts => []}]},
-     {{msg, 'SearchByRegionResp.Wrap'},
-      [#{name => items, fnum => 1, rnum => 2,
-	 type => {msg, 'ItemDetails'}, occurrence => repeated,
-	 opts => []}]},
-     {{msg, 'SearchByRegionResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'SearchByRegionResp.Wrap'},
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'PutRegionResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => region_id, fnum => 1, rnum => 2,
-		type => bytes, occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'PutRegion'},
-      [#{name => region_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'AuthUserResp'},
+    [{{msg, 'AuthUserResp'},
       [#{name => resp, rnum => 2,
 	 fields =>
 	     [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
 		occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
 		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'StoreBid'},
-      [#{name => on_item_id, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => bidder_id, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => value, fnum => 3, rnum => 4, type => uint32,
-	 occurrence => optional, opts => []}]},
-     {{msg, 'BrowseRegionsResp.Wrap'},
-      [#{name => region_names, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => repeated, opts => []}]},
-     {{msg, 'AboutMeResp.AboutMeBid'},
-      [#{name => on_item_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => seller_username, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => price, fnum => 3, rnum => 4, type => uint32,
-	 occurrence => optional, opts => []}]},
-     {{msg, 'StoreItemResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'AuthUser'},
-      [#{name => username, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => password, fnum => 2, rnum => 3, type => bytes,
-	 occurrence => optional, opts => []}]},
-     {{msg, 'BrowseCategories'}, []},
-     {{msg, 'PutCategory'},
-      [#{name => category_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'StoreItem'},
-      [#{name => item_name, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => description, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => quantity, fnum => 3, rnum => 4,
-	 type => uint32, occurrence => optional, opts => []},
-       #{name => category_id, fnum => 4, rnum => 5,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => seller_id, fnum => 5, rnum => 6,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'BrowseCategoriesResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'BrowseCategoriesResp.Wrap'},
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'ViewUserResp.Wrap'},
-      [#{name => user_details, fnum => 1, rnum => 2,
-	 type => {msg, 'ViewUserResp.Wrap.UserInfo'},
-	 occurrence => optional, opts => []}]},
-     {{msg, 'ViewUserResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'ViewUserResp.Wrap'},
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'ViewItemResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'ViewItemResp.Wrap'},
-		occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'SearchByCategory'},
-      [#{name => category_id, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'SearchByRegion'},
-      [#{name => category_id, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => region_id, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'StoreCommentResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => comment_id, fnum => 1, rnum => 2,
-		type => bytes, occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'StoreBuyNow'},
-      [#{name => on_item_id, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => buyer_id, fnum => 2, rnum => 3, type => bytes,
-	 occurrence => optional, opts => []},
-       #{name => quantity, fnum => 3, rnum => 4,
-	 type => uint32, occurrence => optional, opts => []}]},
-     {{msg, 'SearchByCategoryResp.Wrap'},
-      [#{name => items, fnum => 1, rnum => 2,
-	 type => {msg, 'Item'}, occurrence => repeated,
-	 opts => []}]},
      {{msg, 'StoreComment'},
       [#{name => on_item_id, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
@@ -11879,47 +6882,70 @@ get_msg_defs() ->
 	 type => sfixed32, occurrence => optional, opts => []},
        #{name => body, fnum => 5, rnum => 6, type => bytes,
 	 occurrence => optional, opts => []}]},
-     {{msg, 'RegisterUser'},
-      [#{name => username, fnum => 1, rnum => 2,
+     {{msg, 'StoreBuyNow'},
+      [#{name => on_item_id, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
-       #{name => password, fnum => 2, rnum => 3, type => bytes,
+       #{name => buyer_id, fnum => 2, rnum => 3, type => bytes,
 	 occurrence => optional, opts => []},
-       #{name => region_id, fnum => 3, rnum => 4,
-	 type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'BrowseRegions'}, []},
-     {{msg, 'AboutMeResp.Wrap'},
-      [#{name => username, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => rating, fnum => 2, rnum => 3,
-	 type => sfixed32, occurrence => optional, opts => []},
-       #{name => sold_items, fnum => 3, rnum => 4,
-	 type => {msg, 'Item'}, occurrence => repeated,
-	 opts => []},
-       #{name => bought_items, fnum => 4, rnum => 5,
-	 type => {msg, 'AboutMeResp.BuyNowInfo'},
-	 occurrence => repeated, opts => []},
-       #{name => placed_bids, fnum => 5, rnum => 6,
-	 type => {msg, 'AboutMeResp.AboutMeBid'},
-	 occurrence => repeated, opts => []},
-       #{name => authored_comments, fnum => 6, rnum => 7,
-	 type => {msg, 'Comment'}, occurrence => repeated,
-	 opts => []}]},
+       #{name => quantity, fnum => 3, rnum => 4,
+	 type => uint32, occurrence => optional, opts => []}]},
      {{msg, 'AboutMeResp'},
       [#{name => resp, rnum => 2,
 	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'AboutMeResp.Wrap'},
-		occurrence => optional, opts => []},
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'SearchByCategoryResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'BrowseCategoriesResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
 		type => uint32, occurrence => optional, opts => []}]}]},
      {{msg, 'ViewItemBidHist'},
       [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
 	 occurrence => optional, opts => []}]},
+     {{msg, 'SearchByCategory'},
+      [#{name => category_id, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'RegisterUserResp'},
       [#{name => resp, rnum => 2,
 	 fields =>
 	     [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
 		occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'BrowseRegionsResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'ViewUser'},
+      [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => optional, opts => []}]},
+     {{msg, 'ViewUserResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'BrowseCategories'}, []},
+     {{msg, 'SearchByRegionResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
 		type => uint32, occurrence => optional, opts => []}]}]},
      {{msg, 'StoreBuyNowResp'},
@@ -11929,73 +6955,136 @@ get_msg_defs() ->
 		type => bytes, occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
 		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'SearchByCategoryResp'},
+     {{msg, 'StoreItemResp'},
       [#{name => resp, rnum => 2,
 	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'SearchByCategoryResp.Wrap'},
+	     [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
 		occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
 		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'ViewUser'},
-      [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
-	 occurrence => optional, opts => []}]},
-     {{msg, 'BrowseRegionsResp'},
+     {{msg, 'StoreBidResp'},
       [#{name => resp, rnum => 2,
 	 fields =>
-	     [#{name => content, fnum => 1, rnum => 2,
-		type => {msg, 'BrowseRegionsResp.Wrap'},
+	     [#{name => bid_id, fnum => 1, rnum => 2, type => bytes,
 		occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional,
-		opts => []}]}]}].
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'ViewItemResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'PutRegionResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => region_id, fnum => 1, rnum => 2,
+		type => bytes, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'ViewItem'},
+      [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => optional, opts => []}]},
+     {{msg, 'ViewItemBidHistResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'RegisterUser'},
+      [#{name => username, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => password, fnum => 2, rnum => 3, type => bytes,
+	 occurrence => optional, opts => []},
+       #{name => region_id, fnum => 3, rnum => 4,
+	 type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'BrowseRegions'}, []},
+     {{msg, 'PutCategoryResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => category_id, fnum => 1, rnum => 2,
+		type => bytes, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'AboutMe'},
+      [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => optional, opts => []}]},
+     {{msg, 'PutRegion'},
+      [#{name => region_name, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'StoreBid'},
+      [#{name => on_item_id, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => bidder_id, fnum => 2, rnum => 3,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => value, fnum => 3, rnum => 4, type => uint32,
+	 occurrence => optional, opts => []}]},
+     {{msg, 'StoreCommentResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => comment_id, fnum => 1, rnum => 2,
+		type => bytes, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'StoreItem'},
+      [#{name => item_name, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => description, fnum => 2, rnum => 3,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => quantity, fnum => 3, rnum => 4,
+	 type => uint32, occurrence => optional, opts => []},
+       #{name => category_id, fnum => 4, rnum => 5,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => seller_id, fnum => 5, rnum => 6,
+	 type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'PutCategory'},
+      [#{name => category_name, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'AuthUser'},
+      [#{name => username, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => password, fnum => 2, rnum => 3, type => bytes,
+	 occurrence => optional, opts => []}]},
+     {{msg, 'SearchByRegion'},
+      [#{name => category_id, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => region_id, fnum => 2, rnum => 3,
+	 type => bytes, occurrence => optional, opts => []}]}].
 
 
 get_msg_names() ->
-    ['AboutMeResp.BuyNowInfo', 'StoreBidResp', 'AboutMe',
-     'Item', 'ItemDetails', 'ViewItemResp.Wrap', 'Comment',
-     'ViewUserResp.Wrap.UserInfo',
-     'BrowseCategoriesResp.Wrap', 'BidInfo',
-     'ViewItemBidHistResp.Wrap', 'ViewItemBidHistResp',
-     'PutCategoryResp', 'ViewItem',
-     'SearchByRegionResp.Wrap', 'SearchByRegionResp',
-     'PutRegionResp', 'PutRegion', 'AuthUserResp',
-     'StoreBid', 'BrowseRegionsResp.Wrap',
-     'AboutMeResp.AboutMeBid', 'StoreItemResp', 'AuthUser',
-     'BrowseCategories', 'PutCategory', 'StoreItem',
-     'BrowseCategoriesResp', 'ViewUserResp.Wrap',
-     'ViewUserResp', 'ViewItemResp', 'SearchByCategory',
-     'SearchByRegion', 'StoreCommentResp', 'StoreBuyNow',
-     'SearchByCategoryResp.Wrap', 'StoreComment',
-     'RegisterUser', 'BrowseRegions', 'AboutMeResp.Wrap',
-     'AboutMeResp', 'ViewItemBidHist', 'RegisterUserResp',
-     'StoreBuyNowResp', 'SearchByCategoryResp', 'ViewUser',
-     'BrowseRegionsResp'].
+    ['AuthUserResp', 'StoreComment', 'StoreBuyNow',
+     'AboutMeResp', 'SearchByCategoryResp',
+     'BrowseCategoriesResp', 'ViewItemBidHist',
+     'SearchByCategory', 'RegisterUserResp',
+     'BrowseRegionsResp', 'ViewUser', 'ViewUserResp',
+     'BrowseCategories', 'SearchByRegionResp',
+     'StoreBuyNowResp', 'StoreItemResp', 'StoreBidResp',
+     'ViewItemResp', 'PutRegionResp', 'ViewItem',
+     'ViewItemBidHistResp', 'RegisterUser', 'BrowseRegions',
+     'PutCategoryResp', 'AboutMe', 'PutRegion', 'StoreBid',
+     'StoreCommentResp', 'StoreItem', 'PutCategory',
+     'AuthUser', 'SearchByRegion'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['AboutMeResp.BuyNowInfo', 'StoreBidResp', 'AboutMe',
-     'Item', 'ItemDetails', 'ViewItemResp.Wrap', 'Comment',
-     'ViewUserResp.Wrap.UserInfo',
-     'BrowseCategoriesResp.Wrap', 'BidInfo',
-     'ViewItemBidHistResp.Wrap', 'ViewItemBidHistResp',
-     'PutCategoryResp', 'ViewItem',
-     'SearchByRegionResp.Wrap', 'SearchByRegionResp',
-     'PutRegionResp', 'PutRegion', 'AuthUserResp',
-     'StoreBid', 'BrowseRegionsResp.Wrap',
-     'AboutMeResp.AboutMeBid', 'StoreItemResp', 'AuthUser',
-     'BrowseCategories', 'PutCategory', 'StoreItem',
-     'BrowseCategoriesResp', 'ViewUserResp.Wrap',
-     'ViewUserResp', 'ViewItemResp', 'SearchByCategory',
-     'SearchByRegion', 'StoreCommentResp', 'StoreBuyNow',
-     'SearchByCategoryResp.Wrap', 'StoreComment',
-     'RegisterUser', 'BrowseRegions', 'AboutMeResp.Wrap',
-     'AboutMeResp', 'ViewItemBidHist', 'RegisterUserResp',
-     'StoreBuyNowResp', 'SearchByCategoryResp', 'ViewUser',
-     'BrowseRegionsResp'].
+    ['AuthUserResp', 'StoreComment', 'StoreBuyNow',
+     'AboutMeResp', 'SearchByCategoryResp',
+     'BrowseCategoriesResp', 'ViewItemBidHist',
+     'SearchByCategory', 'RegisterUserResp',
+     'BrowseRegionsResp', 'ViewUser', 'ViewUserResp',
+     'BrowseCategories', 'SearchByRegionResp',
+     'StoreBuyNowResp', 'StoreItemResp', 'StoreBidResp',
+     'ViewItemResp', 'PutRegionResp', 'ViewItem',
+     'ViewItemBidHistResp', 'RegisterUser', 'BrowseRegions',
+     'PutCategoryResp', 'AboutMe', 'PutRegion', 'StoreBid',
+     'StoreCommentResp', 'StoreItem', 'PutCategory',
+     'AuthUser', 'SearchByRegion'].
 
 
 get_enum_names() -> [].
@@ -12013,123 +7102,6 @@ fetch_enum_def(EnumName) ->
     erlang:error({no_such_enum, EnumName}).
 
 
-find_msg_def('AboutMeResp.BuyNowInfo') ->
-    [#{name => on_item_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => seller_username, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => quantity, fnum => 3, rnum => 4,
-       type => uint32, occurrence => optional, opts => []}];
-find_msg_def('StoreBidResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => bid_id, fnum => 1, rnum => 2, type => bytes,
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('AboutMe') ->
-    [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
-       occurrence => optional, opts => []}];
-find_msg_def('Item') ->
-    [#{name => item_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => description, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => num_bids, fnum => 3, rnum => 4,
-       type => uint32, occurrence => optional, opts => []},
-     #{name => quantity, fnum => 4, rnum => 5,
-       type => uint32, occurrence => optional, opts => []},
-     #{name => end_date, fnum => 5, rnum => 6, type => int64,
-       occurrence => optional, opts => []},
-     #{name => category_id, fnum => 6, rnum => 7,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('ItemDetails') ->
-    [#{name => item, fnum => 1, rnum => 2,
-       type => {msg, 'Item'}, occurrence => optional,
-       opts => []},
-     #{name => seller_name, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('ViewItemResp.Wrap') ->
-    [#{name => items, fnum => 1, rnum => 2,
-       type => {msg, 'ItemDetails'}, occurrence => repeated,
-       opts => []}];
-find_msg_def('Comment') ->
-    [#{name => on_item_id, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => rating, fnum => 2, rnum => 3,
-       type => sfixed32, occurrence => optional, opts => []},
-     #{name => body, fnum => 3, rnum => 4, type => bytes,
-       occurrence => optional, opts => []},
-     #{name => from_to, rnum => 5,
-       fields =>
-	   [#{name => from_username, fnum => 4, rnum => 5,
-	      type => bytes, occurrence => optional, opts => []},
-	    #{name => to_id, fnum => 5, rnum => 5, type => bytes,
-	      occurrence => optional, opts => []}]}];
-find_msg_def('ViewUserResp.Wrap.UserInfo') ->
-    [#{name => username, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => rating, fnum => 2, rnum => 3,
-       type => sfixed32, occurrence => optional, opts => []},
-     #{name => comments, fnum => 3, rnum => 4,
-       type => {msg, 'Comment'}, occurrence => repeated,
-       opts => []}];
-find_msg_def('BrowseCategoriesResp.Wrap') ->
-    [#{name => category_names, fnum => 1, rnum => 2,
-       type => bytes, occurrence => repeated, opts => []}];
-find_msg_def('BidInfo') ->
-    [#{name => on_item_id, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => price, fnum => 2, rnum => 3, type => uint32,
-       occurrence => optional, opts => []},
-     #{name => bidder_name, fnum => 3, rnum => 4,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('ViewItemBidHistResp.Wrap') ->
-    [#{name => item_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => bids, fnum => 2, rnum => 3,
-       type => {msg, 'BidInfo'}, occurrence => repeated,
-       opts => []}];
-find_msg_def('ViewItemBidHistResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'ViewItemBidHistResp.Wrap'},
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('PutCategoryResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => category_id, fnum => 1, rnum => 2,
-	      type => bytes, occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('ViewItem') ->
-    [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
-       occurrence => optional, opts => []}];
-find_msg_def('SearchByRegionResp.Wrap') ->
-    [#{name => items, fnum => 1, rnum => 2,
-       type => {msg, 'ItemDetails'}, occurrence => repeated,
-       opts => []}];
-find_msg_def('SearchByRegionResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'SearchByRegionResp.Wrap'},
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('PutRegionResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => region_id, fnum => 1, rnum => 2,
-	      type => bytes, occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('PutRegion') ->
-    [#{name => region_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []}];
 find_msg_def('AuthUserResp') ->
     [#{name => resp, rnum => 2,
        fields =>
@@ -12137,104 +7109,6 @@ find_msg_def('AuthUserResp') ->
 	      occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('StoreBid') ->
-    [#{name => on_item_id, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => bidder_id, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => value, fnum => 3, rnum => 4, type => uint32,
-       occurrence => optional, opts => []}];
-find_msg_def('BrowseRegionsResp.Wrap') ->
-    [#{name => region_names, fnum => 1, rnum => 2,
-       type => bytes, occurrence => repeated, opts => []}];
-find_msg_def('AboutMeResp.AboutMeBid') ->
-    [#{name => on_item_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => seller_username, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => price, fnum => 3, rnum => 4, type => uint32,
-       occurrence => optional, opts => []}];
-find_msg_def('StoreItemResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('AuthUser') ->
-    [#{name => username, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => password, fnum => 2, rnum => 3, type => bytes,
-       occurrence => optional, opts => []}];
-find_msg_def('BrowseCategories') -> [];
-find_msg_def('PutCategory') ->
-    [#{name => category_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('StoreItem') ->
-    [#{name => item_name, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => description, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => quantity, fnum => 3, rnum => 4,
-       type => uint32, occurrence => optional, opts => []},
-     #{name => category_id, fnum => 4, rnum => 5,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => seller_id, fnum => 5, rnum => 6,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('BrowseCategoriesResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'BrowseCategoriesResp.Wrap'},
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('ViewUserResp.Wrap') ->
-    [#{name => user_details, fnum => 1, rnum => 2,
-       type => {msg, 'ViewUserResp.Wrap.UserInfo'},
-       occurrence => optional, opts => []}];
-find_msg_def('ViewUserResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'ViewUserResp.Wrap'},
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('ViewItemResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'ViewItemResp.Wrap'},
-	      occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('SearchByCategory') ->
-    [#{name => category_id, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('SearchByRegion') ->
-    [#{name => category_id, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => region_id, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('StoreCommentResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => comment_id, fnum => 1, rnum => 2,
-	      type => bytes, occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('StoreBuyNow') ->
-    [#{name => on_item_id, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => buyer_id, fnum => 2, rnum => 3, type => bytes,
-       occurrence => optional, opts => []},
-     #{name => quantity, fnum => 3, rnum => 4,
-       type => uint32, occurrence => optional, opts => []}];
-find_msg_def('SearchByCategoryResp.Wrap') ->
-    [#{name => items, fnum => 1, rnum => 2,
-       type => {msg, 'Item'}, occurrence => repeated,
-       opts => []}];
 find_msg_def('StoreComment') ->
     [#{name => on_item_id, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
@@ -12246,47 +7120,70 @@ find_msg_def('StoreComment') ->
        type => sfixed32, occurrence => optional, opts => []},
      #{name => body, fnum => 5, rnum => 6, type => bytes,
        occurrence => optional, opts => []}];
-find_msg_def('RegisterUser') ->
-    [#{name => username, fnum => 1, rnum => 2,
+find_msg_def('StoreBuyNow') ->
+    [#{name => on_item_id, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
-     #{name => password, fnum => 2, rnum => 3, type => bytes,
+     #{name => buyer_id, fnum => 2, rnum => 3, type => bytes,
        occurrence => optional, opts => []},
-     #{name => region_id, fnum => 3, rnum => 4,
-       type => bytes, occurrence => optional, opts => []}];
-find_msg_def('BrowseRegions') -> [];
-find_msg_def('AboutMeResp.Wrap') ->
-    [#{name => username, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => rating, fnum => 2, rnum => 3,
-       type => sfixed32, occurrence => optional, opts => []},
-     #{name => sold_items, fnum => 3, rnum => 4,
-       type => {msg, 'Item'}, occurrence => repeated,
-       opts => []},
-     #{name => bought_items, fnum => 4, rnum => 5,
-       type => {msg, 'AboutMeResp.BuyNowInfo'},
-       occurrence => repeated, opts => []},
-     #{name => placed_bids, fnum => 5, rnum => 6,
-       type => {msg, 'AboutMeResp.AboutMeBid'},
-       occurrence => repeated, opts => []},
-     #{name => authored_comments, fnum => 6, rnum => 7,
-       type => {msg, 'Comment'}, occurrence => repeated,
-       opts => []}];
+     #{name => quantity, fnum => 3, rnum => 4,
+       type => uint32, occurrence => optional, opts => []}];
 find_msg_def('AboutMeResp') ->
     [#{name => resp, rnum => 2,
        fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'AboutMeResp.Wrap'},
-	      occurrence => optional, opts => []},
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('SearchByCategoryResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('BrowseCategoriesResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []}]}];
 find_msg_def('ViewItemBidHist') ->
     [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
        occurrence => optional, opts => []}];
+find_msg_def('SearchByCategory') ->
+    [#{name => category_id, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []}];
 find_msg_def('RegisterUserResp') ->
     [#{name => resp, rnum => 2,
        fields =>
 	   [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
 	      occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('BrowseRegionsResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('ViewUser') ->
+    [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
+       occurrence => optional, opts => []}];
+find_msg_def('ViewUserResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('BrowseCategories') -> [];
+find_msg_def('SearchByRegionResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []}]}];
 find_msg_def('StoreBuyNowResp') ->
@@ -12296,25 +7193,103 @@ find_msg_def('StoreBuyNowResp') ->
 	      type => bytes, occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('SearchByCategoryResp') ->
+find_msg_def('StoreItemResp') ->
     [#{name => resp, rnum => 2,
        fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'SearchByCategoryResp.Wrap'},
+	   [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
 	      occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('ViewUser') ->
+find_msg_def('StoreBidResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => bid_id, fnum => 1, rnum => 2, type => bytes,
+	      occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('ViewItemResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('PutRegionResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => region_id, fnum => 1, rnum => 2,
+	      type => bytes, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('ViewItem') ->
+    [#{name => item_id, fnum => 1, rnum => 2, type => bytes,
+       occurrence => optional, opts => []}];
+find_msg_def('ViewItemBidHistResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('RegisterUser') ->
+    [#{name => username, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => password, fnum => 2, rnum => 3, type => bytes,
+       occurrence => optional, opts => []},
+     #{name => region_id, fnum => 3, rnum => 4,
+       type => bytes, occurrence => optional, opts => []}];
+find_msg_def('BrowseRegions') -> [];
+find_msg_def('PutCategoryResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => category_id, fnum => 1, rnum => 2,
+	      type => bytes, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('AboutMe') ->
     [#{name => user_id, fnum => 1, rnum => 2, type => bytes,
        occurrence => optional, opts => []}];
-find_msg_def('BrowseRegionsResp') ->
+find_msg_def('PutRegion') ->
+    [#{name => region_name, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []}];
+find_msg_def('StoreBid') ->
+    [#{name => on_item_id, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => bidder_id, fnum => 2, rnum => 3,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => value, fnum => 3, rnum => 4, type => uint32,
+       occurrence => optional, opts => []}];
+find_msg_def('StoreCommentResp') ->
     [#{name => resp, rnum => 2,
        fields =>
-	   [#{name => content, fnum => 1, rnum => 2,
-	      type => {msg, 'BrowseRegionsResp.Wrap'},
-	      occurrence => optional, opts => []},
+	   [#{name => comment_id, fnum => 1, rnum => 2,
+	      type => bytes, occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('StoreItem') ->
+    [#{name => item_name, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => description, fnum => 2, rnum => 3,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => quantity, fnum => 3, rnum => 4,
+       type => uint32, occurrence => optional, opts => []},
+     #{name => category_id, fnum => 4, rnum => 5,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => seller_id, fnum => 5, rnum => 6,
+       type => bytes, occurrence => optional, opts => []}];
+find_msg_def('PutCategory') ->
+    [#{name => category_name, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []}];
+find_msg_def('AuthUser') ->
+    [#{name => username, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => password, fnum => 2, rnum => 3, type => bytes,
+       occurrence => optional, opts => []}];
+find_msg_def('SearchByRegion') ->
+    [#{name => category_id, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => region_id, fnum => 2, rnum => 3,
+       type => bytes, occurrence => optional, opts => []}];
 find_msg_def(_) -> error.
 
 
