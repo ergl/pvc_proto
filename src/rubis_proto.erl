@@ -5,7 +5,7 @@
 %% Generic client - server side methods
 -export([decode_request/1,
          encode_reply/2,
-         decode_reply/2]).
+         decode_reply/1]).
 
 %% Init DB
 -export([put_region/1,
@@ -41,55 +41,26 @@ decode_request(Bin) ->
     {Type, rubis_pb:decode_msg(BinMsg, Type)}.
 
 %% @doc Generic client side decode
-%%
-%%      First argument is the original request
-decode_reply('PutRegion', Msg) ->
-    dec_resp('PutRegionResp', region_id, Msg);
+decode_reply(Bin) ->
+    {Type, BinMsg} = decode_raw_bits(Bin),
+    dec_resp(Type, reply_field_name(Type), BinMsg).
 
-decode_reply('PutCategory', Msg) ->
-    dec_resp('PutCategoryResp', category_id, Msg);
-
-decode_reply('AuthUser', Msg) ->
-    dec_resp('AuthUserResp', user_id, Msg);
-
-decode_reply('RegisterUser', Msg) ->
-    dec_resp('RegisterUserResp', user_id, Msg);
-
-decode_reply('BrowseCategories', Msg) ->
-    dec_resp('BrowseCategoriesResp', success, Msg);
-
-decode_reply('BrowseRegions', Msg) ->
-    dec_resp('BrowseRegionsResp', success, Msg);
-
-decode_reply('SearchByCategory', Msg) ->
-    dec_resp('SearchByCategoryResp', success, Msg);
-
-decode_reply('SearchByRegion', Msg) ->
-    dec_resp('SearchByRegionResp', success, Msg);
-
-decode_reply('ViewItem', Msg) ->
-    dec_resp('ViewItemResp', success, Msg);
-
-decode_reply('ViewUser', Msg) ->
-    dec_resp('ViewUserResp', success, Msg);
-
-decode_reply('ViewItemBidHist', Msg) ->
-    dec_resp('ViewItemBidHistResp', success, Msg);
-
-decode_reply('StoreBuyNow', Resp) ->
-    dec_resp('StoreBuyNowResp', buy_now_id, Resp);
-
-decode_reply('StoreBid', Msg) ->
-    dec_resp('StoreBidResp', bid_id, Msg);
-
-decode_reply('StoreComment', Resp) ->
-    dec_resp('StoreCommentResp', comment_id, Resp);
-
-decode_reply('StoreItem', Msg) ->
-    dec_resp('StoreItemResp', item_id, Msg);
-
-decode_reply('AboutMe', Msg) ->
-    dec_resp('AboutMeResp', success, Msg).
+reply_field_name('PutRegionResp') -> region_id;
+reply_field_name('PutCategoryResp') -> category_id;
+reply_field_name('AuthUserResp') -> user_id;
+reply_field_name('RegisterUserResp') -> user_id;
+reply_field_name('BrowseCategoriesResp') -> success;
+reply_field_name('BrowseRegionsResp') -> success;
+reply_field_name('SearchByCategoryResp') -> success;
+reply_field_name('SearchByRegionResp') -> success;
+reply_field_name('ViewItemResp') -> success;
+reply_field_name('ViewUserResp') -> success;
+reply_field_name('ViewItemBidHistResp') -> success;
+reply_field_name('StoreBuyNowResp') -> buy_now_id;
+reply_field_name('StoreBidResp') -> bid_id;
+reply_field_name('StoreCommentResp') -> comment_id;
+reply_field_name('StoreItemResp') -> item_id;
+reply_field_name('AboutMeResp') -> success.
 
 %% @doc Generic client side encode
 %%
@@ -231,13 +202,16 @@ store_item(ItemName, ItemDesc, Quantity, CategoryId, SellerId) ->
 %%      error types as well
 -spec enc_resp(atom(), atom(), ok | {ok, any()} | {error, any()}) -> binary().
 enc_resp(MsgType, success, ok) ->
-    rubis_pb:encode_msg(#{resp => {success, encode_success(ok)}}, MsgType);
+    enc_resp_int(MsgType, rubis_pb:encode_msg(#{resp => {success, encode_success(ok)}}, MsgType));
 
 enc_resp(MsgType, InnerName, {ok, Data}) ->
-    rubis_pb:encode_msg(#{resp => {InnerName, Data}}, MsgType);
+    enc_resp_int(MsgType, rubis_pb:encode_msg(#{resp => {InnerName, Data}}, MsgType));
 
 enc_resp(MsgType, _, {error, Reason}) ->
-    rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType).
+    enc_resp_int(MsgType, rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType)).
+
+enc_resp_int(MsgType, Msg) ->
+    encode_raw_bits(MsgType, Msg).
 
 %% @doc Decode a server reply proto message to an erlang result
 -spec dec_resp(atom(), atom(), binary()) -> {ok, any()} | {error, any()}.
@@ -267,6 +241,8 @@ decode_raw_bits(Bin) ->
     {decode_type_num(N), Msg}.
 
 %% @doc Encode msg type as ints
+
+%% Client Requests
 -spec encode_msg_type(atom()) -> non_neg_integer().
 encode_msg_type('PutRegion') -> 1;
 encode_msg_type('PutCategory') -> 2;
@@ -283,10 +259,30 @@ encode_msg_type('StoreBuyNow') -> 12;
 encode_msg_type('StoreBid') -> 13;
 encode_msg_type('StoreComment') -> 14;
 encode_msg_type('StoreItem') -> 15;
-encode_msg_type('AboutMe') -> 16.
+encode_msg_type('AboutMe') -> 16;
+
+%% Server Responses
+encode_msg_type('PutRegionResp') -> 17;
+encode_msg_type('PutCategoryResp') -> 18;
+encode_msg_type('AuthUserResp') -> 19;
+encode_msg_type('RegisterUserResp') -> 20;
+encode_msg_type('BrowseCategoriesResp') -> 21;
+encode_msg_type('BrowseRegionsResp') -> 22;
+encode_msg_type('SearchByCategoryResp') -> 23;
+encode_msg_type('SearchByRegionResp') -> 24;
+encode_msg_type('ViewItemResp') -> 25;
+encode_msg_type('ViewUserResp') -> 26;
+encode_msg_type('ViewItemBidHistResp') -> 27;
+encode_msg_type('StoreBuyNowResp') -> 28;
+encode_msg_type('StoreBidResp') -> 29;
+encode_msg_type('StoreCommentResp') -> 30;
+encode_msg_type('StoreItemResp') -> 31;
+encode_msg_type('AboutMeResp') -> 32.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
+
+%% Client Requests
 decode_type_num(1) -> 'PutRegion';
 decode_type_num(2) -> 'PutCategory';
 decode_type_num(3) -> 'AuthUser';
@@ -303,7 +299,24 @@ decode_type_num(13) -> 'StoreBid';
 decode_type_num(14) -> 'StoreComment';
 decode_type_num(15) -> 'StoreItem';
 decode_type_num(16) -> 'AboutMe';
-decode_type_num(_) -> unknown.
+
+%% Server Responses
+decode_type_num(17) -> 'PutRegionResp';
+decode_type_num(18) -> 'PutCategoryResp';
+decode_type_num(19) -> 'AuthUserResp';
+decode_type_num(20) -> 'RegisterUserResp';
+decode_type_num(21) -> 'BrowseCategoriesResp';
+decode_type_num(22) -> 'BrowseRegionsResp';
+decode_type_num(23) -> 'SearchByCategoryResp';
+decode_type_num(24) -> 'SearchByRegionResp';
+decode_type_num(25) -> 'ViewItemResp';
+decode_type_num(26) -> 'ViewUserResp';
+decode_type_num(27) -> 'ViewItemBidHistResp';
+decode_type_num(28) -> 'StoreBuyNowResp';
+decode_type_num(29) -> 'StoreBidResp';
+decode_type_num(30) -> 'StoreCommentResp';
+decode_type_num(31) -> 'StoreItemResp';
+decode_type_num(32) -> 'AboutMeResp'.
 
 -spec encode_success(atom()) -> non_neg_integer().
 -spec decode_success(non_neg_integer()) -> atom().
