@@ -38,7 +38,7 @@ peek_msg_type(Bin) ->
 -spec decode_request(binary()) -> {atom(), #{}}.
 decode_request(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
-    {Type, rubis_pb:decode_msg(BinMsg, Type)}.
+    {Type, rubis_msgs:decode_msg(BinMsg, Type)}.
 
 %% @doc Generic client side decode
 decode_reply(Bin) ->
@@ -115,70 +115,70 @@ encode_reply('AboutMe', Resp) ->
     enc_resp('AboutMeResp', success, Resp).
 
 put_region(RegionName) when is_binary(RegionName) ->
-    Msg = rubis_pb:encode_msg(#{region_name => RegionName}, 'PutRegion'),
+    Msg = rubis_msgs:encode_msg(#{region_name => RegionName}, 'PutRegion'),
     encode_raw_bits('PutRegion', Msg).
 
 put_category(CategoryName) when is_binary(CategoryName) ->
-    Msg = rubis_pb:encode_msg(#{category_name => CategoryName}, 'PutCategory'),
+    Msg = rubis_msgs:encode_msg(#{category_name => CategoryName}, 'PutCategory'),
     encode_raw_bits('PutCategory', Msg).
 
 auth_user(Username, Password) when is_binary(Username) andalso is_binary(Password) ->
-    Msg = rubis_pb:encode_msg(#{username => Username, password => Password}, 'AuthUser'),
+    Msg = rubis_msgs:encode_msg(#{username => Username, password => Password}, 'AuthUser'),
     encode_raw_bits('AuthUser', Msg).
 
 register_user(Username, Password, RegionId) ->
-    Msg = rubis_pb:encode_msg(#{username => Username,
+    Msg = rubis_msgs:encode_msg(#{username => Username,
                                 password => Password,
                                 region_id => RegionId}, 'RegisterUser'),
     encode_raw_bits('RegisterUser', Msg).
 
 browse_categories() ->
-    Msg = rubis_pb:encode_msg(#{}, 'BrowseCategories'),
+    Msg = rubis_msgs:encode_msg(#{}, 'BrowseCategories'),
     encode_raw_bits('BrowseCategories', Msg).
 
 browse_regions() ->
-    Msg = rubis_pb:encode_msg(#{}, 'BrowseRegions'),
+    Msg = rubis_msgs:encode_msg(#{}, 'BrowseRegions'),
     encode_raw_bits('BrowseRegions', Msg).
 
 search_items_by_category(CategoryId) when is_binary(CategoryId) ->
-    Msg = rubis_pb:encode_msg(#{category_id => CategoryId}, 'SearchByCategory'),
+    Msg = rubis_msgs:encode_msg(#{category_id => CategoryId}, 'SearchByCategory'),
     encode_raw_bits('SearchByCategory', Msg).
 
 search_items_by_region(CategoryId, RegionId) when is_binary(RegionId) ->
-    Msg = rubis_pb:encode_msg(#{category_id => CategoryId,
+    Msg = rubis_msgs:encode_msg(#{category_id => CategoryId,
                                 region_id => RegionId}, 'SearchByRegion'),
     encode_raw_bits('SearchByRegion', Msg).
 
 view_item(ItemId) when is_binary(ItemId) ->
-    Msg = rubis_pb:encode_msg(#{item_id => ItemId}, 'ViewItem'),
+    Msg = rubis_msgs:encode_msg(#{item_id => ItemId}, 'ViewItem'),
     encode_raw_bits('ViewItem', Msg).
 
 view_user(UserId) when is_binary(UserId) ->
-    Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'ViewUser'),
+    Msg = rubis_msgs:encode_msg(#{user_id => UserId}, 'ViewUser'),
     encode_raw_bits('ViewUser', Msg).
 
 view_bid_history(ItemId) when is_binary(ItemId) ->
-    Msg = rubis_pb:encode_msg(#{item_id => ItemId}, 'ViewItemBidHist'),
+    Msg = rubis_msgs:encode_msg(#{item_id => ItemId}, 'ViewItemBidHist'),
     encode_raw_bits('ViewItemBidHist', Msg).
 
 about_me(UserId) when is_binary(UserId) ->
-    Msg = rubis_pb:encode_msg(#{user_id => UserId}, 'AboutMe'),
+    Msg = rubis_msgs:encode_msg(#{user_id => UserId}, 'AboutMe'),
     encode_raw_bits('AboutMe', Msg).
 
 store_buy_now(ItemId, BuyerId, Value) ->
-    Msg = rubis_pb:encode_msg(#{on_item_id => ItemId,
+    Msg = rubis_msgs:encode_msg(#{on_item_id => ItemId,
                                 buyer_id => BuyerId,
                                 quantity => Value}, 'StoreBuyNow'),
     encode_raw_bits('StoreBuyNow', Msg).
 
 store_bid(ItemId, BidderId, Value) ->
-    Msg = rubis_pb:encode_msg(#{on_item_id => ItemId,
+    Msg = rubis_msgs:encode_msg(#{on_item_id => ItemId,
                                 bidder_id => BidderId,
                                 value => Value}, 'StoreBid'),
     encode_raw_bits('StoreBid', Msg).
 
 store_comment(ItemId, FromId, ToId, Rating, Body) ->
-    Msg = rubis_pb:encode_msg(#{on_item_id => ItemId,
+    Msg = rubis_msgs:encode_msg(#{on_item_id => ItemId,
                                 from_id => FromId,
                                 to_id => ToId,
                                 rating => Rating,
@@ -186,7 +186,7 @@ store_comment(ItemId, FromId, ToId, Rating, Body) ->
     encode_raw_bits('StoreComment', Msg).
 
 store_item(ItemName, ItemDesc, Quantity, CategoryId, SellerId) ->
-    Msg = rubis_pb:encode_msg(#{item_name => ItemName,
+    Msg = rubis_msgs:encode_msg(#{item_name => ItemName,
                                 description => ItemDesc,
                                 quantity => Quantity,
                                 category_id => CategoryId,
@@ -202,13 +202,13 @@ store_item(ItemName, ItemDesc, Quantity, CategoryId, SellerId) ->
 %%      error types as well
 -spec enc_resp(atom(), atom(), ok | {ok, any()} | {error, any()}) -> binary().
 enc_resp(MsgType, success, ok) ->
-    enc_resp_int(MsgType, rubis_pb:encode_msg(#{resp => {success, encode_success(ok)}}, MsgType));
+    enc_resp_int(MsgType, rubis_msgs:encode_msg(#{resp => {success, encode_success(ok)}}, MsgType));
 
 enc_resp(MsgType, InnerName, {ok, Data}) ->
-    enc_resp_int(MsgType, rubis_pb:encode_msg(#{resp => {InnerName, Data}}, MsgType));
+    enc_resp_int(MsgType, rubis_msgs:encode_msg(#{resp => {InnerName, Data}}, MsgType));
 
 enc_resp(MsgType, _, {error, Reason}) ->
-    enc_resp_int(MsgType, rubis_pb:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType)).
+    enc_resp_int(MsgType, rubis_msgs:encode_msg(#{resp => {error_reason, encode_error(Reason)}}, MsgType)).
 
 enc_resp_int(MsgType, Msg) ->
     encode_raw_bits(MsgType, Msg).
@@ -216,7 +216,7 @@ enc_resp_int(MsgType, Msg) ->
 %% @doc Decode a server reply proto message to an erlang result
 -spec dec_resp(atom(), atom(), binary()) -> {ok, any()} | {error, any()}.
 dec_resp(MsgType, InnerName, Msg) ->
-    Resp = maps:get(resp, rubis_pb:decode_msg(Msg, MsgType)),
+    Resp = maps:get(resp, rubis_msgs:decode_msg(Msg, MsgType)),
     case Resp of
         {success, Code} ->
             decode_success(Code);
