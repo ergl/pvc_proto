@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+message ReadOnlyTx {
+    repeated bytes keys = 1;
+}
+
+message KeyOp {
+    bytes key = 1;
+    bytes value = 2;
+}
+
+message ReadWriteTx {
+    repeated KeyOp ops = 1;
+}
+
+message CommitResp {
+    oneof resp {
+        uint32 success = 1;
+        uint32 error_reason = 2;
+    }
+}

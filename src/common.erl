@@ -15,7 +15,8 @@
 ]).
 
 -spec encode_driver_module(atom()) -> non_neg_integer().
-encode_driver_module(rpb_rubis_driver) -> 1.
+encode_driver_module(rpb_rubis_driver) -> 1;
+encode_driver_module(rpb_simple_driver) -> 2.
 
 -spec decode_driver_module(binary()) -> atom().
 decode_driver_module(Bin) ->
@@ -23,7 +24,8 @@ decode_driver_module(Bin) ->
     decode_driver_module_int(N).
 
 -spec decode_driver_module_int(non_neg_integer()) -> atom().
-decode_driver_module_int(1) -> rpb_rubis_driver.
+decode_driver_module_int(1) -> rpb_rubis_driver;
+decode_driver_module_int(2) -> rpb_simple_driver.
 
 -spec encode_success(atom()) -> non_neg_integer().
 encode_success(_) -> 1.
