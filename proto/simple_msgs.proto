@@ -10,7 +10,8 @@ message KeyOp {
 }
 
 message ReadWriteTx {
-    repeated KeyOp ops = 1;
+    repeated bytes read_keys = 1;
+    repeated KeyOp ops = 2;
 }
 
 message CommitResp {

@@ -5,7 +5,7 @@
          from_server_dec/1]).
 
 -export([read_only/1,
-         read_write/1]).
+         read_write/2]).
 
 -spec from_client_dec(binary()) -> {atom(), #{}}.
 from_client_dec(Bin) ->
@@ -46,11 +46,11 @@ read_only(Keys) when is_list(Keys) ->
     Msg = simple_msgs:encode_msg(#{keys => Keys}, 'ReadOnlyTx'),
     encode_raw_bits('ReadOnlyTx', Msg).
 
-read_write(Updates) when is_list(Updates) ->
+read_write(Keys, Updates) when is_list(Keys) andalso is_list(Updates) ->
     Ops = lists:map(fun({K, V}) ->
         #{key => K, value => V}
     end, Updates),
-    Msg = simple_msgs:encode_msg(#{ops => Ops}, 'ReadWriteTx'),
+    Msg = simple_msgs:encode_msg(#{read_keys => Keys, ops => Ops}, 'ReadWriteTx'),
     encode_raw_bits('ReadWriteTx', Msg).
 
 %% @doc Encode Protobuf msg along with msg info

@@ -39,7 +39,8 @@
         value                   => binary()         % = 2
        }.
 -type 'ReadWriteTx'() ::
-      #{ops                     => ['KeyOp'()]      % = 1
+      #{read_keys               => [binary()],      % = 1
+        ops                     => ['KeyOp'()]      % = 2
        }.
 -export_type(['ReadOnlyTx'/0, 'CommitResp'/0, 'KeyOp'/0, 'ReadWriteTx'/0]).
 
@@ -130,13 +131,22 @@ e_msg_ReadWriteTx(Msg, TrUserData) ->
 
 
 e_msg_ReadWriteTx(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{read_keys := F1} ->
+	       TrF1 = id(F1, TrUserData),
+	       if TrF1 == [] -> Bin;
+		  true ->
+		      e_field_ReadWriteTx_read_keys(TrF1, Bin, TrUserData)
+	       end;
+	   _ -> Bin
+	 end,
     case M of
-      #{ops := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true -> e_field_ReadWriteTx_ops(TrF1, Bin, TrUserData)
+      #{ops := F2} ->
+	  TrF2 = id(F2, TrUserData),
+	  if TrF2 == [] -> B1;
+	     true -> e_field_ReadWriteTx_ops(TrF2, B1, TrUserData)
 	  end;
-      _ -> Bin
+      _ -> B1
     end.
 
 e_field_ReadOnlyTx_keys([Elem | Rest], Bin,
@@ -146,6 +156,14 @@ e_field_ReadOnlyTx_keys([Elem | Rest], Bin,
     e_field_ReadOnlyTx_keys(Rest, Bin3, TrUserData);
 e_field_ReadOnlyTx_keys([], Bin, _TrUserData) -> Bin.
 
+e_field_ReadWriteTx_read_keys([Elem | Rest], Bin,
+			      TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2),
+    e_field_ReadWriteTx_read_keys(Rest, Bin3, TrUserData);
+e_field_ReadWriteTx_read_keys([], Bin, _TrUserData) ->
+    Bin.
+
 e_mfield_ReadWriteTx_ops(Msg, Bin, TrUserData) ->
     SubBin = e_msg_KeyOp(Msg, <<>>, TrUserData),
     Bin2 = e_varint(byte_size(SubBin), Bin),
@@ -153,7 +171,7 @@ e_mfield_ReadWriteTx_ops(Msg, Bin, TrUserData) ->
 
 e_field_ReadWriteTx_ops([Elem | Rest], Bin,
 			TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
+    Bin2 = <<Bin/binary, 18>>,
     Bin3 = e_mfield_ReadWriteTx_ops(id(Elem, TrUserData),
 				    Bin2, TrUserData),
     e_field_ReadWriteTx_ops(Rest, Bin3, TrUserData);
@@ -561,100 +579,132 @@ skip_64_KeyOp(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2,
 
 d_msg_ReadWriteTx(Bin, TrUserData) ->
     dfp_read_field_def_ReadWriteTx(Bin, 0, 0,
-				   id([], TrUserData), TrUserData).
+				   id([], TrUserData), id([], TrUserData),
+				   TrUserData).
 
 dfp_read_field_def_ReadWriteTx(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, TrUserData) ->
-    d_field_ReadWriteTx_ops(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_ReadWriteTx(<<>>, 0, 0, R1,
+			       Z2, F@_1, F@_2, TrUserData) ->
+    d_field_ReadWriteTx_read_keys(Rest, Z1, Z2, F@_1, F@_2,
+				  TrUserData);
+dfp_read_field_def_ReadWriteTx(<<18, Rest/binary>>, Z1,
+			       Z2, F@_1, F@_2, TrUserData) ->
+    d_field_ReadWriteTx_ops(Rest, Z1, Z2, F@_1, F@_2,
+			    TrUserData);
+dfp_read_field_def_ReadWriteTx(<<>>, 0, 0, R1, R2,
 			       TrUserData) ->
-    #{ops => lists_reverse(R1, TrUserData)};
+    #{read_keys => lists_reverse(R1, TrUserData),
+      ops => lists_reverse(R2, TrUserData)};
 dfp_read_field_def_ReadWriteTx(Other, Z1, Z2, F@_1,
-			       TrUserData) ->
-    dg_read_field_def_ReadWriteTx(Other, Z1, Z2, F@_1,
+			       F@_2, TrUserData) ->
+    dg_read_field_def_ReadWriteTx(Other, Z1, Z2, F@_1, F@_2,
 				  TrUserData).
 
 dg_read_field_def_ReadWriteTx(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData)
+			      N, Acc, F@_1, F@_2, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_ReadWriteTx(Rest, N + 7,
-				  X bsl N + Acc, F@_1, TrUserData);
+				  X bsl N + Acc, F@_1, F@_2, TrUserData);
 dg_read_field_def_ReadWriteTx(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, TrUserData) ->
+			      N, Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_ReadWriteTx_ops(Rest, 0, 0, F@_1, TrUserData);
+	  d_field_ReadWriteTx_read_keys(Rest, 0, 0, F@_1, F@_2,
+					TrUserData);
+      18 ->
+	  d_field_ReadWriteTx_ops(Rest, 0, 0, F@_1, F@_2,
+				  TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_ReadWriteTx(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_ReadWriteTx(Rest, 0, 0, F@_1, TrUserData);
+		skip_varint_ReadWriteTx(Rest, 0, 0, F@_1, F@_2,
+					TrUserData);
+	    1 ->
+		skip_64_ReadWriteTx(Rest, 0, 0, F@_1, F@_2, TrUserData);
 	    2 ->
 		skip_length_delimited_ReadWriteTx(Rest, 0, 0, F@_1,
-						  TrUserData);
+						  F@_2, TrUserData);
 	    3 ->
-		skip_group_ReadWriteTx(Rest, Key bsr 3, 0, F@_1,
+		skip_group_ReadWriteTx(Rest, Key bsr 3, 0, F@_1, F@_2,
 				       TrUserData);
-	    5 -> skip_32_ReadWriteTx(Rest, 0, 0, F@_1, TrUserData)
+	    5 ->
+		skip_32_ReadWriteTx(Rest, 0, 0, F@_1, F@_2, TrUserData)
 	  end
     end;
-dg_read_field_def_ReadWriteTx(<<>>, 0, 0, R1,
+dg_read_field_def_ReadWriteTx(<<>>, 0, 0, R1, R2,
 			      TrUserData) ->
-    #{ops => lists_reverse(R1, TrUserData)}.
+    #{read_keys => lists_reverse(R1, TrUserData),
+      ops => lists_reverse(R2, TrUserData)}.
+
+d_field_ReadWriteTx_read_keys(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    d_field_ReadWriteTx_read_keys(Rest, N + 7,
+				  X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_ReadWriteTx_read_keys(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, Prev, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_ReadWriteTx(RestF, 0, 0,
+				   cons(NewFValue, Prev, TrUserData), F@_2,
+				   TrUserData).
 
 d_field_ReadWriteTx_ops(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F@_1, TrUserData)
+			Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
     d_field_ReadWriteTx_ops(Rest, N + 7, X bsl N + Acc,
-			    F@_1, TrUserData);
+			    F@_1, F@_2, TrUserData);
 d_field_ReadWriteTx_ops(<<0:1, X:7, Rest/binary>>, N,
-			Acc, Prev, TrUserData) ->
+			Acc, F@_1, Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bs:Len/binary, Rest2/binary>> = Rest,
 			   {id(d_msg_KeyOp(Bs, TrUserData), TrUserData), Rest2}
 			 end,
-    dfp_read_field_def_ReadWriteTx(RestF, 0, 0,
+    dfp_read_field_def_ReadWriteTx(RestF, 0, 0, F@_1,
 				   cons(NewFValue, Prev, TrUserData),
 				   TrUserData).
 
 skip_varint_ReadWriteTx(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, TrUserData) ->
-    skip_varint_ReadWriteTx(Rest, Z1, Z2, F@_1, TrUserData);
+			Z2, F@_1, F@_2, TrUserData) ->
+    skip_varint_ReadWriteTx(Rest, Z1, Z2, F@_1, F@_2,
+			    TrUserData);
 skip_varint_ReadWriteTx(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1,
+			Z2, F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1, F@_2,
 				   TrUserData).
 
 skip_length_delimited_ReadWriteTx(<<1:1, X:7,
 				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData)
+				  N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
     skip_length_delimited_ReadWriteTx(Rest, N + 7,
-				      X bsl N + Acc, F@_1, TrUserData);
+				      X bsl N + Acc, F@_1, F@_2, TrUserData);
 skip_length_delimited_ReadWriteTx(<<0:1, X:7,
 				    Rest/binary>>,
-				  N, Acc, F@_1, TrUserData) ->
+				  N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ReadWriteTx(Rest2, 0, 0, F@_1,
+    dfp_read_field_def_ReadWriteTx(Rest2, 0, 0, F@_1, F@_2,
 				   TrUserData).
 
-skip_group_ReadWriteTx(Bin, FNum, Z2, F@_1,
+skip_group_ReadWriteTx(Bin, FNum, Z2, F@_1, F@_2,
 		       TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ReadWriteTx(Rest, 0, Z2, F@_1,
+    dfp_read_field_def_ReadWriteTx(Rest, 0, Z2, F@_1, F@_2,
 				   TrUserData).
 
 skip_32_ReadWriteTx(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    TrUserData) ->
-    dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1,
+		    F@_2, TrUserData) ->
+    dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1, F@_2,
 				   TrUserData).
 
 skip_64_ReadWriteTx(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    TrUserData) ->
-    dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1,
+		    F@_2, TrUserData) ->
+    dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1, F@_2,
 				   TrUserData).
 
 read_group(Bin, FieldNum) ->
@@ -763,12 +813,23 @@ merge_msg_KeyOp(PMsg, NMsg, _) ->
 
 merge_msg_ReadWriteTx(PMsg, NMsg, TrUserData) ->
     S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {#{read_keys := PFread_keys},
+	    #{read_keys := NFread_keys}} ->
+	       S1#{read_keys =>
+		       'erlang_++'(PFread_keys, NFread_keys, TrUserData)};
+	   {_, #{read_keys := NFread_keys}} ->
+	       S1#{read_keys => NFread_keys};
+	   {#{read_keys := PFread_keys}, _} ->
+	       S1#{read_keys => PFread_keys};
+	   {_, _} -> S1
+	 end,
     case {PMsg, NMsg} of
       {#{ops := PFops}, #{ops := NFops}} ->
-	  S1#{ops => 'erlang_++'(PFops, NFops, TrUserData)};
-      {_, #{ops := NFops}} -> S1#{ops => NFops};
-      {#{ops := PFops}, _} -> S1#{ops => PFops};
-      {_, _} -> S1
+	  S2#{ops => 'erlang_++'(PFops, NFops, TrUserData)};
+      {_, #{ops := NFops}} -> S2#{ops => NFops};
+      {#{ops := PFops}, _} -> S2#{ops => PFops};
+      {_, _} -> S2
     end.
 
 
@@ -866,18 +927,31 @@ v_msg_KeyOp(X, Path, _TrUserData) ->
 -dialyzer({nowarn_function,v_msg_ReadWriteTx/3}).
 v_msg_ReadWriteTx(#{} = M, Path, TrUserData) ->
     case M of
-      #{ops := F1} ->
+      #{read_keys := F1} ->
 	  if is_list(F1) ->
-		 _ = [v_msg_KeyOp(Elem, [ops | Path], TrUserData)
+		 _ = [v_type_bytes(Elem, [read_keys | Path])
 		      || Elem <- F1],
 		 ok;
 	     true ->
-		 mk_type_error({invalid_list_of, {msg, 'KeyOp'}}, F1,
+		 mk_type_error({invalid_list_of, bytes}, F1,
+			       [read_keys | Path])
+	  end;
+      _ -> ok
+    end,
+    case M of
+      #{ops := F2} ->
+	  if is_list(F2) ->
+		 _ = [v_msg_KeyOp(Elem, [ops | Path], TrUserData)
+		      || Elem <- F2],
+		 ok;
+	     true ->
+		 mk_type_error({invalid_list_of, {msg, 'KeyOp'}}, F2,
 			       [ops | Path])
 	  end;
       _ -> ok
     end,
-    lists:foreach(fun (ops) -> ok;
+    lists:foreach(fun (read_keys) -> ok;
+		      (ops) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
@@ -951,7 +1025,9 @@ get_msg_defs() ->
        #{name => value, fnum => 2, rnum => 3, type => bytes,
 	 occurrence => optional, opts => []}]},
      {{msg, 'ReadWriteTx'},
-      [#{name => ops, fnum => 1, rnum => 2,
+      [#{name => read_keys, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => repeated, opts => []},
+       #{name => ops, fnum => 2, rnum => 3,
 	 type => {msg, 'KeyOp'}, occurrence => repeated,
 	 opts => []}]}].
 
@@ -998,7 +1074,9 @@ find_msg_def('KeyOp') ->
      #{name => value, fnum => 2, rnum => 3, type => bytes,
        occurrence => optional, opts => []}];
 find_msg_def('ReadWriteTx') ->
-    [#{name => ops, fnum => 1, rnum => 2,
+    [#{name => read_keys, fnum => 1, rnum => 2,
+       type => bytes, occurrence => repeated, opts => []},
+     #{name => ops, fnum => 2, rnum => 3,
        type => {msg, 'KeyOp'}, occurrence => repeated,
        opts => []}];
 find_msg_def(_) -> error.
