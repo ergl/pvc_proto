@@ -4,7 +4,8 @@
          to_client_enc/2,
          from_server_dec/1]).
 
--export([read_only/1,
+-export([ping/0,
+         read_only/1,
          read_write/2]).
 
 -spec from_client_dec(binary()) -> {atom(), #{}}.
@@ -41,6 +42,11 @@ from_server_dec(Bin) ->
             {error, common:decode_error(Code)}
     end.
 
+-spec ping() -> binary().
+ping() ->
+    Msg = simple_msgs:encode_msg(#{}, 'Ping'),
+    encode_raw_bits('Ping', Msg).
+
 -spec read_only([binary()]) -> binary().
 read_only(Keys) when is_list(Keys) ->
     Msg = simple_msgs:encode_msg(#{keys => Keys}, 'ReadOnlyTx'),
@@ -72,6 +78,7 @@ decode_raw_bits(Bin) ->
 -spec encode_msg_type(atom()) -> non_neg_integer().
 encode_msg_type('ReadOnlyTx') -> 1;
 encode_msg_type('ReadWriteTx') -> 2;
+encode_msg_type('Ping') -> 4;
 
 %% Server Responses
 encode_msg_type('CommitResp') -> 3.
@@ -82,6 +89,7 @@ encode_msg_type('CommitResp') -> 3.
 %% Client Requests
 decode_type_num(1) -> 'ReadOnlyTx';
 decode_type_num(2) -> 'ReadWriteTx';
+decode_type_num(4) -> 'Ping';
 
 %% Server Responses
 decode_type_num(3) -> 'CommitResp'.
