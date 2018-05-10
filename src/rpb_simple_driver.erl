@@ -5,6 +5,7 @@
          from_server_dec/1]).
 
 -export([ping/0,
+         load/2,
          read_only/1,
          read_write/2]).
 
@@ -47,6 +48,10 @@ ping() ->
     Msg = simple_msgs:encode_msg(#{}, 'Ping'),
     encode_raw_bits('Ping', Msg).
 
+load(NumKeys, BinSize) ->
+    Msg = simple_msgs:encode_msg(#{num_keys => NumKeys, bin_size => BinSize}, 'Load'),
+    encode_raw_bits('Load', Msg).
+
 -spec read_only([binary()]) -> binary().
 read_only(Keys) when is_list(Keys) ->
     Msg = simple_msgs:encode_msg(#{keys => Keys}, 'ReadOnlyTx'),
@@ -79,6 +84,7 @@ decode_raw_bits(Bin) ->
 encode_msg_type('ReadOnlyTx') -> 1;
 encode_msg_type('ReadWriteTx') -> 2;
 encode_msg_type('Ping') -> 4;
+encode_msg_type('Load') -> 5;
 
 %% Server Responses
 encode_msg_type('CommitResp') -> 3.
@@ -90,6 +96,7 @@ encode_msg_type('CommitResp') -> 3.
 decode_type_num(1) -> 'ReadOnlyTx';
 decode_type_num(2) -> 'ReadWriteTx';
 decode_type_num(4) -> 'Ping';
+decode_type_num(5) -> 'Load';
 
 %% Server Responses
 decode_type_num(3) -> 'CommitResp'.

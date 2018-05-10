@@ -31,6 +31,12 @@
 -type 'Ping'() ::
       #{
        }.
+-type 'CommitResp'() ::
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+       }.
+-type 'ReadOnlyTx'() ::
+      #{keys                    => [binary()]       % = 1
+       }.
 -type 'KeyOp'() ::
       #{key                     => binary(),        % = 1
         value                   => binary()         % = 2
@@ -39,20 +45,18 @@
       #{read_keys               => [binary()],      % = 1
         ops                     => ['KeyOp'()]      % = 2
        }.
--type 'CommitResp'() ::
-      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+-type 'Load'() ::
+      #{num_keys                => non_neg_integer(), % = 1, 32 bits
+        bin_size                => non_neg_integer() % = 2, 32 bits
        }.
--type 'ReadOnlyTx'() ::
-      #{keys                    => [binary()]       % = 1
-       }.
--export_type(['Ping'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0, 'ReadOnlyTx'/0]).
+-export_type(['Ping'/0, 'CommitResp'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'Load'/0]).
 
--spec encode_msg('Ping'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'() | 'ReadOnlyTx'(),'Ping' | 'KeyOp' | 'ReadWriteTx' | 'CommitResp' | 'ReadOnlyTx') -> binary().
+-spec encode_msg('Ping'() | 'CommitResp'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'Load'(),'Ping' | 'CommitResp' | 'ReadOnlyTx' | 'KeyOp' | 'ReadWriteTx' | 'Load') -> binary().
 encode_msg(Msg, MsgName) ->
     encode_msg(Msg, MsgName, []).
 
 
--spec encode_msg('Ping'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'() | 'ReadOnlyTx'(),'Ping' | 'KeyOp' | 'ReadWriteTx' | 'CommitResp' | 'ReadOnlyTx', list()) -> binary().
+-spec encode_msg('Ping'() | 'CommitResp'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'Load'(),'Ping' | 'CommitResp' | 'ReadOnlyTx' | 'KeyOp' | 'ReadWriteTx' | 'Load', list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -61,15 +65,49 @@ encode_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
       'Ping' -> e_msg_Ping(Msg, TrUserData);
+      'CommitResp' -> e_msg_CommitResp(Msg, TrUserData);
+      'ReadOnlyTx' -> e_msg_ReadOnlyTx(Msg, TrUserData);
       'KeyOp' -> e_msg_KeyOp(Msg, TrUserData);
       'ReadWriteTx' -> e_msg_ReadWriteTx(Msg, TrUserData);
-      'CommitResp' -> e_msg_CommitResp(Msg, TrUserData);
-      'ReadOnlyTx' -> e_msg_ReadOnlyTx(Msg, TrUserData)
+      'Load' -> e_msg_Load(Msg, TrUserData)
     end.
 
 
 
 e_msg_Ping(_Msg, _TrUserData) -> <<>>.
+
+e_msg_CommitResp(Msg, TrUserData) ->
+    e_msg_CommitResp(Msg, <<>>, TrUserData).
+
+
+e_msg_CommitResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	  end;
+      #{resp := {error_reason, OF1}} ->
+	  begin
+	    TrOF1 = id(OF1, TrUserData),
+	    e_varint(TrOF1, <<Bin/binary, 16>>)
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_ReadOnlyTx(Msg, TrUserData) ->
+    e_msg_ReadOnlyTx(Msg, <<>>, TrUserData).
+
+
+e_msg_ReadOnlyTx(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{keys := F1} ->
+	  TrF1 = id(F1, TrUserData),
+	  if TrF1 == [] -> Bin;
+	     true -> e_field_ReadOnlyTx_keys(TrF1, Bin, TrUserData)
+	  end;
+      _ -> Bin
+    end.
 
 e_msg_KeyOp(Msg, TrUserData) ->
     e_msg_KeyOp(Msg, <<>>, TrUserData).
@@ -122,38 +160,38 @@ e_msg_ReadWriteTx(#{} = M, Bin, TrUserData) ->
       _ -> B1
     end.
 
-e_msg_CommitResp(Msg, TrUserData) ->
-    e_msg_CommitResp(Msg, <<>>, TrUserData).
+e_msg_Load(Msg, TrUserData) ->
+    e_msg_Load(Msg, <<>>, TrUserData).
 
 
-e_msg_CommitResp(#{} = M, Bin, TrUserData) ->
+e_msg_Load(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{num_keys := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 if TrF1 =:= 0 -> Bin;
+		    true -> e_varint(TrF1, <<Bin/binary, 8>>)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
     case M of
-      #{resp := {success, OF1}} ->
+      #{bin_size := F2} ->
 	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 8>>)
+	    TrF2 = id(F2, TrUserData),
+	    if TrF2 =:= 0 -> B1;
+	       true -> e_varint(TrF2, <<B1/binary, 16>>)
+	    end
 	  end;
-      #{resp := {error_reason, OF1}} ->
-	  begin
-	    TrOF1 = id(OF1, TrUserData),
-	    e_varint(TrOF1, <<Bin/binary, 16>>)
-	  end;
-      _ -> Bin
+      _ -> B1
     end.
 
-e_msg_ReadOnlyTx(Msg, TrUserData) ->
-    e_msg_ReadOnlyTx(Msg, <<>>, TrUserData).
-
-
-e_msg_ReadOnlyTx(#{} = M, Bin, TrUserData) ->
-    case M of
-      #{keys := F1} ->
-	  TrF1 = id(F1, TrUserData),
-	  if TrF1 == [] -> Bin;
-	     true -> e_field_ReadOnlyTx_keys(TrF1, Bin, TrUserData)
-	  end;
-      _ -> Bin
-    end.
+e_field_ReadOnlyTx_keys([Elem | Rest], Bin,
+			TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2),
+    e_field_ReadOnlyTx_keys(Rest, Bin3, TrUserData);
+e_field_ReadOnlyTx_keys([], Bin, _TrUserData) -> Bin.
 
 e_field_ReadWriteTx_read_keys([Elem | Rest], Bin,
 			      TrUserData) ->
@@ -175,13 +213,6 @@ e_field_ReadWriteTx_ops([Elem | Rest], Bin,
 				    Bin2, TrUserData),
     e_field_ReadWriteTx_ops(Rest, Bin3, TrUserData);
 e_field_ReadWriteTx_ops([], Bin, _TrUserData) -> Bin.
-
-e_field_ReadOnlyTx_keys([Elem | Rest], Bin,
-			TrUserData) ->
-    Bin2 = <<Bin/binary, 10>>,
-    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2),
-    e_field_ReadOnlyTx_keys(Rest, Bin3, TrUserData);
-e_field_ReadOnlyTx_keys([], Bin, _TrUserData) -> Bin.
 
 e_type_bytes(Bytes, Bin) when is_binary(Bytes) ->
     Bin2 = e_varint(byte_size(Bytes), Bin),
@@ -211,6 +242,22 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 		       {decoding_failure,
 			{Bin, 'Ping', {Class, Reason, StackTrace}}}})
 	  end;
+      'CommitResp' ->
+	  try d_msg_CommitResp(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'CommitResp', {Class, Reason, StackTrace}}}})
+	  end;
+      'ReadOnlyTx' ->
+	  try d_msg_ReadOnlyTx(Bin, TrUserData) catch
+	    Class:Reason ->
+		StackTrace = erlang:get_stacktrace(),
+		error({gpb_error,
+		       {decoding_failure,
+			{Bin, 'ReadOnlyTx', {Class, Reason, StackTrace}}}})
+	  end;
       'KeyOp' ->
 	  try d_msg_KeyOp(Bin, TrUserData) catch
 	    Class:Reason ->
@@ -227,21 +274,13 @@ decode_msg(Bin, MsgName, Opts) when is_binary(Bin) ->
 		       {decoding_failure,
 			{Bin, 'ReadWriteTx', {Class, Reason, StackTrace}}}})
 	  end;
-      'CommitResp' ->
-	  try d_msg_CommitResp(Bin, TrUserData) catch
+      'Load' ->
+	  try d_msg_Load(Bin, TrUserData) catch
 	    Class:Reason ->
 		StackTrace = erlang:get_stacktrace(),
 		error({gpb_error,
 		       {decoding_failure,
-			{Bin, 'CommitResp', {Class, Reason, StackTrace}}}})
-	  end;
-      'ReadOnlyTx' ->
-	  try d_msg_ReadOnlyTx(Bin, TrUserData) catch
-	    Class:Reason ->
-		StackTrace = erlang:get_stacktrace(),
-		error({gpb_error,
-		       {decoding_failure,
-			{Bin, 'ReadOnlyTx', {Class, Reason, StackTrace}}}})
+			{Bin, 'Load', {Class, Reason, StackTrace}}}})
 	  end
     end.
 
@@ -300,6 +339,223 @@ skip_32_Ping(<<_:32, Rest/binary>>, Z1, Z2,
 skip_64_Ping(<<_:64, Rest/binary>>, Z1, Z2,
 	     TrUserData) ->
     dfp_read_field_def_Ping(Rest, Z1, Z2, TrUserData).
+
+d_msg_CommitResp(Bin, TrUserData) ->
+    dfp_read_field_def_CommitResp(Bin, 0, 0,
+				  id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_CommitResp(<<8, Rest/binary>>, Z1,
+			      Z2, F@_1, TrUserData) ->
+    d_field_CommitResp_success(Rest, Z1, Z2, F@_1,
+			       TrUserData);
+dfp_read_field_def_CommitResp(<<16, Rest/binary>>, Z1,
+			      Z2, F@_1, TrUserData) ->
+    d_field_CommitResp_error_reason(Rest, Z1, Z2, F@_1,
+				    TrUserData);
+dfp_read_field_def_CommitResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_CommitResp(Other, Z1, Z2, F@_1,
+			      TrUserData) ->
+    dg_read_field_def_CommitResp(Other, Z1, Z2, F@_1,
+				 TrUserData).
+
+dg_read_field_def_CommitResp(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_CommitResp(Rest, N + 7, X bsl N + Acc,
+				 F@_1, TrUserData);
+dg_read_field_def_CommitResp(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_CommitResp_success(Rest, 0, 0, F@_1,
+				     TrUserData);
+      16 ->
+	  d_field_CommitResp_error_reason(Rest, 0, 0, F@_1,
+					  TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_CommitResp(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_CommitResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_CommitResp(Rest, 0, 0, F@_1,
+						 TrUserData);
+	    3 ->
+		skip_group_CommitResp(Rest, Key bsr 3, 0, F@_1,
+				      TrUserData);
+	    5 -> skip_32_CommitResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_CommitResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_CommitResp_success(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_CommitResp_success(Rest, N + 7, X bsl N + Acc,
+			       F@_1, TrUserData);
+d_field_CommitResp_success(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_CommitResp(RestF, 0, 0,
+				  {success, NewFValue}, TrUserData).
+
+d_field_CommitResp_error_reason(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_CommitResp_error_reason(Rest, N + 7,
+				    X bsl N + Acc, F@_1, TrUserData);
+d_field_CommitResp_error_reason(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {X bsl N + Acc, Rest},
+    dfp_read_field_def_CommitResp(RestF, 0, 0,
+				  {error_reason, NewFValue}, TrUserData).
+
+skip_varint_CommitResp(<<1:1, _:7, Rest/binary>>, Z1,
+		       Z2, F@_1, TrUserData) ->
+    skip_varint_CommitResp(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_CommitResp(<<0:1, _:7, Rest/binary>>, Z1,
+		       Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_CommitResp(Rest, Z1, Z2, F@_1,
+				  TrUserData).
+
+skip_length_delimited_CommitResp(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_CommitResp(Rest, N + 7,
+				     X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_CommitResp(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_CommitResp(Rest2, 0, 0, F@_1,
+				  TrUserData).
+
+skip_group_CommitResp(Bin, FNum, Z2, F@_1,
+		      TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_CommitResp(Rest, 0, Z2, F@_1,
+				  TrUserData).
+
+skip_32_CommitResp(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		   TrUserData) ->
+    dfp_read_field_def_CommitResp(Rest, Z1, Z2, F@_1,
+				  TrUserData).
+
+skip_64_CommitResp(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		   TrUserData) ->
+    dfp_read_field_def_CommitResp(Rest, Z1, Z2, F@_1,
+				  TrUserData).
+
+d_msg_ReadOnlyTx(Bin, TrUserData) ->
+    dfp_read_field_def_ReadOnlyTx(Bin, 0, 0,
+				  id([], TrUserData), TrUserData).
+
+dfp_read_field_def_ReadOnlyTx(<<10, Rest/binary>>, Z1,
+			      Z2, F@_1, TrUserData) ->
+    d_field_ReadOnlyTx_keys(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_ReadOnlyTx(<<>>, 0, 0, R1,
+			      TrUserData) ->
+    #{keys => lists_reverse(R1, TrUserData)};
+dfp_read_field_def_ReadOnlyTx(Other, Z1, Z2, F@_1,
+			      TrUserData) ->
+    dg_read_field_def_ReadOnlyTx(Other, Z1, Z2, F@_1,
+				 TrUserData).
+
+dg_read_field_def_ReadOnlyTx(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ReadOnlyTx(Rest, N + 7, X bsl N + Acc,
+				 F@_1, TrUserData);
+dg_read_field_def_ReadOnlyTx(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_ReadOnlyTx_keys(Rest, 0, 0, F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ReadOnlyTx(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_ReadOnlyTx(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_ReadOnlyTx(Rest, 0, 0, F@_1,
+						 TrUserData);
+	    3 ->
+		skip_group_ReadOnlyTx(Rest, Key bsr 3, 0, F@_1,
+				      TrUserData);
+	    5 -> skip_32_ReadOnlyTx(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_ReadOnlyTx(<<>>, 0, 0, R1,
+			     TrUserData) ->
+    #{keys => lists_reverse(R1, TrUserData)}.
+
+d_field_ReadOnlyTx_keys(<<1:1, X:7, Rest/binary>>, N,
+			Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_ReadOnlyTx_keys(Rest, N + 7, X bsl N + Acc,
+			    F@_1, TrUserData);
+d_field_ReadOnlyTx_keys(<<0:1, X:7, Rest/binary>>, N,
+			Acc, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {binary:copy(Bytes), Rest2}
+			 end,
+    dfp_read_field_def_ReadOnlyTx(RestF, 0, 0,
+				  cons(NewFValue, Prev, TrUserData),
+				  TrUserData).
+
+skip_varint_ReadOnlyTx(<<1:1, _:7, Rest/binary>>, Z1,
+		       Z2, F@_1, TrUserData) ->
+    skip_varint_ReadOnlyTx(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_ReadOnlyTx(<<0:1, _:7, Rest/binary>>, Z1,
+		       Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_ReadOnlyTx(Rest, Z1, Z2, F@_1,
+				  TrUserData).
+
+skip_length_delimited_ReadOnlyTx(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ReadOnlyTx(Rest, N + 7,
+				     X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_ReadOnlyTx(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ReadOnlyTx(Rest2, 0, 0, F@_1,
+				  TrUserData).
+
+skip_group_ReadOnlyTx(Bin, FNum, Z2, F@_1,
+		      TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ReadOnlyTx(Rest, 0, Z2, F@_1,
+				  TrUserData).
+
+skip_32_ReadOnlyTx(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		   TrUserData) ->
+    dfp_read_field_def_ReadOnlyTx(Rest, Z1, Z2, F@_1,
+				  TrUserData).
+
+skip_64_ReadOnlyTx(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		   TrUserData) ->
+    dfp_read_field_def_ReadOnlyTx(Rest, Z1, Z2, F@_1,
+				  TrUserData).
 
 d_msg_KeyOp(Bin, TrUserData) ->
     dfp_read_field_def_KeyOp(Bin, 0, 0,
@@ -558,222 +814,126 @@ skip_64_ReadWriteTx(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
     dfp_read_field_def_ReadWriteTx(Rest, Z1, Z2, F@_1, F@_2,
 				   TrUserData).
 
-d_msg_CommitResp(Bin, TrUserData) ->
-    dfp_read_field_def_CommitResp(Bin, 0, 0,
-				  id('$undef', TrUserData), TrUserData).
+d_msg_Load(Bin, TrUserData) ->
+    dfp_read_field_def_Load(Bin, 0, 0, id(0, TrUserData),
+			    id(0, TrUserData), TrUserData).
 
-dfp_read_field_def_CommitResp(<<8, Rest/binary>>, Z1,
-			      Z2, F@_1, TrUserData) ->
-    d_field_CommitResp_success(Rest, Z1, Z2, F@_1,
-			       TrUserData);
-dfp_read_field_def_CommitResp(<<16, Rest/binary>>, Z1,
-			      Z2, F@_1, TrUserData) ->
-    d_field_CommitResp_error_reason(Rest, Z1, Z2, F@_1,
-				    TrUserData);
-dfp_read_field_def_CommitResp(<<>>, 0, 0, F@_1, _) ->
+dfp_read_field_def_Load(<<8, Rest/binary>>, Z1, Z2,
+			F@_1, F@_2, TrUserData) ->
+    d_field_Load_num_keys(Rest, Z1, Z2, F@_1, F@_2,
+			  TrUserData);
+dfp_read_field_def_Load(<<16, Rest/binary>>, Z1, Z2,
+			F@_1, F@_2, TrUserData) ->
+    d_field_Load_bin_size(Rest, Z1, Z2, F@_1, F@_2,
+			  TrUserData);
+dfp_read_field_def_Load(<<>>, 0, 0, F@_1, F@_2, _) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{num_keys => F@_1}
+	 end,
+    if F@_2 == '$undef' -> S2;
+       true -> S2#{bin_size => F@_2}
     end;
-dfp_read_field_def_CommitResp(Other, Z1, Z2, F@_1,
-			      TrUserData) ->
-    dg_read_field_def_CommitResp(Other, Z1, Z2, F@_1,
-				 TrUserData).
+dfp_read_field_def_Load(Other, Z1, Z2, F@_1, F@_2,
+			TrUserData) ->
+    dg_read_field_def_Load(Other, Z1, Z2, F@_1, F@_2,
+			   TrUserData).
 
-dg_read_field_def_CommitResp(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, TrUserData)
+dg_read_field_def_Load(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, F@_2, TrUserData)
     when N < 32 - 7 ->
-    dg_read_field_def_CommitResp(Rest, N + 7, X bsl N + Acc,
-				 F@_1, TrUserData);
-dg_read_field_def_CommitResp(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, TrUserData) ->
+    dg_read_field_def_Load(Rest, N + 7, X bsl N + Acc, F@_1,
+			   F@_2, TrUserData);
+dg_read_field_def_Load(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_CommitResp_success(Rest, 0, 0, F@_1,
-				     TrUserData);
+	  d_field_Load_num_keys(Rest, 0, 0, F@_1, F@_2,
+				TrUserData);
       16 ->
-	  d_field_CommitResp_error_reason(Rest, 0, 0, F@_1,
-					  TrUserData);
+	  d_field_Load_bin_size(Rest, 0, 0, F@_1, F@_2,
+				TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_CommitResp(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_CommitResp(Rest, 0, 0, F@_1, TrUserData);
+		skip_varint_Load(Rest, 0, 0, F@_1, F@_2, TrUserData);
+	    1 -> skip_64_Load(Rest, 0, 0, F@_1, F@_2, TrUserData);
 	    2 ->
-		skip_length_delimited_CommitResp(Rest, 0, 0, F@_1,
-						 TrUserData);
+		skip_length_delimited_Load(Rest, 0, 0, F@_1, F@_2,
+					   TrUserData);
 	    3 ->
-		skip_group_CommitResp(Rest, Key bsr 3, 0, F@_1,
-				      TrUserData);
-	    5 -> skip_32_CommitResp(Rest, 0, 0, F@_1, TrUserData)
+		skip_group_Load(Rest, Key bsr 3, 0, F@_1, F@_2,
+				TrUserData);
+	    5 -> skip_32_Load(Rest, 0, 0, F@_1, F@_2, TrUserData)
 	  end
     end;
-dg_read_field_def_CommitResp(<<>>, 0, 0, F@_1, _) ->
+dg_read_field_def_Load(<<>>, 0, 0, F@_1, F@_2, _) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{resp => F@_1}
+    S2 = if F@_1 == '$undef' -> S1;
+	    true -> S1#{num_keys => F@_1}
+	 end,
+    if F@_2 == '$undef' -> S2;
+       true -> S2#{bin_size => F@_2}
     end.
 
-d_field_CommitResp_success(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, TrUserData)
+d_field_Load_num_keys(<<1:1, X:7, Rest/binary>>, N, Acc,
+		      F@_1, F@_2, TrUserData)
     when N < 57 ->
-    d_field_CommitResp_success(Rest, N + 7, X bsl N + Acc,
-			       F@_1, TrUserData);
-d_field_CommitResp_success(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, _, TrUserData) ->
+    d_field_Load_num_keys(Rest, N + 7, X bsl N + Acc, F@_1,
+			  F@_2, TrUserData);
+d_field_Load_num_keys(<<0:1, X:7, Rest/binary>>, N, Acc,
+		      _, F@_2, TrUserData) ->
     {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_CommitResp(RestF, 0, 0,
-				  {success, NewFValue}, TrUserData).
+    dfp_read_field_def_Load(RestF, 0, 0, NewFValue, F@_2,
+			    TrUserData).
 
-d_field_CommitResp_error_reason(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, F@_1, TrUserData)
+d_field_Load_bin_size(<<1:1, X:7, Rest/binary>>, N, Acc,
+		      F@_1, F@_2, TrUserData)
     when N < 57 ->
-    d_field_CommitResp_error_reason(Rest, N + 7,
-				    X bsl N + Acc, F@_1, TrUserData);
-d_field_CommitResp_error_reason(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, _, TrUserData) ->
+    d_field_Load_bin_size(Rest, N + 7, X bsl N + Acc, F@_1,
+			  F@_2, TrUserData);
+d_field_Load_bin_size(<<0:1, X:7, Rest/binary>>, N, Acc,
+		      F@_1, _, TrUserData) ->
     {NewFValue, RestF} = {X bsl N + Acc, Rest},
-    dfp_read_field_def_CommitResp(RestF, 0, 0,
-				  {error_reason, NewFValue}, TrUserData).
+    dfp_read_field_def_Load(RestF, 0, 0, F@_1, NewFValue,
+			    TrUserData).
 
-skip_varint_CommitResp(<<1:1, _:7, Rest/binary>>, Z1,
-		       Z2, F@_1, TrUserData) ->
-    skip_varint_CommitResp(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_CommitResp(<<0:1, _:7, Rest/binary>>, Z1,
-		       Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_CommitResp(Rest, Z1, Z2, F@_1,
-				  TrUserData).
+skip_varint_Load(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		 F@_1, F@_2, TrUserData) ->
+    skip_varint_Load(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+skip_varint_Load(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		 F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, F@_2,
+			    TrUserData).
 
-skip_length_delimited_CommitResp(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, TrUserData)
+skip_length_delimited_Load(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
-    skip_length_delimited_CommitResp(Rest, N + 7,
-				     X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_CommitResp(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, TrUserData) ->
+    skip_length_delimited_Load(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, TrUserData);
+skip_length_delimited_Load(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_CommitResp(Rest2, 0, 0, F@_1,
-				  TrUserData).
+    dfp_read_field_def_Load(Rest2, 0, 0, F@_1, F@_2,
+			    TrUserData).
 
-skip_group_CommitResp(Bin, FNum, Z2, F@_1,
-		      TrUserData) ->
+skip_group_Load(Bin, FNum, Z2, F@_1, F@_2,
+		TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_CommitResp(Rest, 0, Z2, F@_1,
-				  TrUserData).
+    dfp_read_field_def_Load(Rest, 0, Z2, F@_1, F@_2,
+			    TrUserData).
 
-skip_32_CommitResp(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		   TrUserData) ->
-    dfp_read_field_def_CommitResp(Rest, Z1, Z2, F@_1,
-				  TrUserData).
+skip_32_Load(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2,
+	     TrUserData) ->
+    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, F@_2,
+			    TrUserData).
 
-skip_64_CommitResp(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		   TrUserData) ->
-    dfp_read_field_def_CommitResp(Rest, Z1, Z2, F@_1,
-				  TrUserData).
-
-d_msg_ReadOnlyTx(Bin, TrUserData) ->
-    dfp_read_field_def_ReadOnlyTx(Bin, 0, 0,
-				  id([], TrUserData), TrUserData).
-
-dfp_read_field_def_ReadOnlyTx(<<10, Rest/binary>>, Z1,
-			      Z2, F@_1, TrUserData) ->
-    d_field_ReadOnlyTx_keys(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_ReadOnlyTx(<<>>, 0, 0, R1,
-			      TrUserData) ->
-    #{keys => lists_reverse(R1, TrUserData)};
-dfp_read_field_def_ReadOnlyTx(Other, Z1, Z2, F@_1,
-			      TrUserData) ->
-    dg_read_field_def_ReadOnlyTx(Other, Z1, Z2, F@_1,
-				 TrUserData).
-
-dg_read_field_def_ReadOnlyTx(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_ReadOnlyTx(Rest, N + 7, X bsl N + Acc,
-				 F@_1, TrUserData);
-dg_read_field_def_ReadOnlyTx(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  d_field_ReadOnlyTx_keys(Rest, 0, 0, F@_1, TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		skip_varint_ReadOnlyTx(Rest, 0, 0, F@_1, TrUserData);
-	    1 -> skip_64_ReadOnlyTx(Rest, 0, 0, F@_1, TrUserData);
-	    2 ->
-		skip_length_delimited_ReadOnlyTx(Rest, 0, 0, F@_1,
-						 TrUserData);
-	    3 ->
-		skip_group_ReadOnlyTx(Rest, Key bsr 3, 0, F@_1,
-				      TrUserData);
-	    5 -> skip_32_ReadOnlyTx(Rest, 0, 0, F@_1, TrUserData)
-	  end
-    end;
-dg_read_field_def_ReadOnlyTx(<<>>, 0, 0, R1,
-			     TrUserData) ->
-    #{keys => lists_reverse(R1, TrUserData)}.
-
-d_field_ReadOnlyTx_keys(<<1:1, X:7, Rest/binary>>, N,
-			Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_ReadOnlyTx_keys(Rest, N + 7, X bsl N + Acc,
-			    F@_1, TrUserData);
-d_field_ReadOnlyTx_keys(<<0:1, X:7, Rest/binary>>, N,
-			Acc, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {binary:copy(Bytes), Rest2}
-			 end,
-    dfp_read_field_def_ReadOnlyTx(RestF, 0, 0,
-				  cons(NewFValue, Prev, TrUserData),
-				  TrUserData).
-
-skip_varint_ReadOnlyTx(<<1:1, _:7, Rest/binary>>, Z1,
-		       Z2, F@_1, TrUserData) ->
-    skip_varint_ReadOnlyTx(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_ReadOnlyTx(<<0:1, _:7, Rest/binary>>, Z1,
-		       Z2, F@_1, TrUserData) ->
-    dfp_read_field_def_ReadOnlyTx(Rest, Z1, Z2, F@_1,
-				  TrUserData).
-
-skip_length_delimited_ReadOnlyTx(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_ReadOnlyTx(Rest, N + 7,
-				     X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_ReadOnlyTx(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_ReadOnlyTx(Rest2, 0, 0, F@_1,
-				  TrUserData).
-
-skip_group_ReadOnlyTx(Bin, FNum, Z2, F@_1,
-		      TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_ReadOnlyTx(Rest, 0, Z2, F@_1,
-				  TrUserData).
-
-skip_32_ReadOnlyTx(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		   TrUserData) ->
-    dfp_read_field_def_ReadOnlyTx(Rest, Z1, Z2, F@_1,
-				  TrUserData).
-
-skip_64_ReadOnlyTx(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		   TrUserData) ->
-    dfp_read_field_def_ReadOnlyTx(Rest, Z1, Z2, F@_1,
-				  TrUserData).
+skip_64_Load(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2,
+	     TrUserData) ->
+    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, F@_2,
+			    TrUserData).
 
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
@@ -840,16 +1000,35 @@ merge_msgs(Prev, New, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
       'Ping' -> merge_msg_Ping(Prev, New, TrUserData);
-      'KeyOp' -> merge_msg_KeyOp(Prev, New, TrUserData);
-      'ReadWriteTx' ->
-	  merge_msg_ReadWriteTx(Prev, New, TrUserData);
       'CommitResp' ->
 	  merge_msg_CommitResp(Prev, New, TrUserData);
       'ReadOnlyTx' ->
-	  merge_msg_ReadOnlyTx(Prev, New, TrUserData)
+	  merge_msg_ReadOnlyTx(Prev, New, TrUserData);
+      'KeyOp' -> merge_msg_KeyOp(Prev, New, TrUserData);
+      'ReadWriteTx' ->
+	  merge_msg_ReadWriteTx(Prev, New, TrUserData);
+      'Load' -> merge_msg_Load(Prev, New, TrUserData)
     end.
 
 merge_msg_Ping(_Prev, New, _TrUserData) -> New.
+
+merge_msg_CommitResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+merge_msg_ReadOnlyTx(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {#{keys := PFkeys}, #{keys := NFkeys}} ->
+	  S1#{keys => 'erlang_++'(PFkeys, NFkeys, TrUserData)};
+      {_, #{keys := NFkeys}} -> S1#{keys => NFkeys};
+      {#{keys := PFkeys}, _} -> S1#{keys => PFkeys};
+      {_, _} -> S1
+    end.
 
 merge_msg_KeyOp(PMsg, NMsg, _) ->
     S1 = #{},
@@ -885,22 +1064,21 @@ merge_msg_ReadWriteTx(PMsg, NMsg, TrUserData) ->
       {_, _} -> S2
     end.
 
-merge_msg_CommitResp(PMsg, NMsg, _) ->
+merge_msg_Load(PMsg, NMsg, _) ->
     S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{num_keys := NFnum_keys}} ->
+	       S1#{num_keys => NFnum_keys};
+	   {#{num_keys := PFnum_keys}, _} ->
+	       S1#{num_keys => PFnum_keys};
+	   _ -> S1
+	 end,
     case {PMsg, NMsg} of
-      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
-      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
-      _ -> S1
-    end.
-
-merge_msg_ReadOnlyTx(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-      {#{keys := PFkeys}, #{keys := NFkeys}} ->
-	  S1#{keys => 'erlang_++'(PFkeys, NFkeys, TrUserData)};
-      {_, #{keys := NFkeys}} -> S1#{keys => NFkeys};
-      {#{keys := PFkeys}, _} -> S1#{keys => PFkeys};
-      {_, _} -> S1
+      {_, #{bin_size := NFbin_size}} ->
+	  S2#{bin_size => NFbin_size};
+      {#{bin_size := PFbin_size}, _} ->
+	  S2#{bin_size => PFbin_size};
+      _ -> S2
     end.
 
 
@@ -911,13 +1089,14 @@ verify_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
       'Ping' -> v_msg_Ping(Msg, ['Ping'], TrUserData);
-      'KeyOp' -> v_msg_KeyOp(Msg, ['KeyOp'], TrUserData);
-      'ReadWriteTx' ->
-	  v_msg_ReadWriteTx(Msg, ['ReadWriteTx'], TrUserData);
       'CommitResp' ->
 	  v_msg_CommitResp(Msg, ['CommitResp'], TrUserData);
       'ReadOnlyTx' ->
 	  v_msg_ReadOnlyTx(Msg, ['ReadOnlyTx'], TrUserData);
+      'KeyOp' -> v_msg_KeyOp(Msg, ['KeyOp'], TrUserData);
+      'ReadWriteTx' ->
+	  v_msg_ReadWriteTx(Msg, ['ReadWriteTx'], TrUserData);
+      'Load' -> v_msg_Load(Msg, ['Load'], TrUserData);
       _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
 
@@ -935,6 +1114,56 @@ v_msg_Ping(M, Path, _TrUserData) when is_map(M) ->
 		  M, Path);
 v_msg_Ping(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'Ping'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_CommitResp/3}).
+v_msg_CommitResp(#{} = M, Path, _) ->
+    case M of
+      #{resp := {success, OF1}} ->
+	  v_type_uint32(OF1, [success, resp | Path]);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path]);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_CommitResp(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'CommitResp'},
+		  M, Path);
+v_msg_CommitResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'CommitResp'}, X, Path).
+
+-dialyzer({nowarn_function,v_msg_ReadOnlyTx/3}).
+v_msg_ReadOnlyTx(#{} = M, Path, _) ->
+    case M of
+      #{keys := F1} ->
+	  if is_list(F1) ->
+		 _ = [v_type_bytes(Elem, [keys | Path]) || Elem <- F1],
+		 ok;
+	     true ->
+		 mk_type_error({invalid_list_of, bytes}, F1,
+			       [keys | Path])
+	  end;
+      _ -> ok
+    end,
+    lists:foreach(fun (keys) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ReadOnlyTx(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ReadOnlyTx'},
+		  M, Path);
+v_msg_ReadOnlyTx(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ReadOnlyTx'}, X, Path).
 
 -dialyzer({nowarn_function,v_msg_KeyOp/3}).
 v_msg_KeyOp(#{} = M, Path, _) ->
@@ -1001,55 +1230,31 @@ v_msg_ReadWriteTx(M, Path, _TrUserData)
 v_msg_ReadWriteTx(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'ReadWriteTx'}, X, Path).
 
--dialyzer({nowarn_function,v_msg_CommitResp/3}).
-v_msg_CommitResp(#{} = M, Path, _) ->
+-dialyzer({nowarn_function,v_msg_Load/3}).
+v_msg_Load(#{} = M, Path, _) ->
     case M of
-      #{resp := {success, OF1}} ->
-	  v_type_uint32(OF1, [success, resp | Path]);
-      #{resp := {error_reason, OF1}} ->
-	  v_type_uint32(OF1, [error_reason, resp | Path]);
-      #{resp := F1} ->
-	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      #{num_keys := F1} ->
+	  v_type_uint32(F1, [num_keys | Path]);
       _ -> ok
     end,
-    lists:foreach(fun (resp) -> ok;
+    case M of
+      #{bin_size := F2} ->
+	  v_type_uint32(F2, [bin_size | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (num_keys) -> ok;
+		      (bin_size) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
 		  maps:keys(M)),
     ok;
-v_msg_CommitResp(M, Path, _TrUserData) when is_map(M) ->
+v_msg_Load(M, Path, _TrUserData) when is_map(M) ->
     mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'CommitResp'},
+		   'Load'},
 		  M, Path);
-v_msg_CommitResp(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'CommitResp'}, X, Path).
-
--dialyzer({nowarn_function,v_msg_ReadOnlyTx/3}).
-v_msg_ReadOnlyTx(#{} = M, Path, _) ->
-    case M of
-      #{keys := F1} ->
-	  if is_list(F1) ->
-		 _ = [v_type_bytes(Elem, [keys | Path]) || Elem <- F1],
-		 ok;
-	     true ->
-		 mk_type_error({invalid_list_of, bytes}, F1,
-			       [keys | Path])
-	  end;
-      _ -> ok
-    end,
-    lists:foreach(fun (keys) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_ReadOnlyTx(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'ReadOnlyTx'},
-		  M, Path);
-v_msg_ReadOnlyTx(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'ReadOnlyTx'}, X, Path).
+v_msg_Load(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'Load'}, X, Path).
 
 -dialyzer({nowarn_function,v_type_uint32/2}).
 v_type_uint32(N, _Path) when 0 =< N, N =< 4294967295 ->
@@ -1096,6 +1301,16 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 
 get_msg_defs() ->
     [{{msg, 'Ping'}, []},
+     {{msg, 'CommitResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => success, fnum => 1, rnum => 2,
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
+     {{msg, 'ReadOnlyTx'},
+      [#{name => keys, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => repeated, opts => []}]},
      {{msg, 'KeyOp'},
       [#{name => key, fnum => 1, rnum => 2, type => bytes,
 	 occurrence => optional, opts => []},
@@ -1107,29 +1322,24 @@ get_msg_defs() ->
        #{name => ops, fnum => 2, rnum => 3,
 	 type => {msg, 'KeyOp'}, occurrence => repeated,
 	 opts => []}]},
-     {{msg, 'CommitResp'},
-      [#{name => resp, rnum => 2,
-	 fields =>
-	     [#{name => success, fnum => 1, rnum => 2,
-		type => uint32, occurrence => optional, opts => []},
-	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional, opts => []}]}]},
-     {{msg, 'ReadOnlyTx'},
-      [#{name => keys, fnum => 1, rnum => 2, type => bytes,
-	 occurrence => repeated, opts => []}]}].
+     {{msg, 'Load'},
+      [#{name => num_keys, fnum => 1, rnum => 2,
+	 type => uint32, occurrence => optional, opts => []},
+       #{name => bin_size, fnum => 2, rnum => 3,
+	 type => uint32, occurrence => optional, opts => []}]}].
 
 
 get_msg_names() ->
-    ['Ping', 'KeyOp', 'ReadWriteTx', 'CommitResp',
-     'ReadOnlyTx'].
+    ['Ping', 'CommitResp', 'ReadOnlyTx', 'KeyOp',
+     'ReadWriteTx', 'Load'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['Ping', 'KeyOp', 'ReadWriteTx', 'CommitResp',
-     'ReadOnlyTx'].
+    ['Ping', 'CommitResp', 'ReadOnlyTx', 'KeyOp',
+     'ReadWriteTx', 'Load'].
 
 
 get_enum_names() -> [].
@@ -1148,6 +1358,16 @@ fetch_enum_def(EnumName) ->
 
 
 find_msg_def('Ping') -> [];
+find_msg_def('CommitResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => success, fnum => 1, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
+find_msg_def('ReadOnlyTx') ->
+    [#{name => keys, fnum => 1, rnum => 2, type => bytes,
+       occurrence => repeated, opts => []}];
 find_msg_def('KeyOp') ->
     [#{name => key, fnum => 1, rnum => 2, type => bytes,
        occurrence => optional, opts => []},
@@ -1159,16 +1379,11 @@ find_msg_def('ReadWriteTx') ->
      #{name => ops, fnum => 2, rnum => 3,
        type => {msg, 'KeyOp'}, occurrence => repeated,
        opts => []}];
-find_msg_def('CommitResp') ->
-    [#{name => resp, rnum => 2,
-       fields =>
-	   [#{name => success, fnum => 1, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []},
-	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
-find_msg_def('ReadOnlyTx') ->
-    [#{name => keys, fnum => 1, rnum => 2, type => bytes,
-       occurrence => repeated, opts => []}];
+find_msg_def('Load') ->
+    [#{name => num_keys, fnum => 1, rnum => 2,
+       type => uint32, occurrence => optional, opts => []},
+     #{name => bin_size, fnum => 2, rnum => 3,
+       type => uint32, occurrence => optional, opts => []}];
 find_msg_def(_) -> error.
 
 

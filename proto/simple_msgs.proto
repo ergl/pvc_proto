@@ -2,6 +2,11 @@ syntax = "proto3";
 
 message Ping {}
 
+message Load {
+    uint32 num_keys = 1;
+    uint32 bin_size = 2;
+}
+
 message ReadOnlyTx {
     repeated bytes keys = 1;
 }
