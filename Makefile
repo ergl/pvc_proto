@@ -10,7 +10,7 @@ MAKE						 = make
 all: compile
 
 gen: devdep
-	_build/dev/lib/gpb/bin/protoc-erl -strbin -maps -I. proto/*.proto -o src/
+	_build/dev/lib/gpb/bin/protoc-erl -strbin -for-version 19 -maps -I. proto/*.proto -o src/
 
 ##
 ## Compilation targets
