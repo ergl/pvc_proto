@@ -30,6 +30,15 @@ to_client_enc(_, {error, Reason}) ->
             #{resp => {error_reason, common:encode_error(Reason)}},
             'CommitResp'
         )
+    );
+
+to_client_enc(_, {request_to, Ip}) ->
+    encode_raw_bits(
+        'CommitResp',
+        simple_msgs:encode_msg(
+            #{resp => {request_to, Ip}},
+            'CommitResp'
+        )
     ).
 
 %% @doc Generic client side decode
@@ -40,7 +49,9 @@ from_server_dec(Bin) ->
         {success, Code} ->
             common:decode_success(Code);
         {error_reason, Code} ->
-            {error, common:decode_error(Code)}
+            {error, common:decode_error(Code)};
+        {request_to, Ip} ->
+            {request_to, Ip}
     end.
 
 -spec ping() -> binary().
