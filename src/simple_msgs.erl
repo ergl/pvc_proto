@@ -52,7 +52,7 @@
        }.
 
 -type 'CommitResp'() ::
-      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
+      #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} | {request_to, iodata()} % oneof
        }.
 
 -export_type(['Ping'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
@@ -191,6 +191,11 @@ e_msg_CommitResp(#{} = M, Bin, TrUserData) ->
 		begin
 		  TrTF1 = id(TF1, TrUserData),
 		  e_varint(TrTF1, <<Bin/binary, 16>>, TrUserData)
+		end;
+	    {request_to, TF1} ->
+		begin
+		  TrTF1 = id(TF1, TrUserData),
+		  e_type_bytes(TrTF1, <<Bin/binary, 26>>, TrUserData)
 		end
 	  end;
       _ -> Bin
@@ -887,6 +892,10 @@ dfp_read_field_def_CommitResp(<<16, Rest/binary>>, Z1,
 			      Z2, F@_1, TrUserData) ->
     d_field_CommitResp_error_reason(Rest, Z1, Z2, F@_1,
 				    TrUserData);
+dfp_read_field_def_CommitResp(<<26, Rest/binary>>, Z1,
+			      Z2, F@_1, TrUserData) ->
+    d_field_CommitResp_request_to(Rest, Z1, Z2, F@_1,
+				  TrUserData);
 dfp_read_field_def_CommitResp(<<>>, 0, 0, F@_1, _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
@@ -912,6 +921,9 @@ dg_read_field_def_CommitResp(<<0:1, X:7, Rest/binary>>,
       16 ->
 	  d_field_CommitResp_error_reason(Rest, 0, 0, F@_1,
 					  TrUserData);
+      26 ->
+	  d_field_CommitResp_request_to(Rest, 0, 0, F@_1,
+					TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
@@ -958,6 +970,22 @@ d_field_CommitResp_error_reason(<<0:1, X:7,
 			  Rest},
     dfp_read_field_def_CommitResp(RestF, 0, 0,
 				  id({error_reason, NewFValue}, TrUserData),
+				  TrUserData).
+
+d_field_CommitResp_request_to(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_CommitResp_request_to(Rest, N + 7,
+				  X bsl N + Acc, F@_1, TrUserData);
+d_field_CommitResp_request_to(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_CommitResp(RestF, 0, 0,
+				  id({request_to, NewFValue}, TrUserData),
 				  TrUserData).
 
 skip_varint_CommitResp(<<1:1, _:7, Rest/binary>>, Z1,
@@ -1318,6 +1346,9 @@ v_msg_CommitResp(#{} = M, Path, TrUserData) ->
       #{resp := {error_reason, OF1}} ->
 	  v_type_uint32(OF1, [error_reason, resp | Path],
 			TrUserData);
+      #{resp := {request_to, OF1}} ->
+	  v_type_bytes(OF1, [request_to, resp | Path],
+		       TrUserData);
       #{resp := F1} ->
 	  mk_type_error(invalid_oneof, F1, [resp | Path]);
       _ -> ok
@@ -1425,8 +1456,9 @@ get_msg_defs() ->
 	     [#{name => success, fnum => 1, rnum => 2,
 		type => uint32, occurrence => optional, opts => []},
 	      #{name => error_reason, fnum => 2, rnum => 2,
-		type => uint32, occurrence => optional,
-		opts => []}]}]}].
+		type => uint32, occurrence => optional, opts => []},
+	      #{name => request_to, fnum => 3, rnum => 2,
+		type => bytes, occurrence => optional, opts => []}]}]}].
 
 
 get_msg_names() ->
@@ -1483,7 +1515,9 @@ find_msg_def('CommitResp') ->
 	   [#{name => success, fnum => 1, rnum => 2,
 	      type => uint32, occurrence => optional, opts => []},
 	    #{name => error_reason, fnum => 2, rnum => 2,
-	      type => uint32, occurrence => optional, opts => []}]}];
+	      type => uint32, occurrence => optional, opts => []},
+	    #{name => request_to, fnum => 3, rnum => 2,
+	      type => bytes, occurrence => optional, opts => []}]}];
 find_msg_def(_) -> error.
 
 
