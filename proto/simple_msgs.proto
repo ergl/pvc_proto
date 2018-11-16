@@ -2,6 +2,17 @@ syntax = "proto3";
 
 message Ping {}
 
+message GetRing {}
+
+message Ring {
+    message RingEntry {
+        bytes node_entry = 1;
+        bytes node_ip = 2;
+    }
+
+    repeated RingEntry ring = 1;
+}
+
 message Load {
     uint32 num_keys = 1;
     uint32 bin_size = 2;
