@@ -36,13 +36,8 @@
       #{
        }.
 
--type 'Ring.RingEntry'() ::
-      #{node_entry              => iodata(),        % = 1
-        node_ip                 => iodata()         % = 2
-       }.
-
 -type 'Ring'() ::
-      #{ring                    => ['Ring.RingEntry'()] % = 1
+      #{nodes                   => [iodata()]       % = 1
        }.
 
 -type 'Load'() ::
@@ -68,13 +63,13 @@
       #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} | {request_to, iodata()} % oneof
        }.
 
--export_type(['Ping'/0, 'GetRing'/0, 'Ring.RingEntry'/0, 'Ring'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
+-export_type(['Ping'/0, 'GetRing'/0, 'Ring'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
 
--spec encode_msg('Ping'() | 'GetRing'() | 'Ring.RingEntry'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom()) -> binary().
+-spec encode_msg('Ping'() | 'GetRing'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []).
 
--spec encode_msg('Ping'() | 'GetRing'() | 'Ring.RingEntry'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom(), list()) -> binary().
+-spec encode_msg('Ping'() | 'GetRing'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -85,8 +80,6 @@ encode_msg(Msg, MsgName, Opts) ->
       'Ping' -> e_msg_Ping(id(Msg, TrUserData), TrUserData);
       'GetRing' ->
 	  e_msg_GetRing(id(Msg, TrUserData), TrUserData);
-      'Ring.RingEntry' ->
-	  'e_msg_Ring.RingEntry'(id(Msg, TrUserData), TrUserData);
       'Ring' -> e_msg_Ring(id(Msg, TrUserData), TrUserData);
       'Load' -> e_msg_Load(id(Msg, TrUserData), TrUserData);
       'ReadOnlyTx' ->
@@ -103,44 +96,16 @@ e_msg_Ping(_Msg, _TrUserData) -> <<>>.
 
 e_msg_GetRing(_Msg, _TrUserData) -> <<>>.
 
-'e_msg_Ring.RingEntry'(Msg, TrUserData) ->
-    'e_msg_Ring.RingEntry'(Msg, <<>>, TrUserData).
-
-
-'e_msg_Ring.RingEntry'(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{node_entry := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 case iolist_size(TrF1) of
-		   0 -> Bin;
-		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
-    case M of
-      #{node_ip := F2} ->
-	  begin
-	    TrF2 = id(F2, TrUserData),
-	    case iolist_size(TrF2) of
-	      0 -> B1;
-	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
-	    end
-	  end;
-      _ -> B1
-    end.
-
 e_msg_Ring(Msg, TrUserData) ->
     e_msg_Ring(Msg, <<>>, TrUserData).
 
 
 e_msg_Ring(#{} = M, Bin, TrUserData) ->
     case M of
-      #{ring := F1} ->
+      #{nodes := F1} ->
 	  TrF1 = id(F1, TrUserData),
 	  if TrF1 == [] -> Bin;
-	     true -> e_field_Ring_ring(TrF1, Bin, TrUserData)
+	     true -> e_field_Ring_nodes(TrF1, Bin, TrUserData)
 	  end;
       _ -> Bin
     end.
@@ -263,17 +228,12 @@ e_msg_CommitResp(#{} = M, Bin, TrUserData) ->
       _ -> Bin
     end.
 
-e_mfield_Ring_ring(Msg, Bin, TrUserData) ->
-    SubBin = 'e_msg_Ring.RingEntry'(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_field_Ring_ring([Elem | Rest], Bin, TrUserData) ->
+e_field_Ring_nodes([Elem | Rest], Bin, TrUserData) ->
     Bin2 = <<Bin/binary, 10>>,
-    Bin3 = e_mfield_Ring_ring(id(Elem, TrUserData), Bin2,
-			      TrUserData),
-    e_field_Ring_ring(Rest, Bin3, TrUserData);
-e_field_Ring_ring([], Bin, _TrUserData) -> Bin.
+    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2,
+			TrUserData),
+    e_field_Ring_nodes(Rest, Bin3, TrUserData);
+e_field_Ring_nodes([], Bin, _TrUserData) -> Bin.
 
 e_field_ReadOnlyTx_keys([Elem | Rest], Bin,
 			TrUserData) ->
@@ -431,8 +391,6 @@ decode_msg_2_doit('Ping', Bin, TrUserData) ->
     id(d_msg_Ping(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('GetRing', Bin, TrUserData) ->
     id(d_msg_GetRing(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('Ring.RingEntry', Bin, TrUserData) ->
-    id('d_msg_Ring.RingEntry'(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('Ring', Bin, TrUserData) ->
     id(d_msg_Ring(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('Load', Bin, TrUserData) ->
@@ -557,153 +515,15 @@ skip_64_GetRing(<<_:64, Rest/binary>>, Z1, Z2,
 		TrUserData) ->
     dfp_read_field_def_GetRing(Rest, Z1, Z2, TrUserData).
 
-'d_msg_Ring.RingEntry'(Bin, TrUserData) ->
-    'dfp_read_field_def_Ring.RingEntry'(Bin, 0, 0,
-					id(<<>>, TrUserData),
-					id(<<>>, TrUserData), TrUserData).
-
-'dfp_read_field_def_Ring.RingEntry'(<<10, Rest/binary>>,
-				    Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'd_field_Ring.RingEntry_node_entry'(Rest, Z1, Z2, F@_1,
-					F@_2, TrUserData);
-'dfp_read_field_def_Ring.RingEntry'(<<18, Rest/binary>>,
-				    Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'd_field_Ring.RingEntry_node_ip'(Rest, Z1, Z2, F@_1,
-				     F@_2, TrUserData);
-'dfp_read_field_def_Ring.RingEntry'(<<>>, 0, 0, F@_1,
-				    F@_2, _) ->
-    #{node_entry => F@_1, node_ip => F@_2};
-'dfp_read_field_def_Ring.RingEntry'(Other, Z1, Z2, F@_1,
-				    F@_2, TrUserData) ->
-    'dg_read_field_def_Ring.RingEntry'(Other, Z1, Z2, F@_1,
-				       F@_2, TrUserData).
-
-'dg_read_field_def_Ring.RingEntry'(<<1:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, F@_2, TrUserData)
-    when N < 32 - 7 ->
-    'dg_read_field_def_Ring.RingEntry'(Rest, N + 7,
-				       X bsl N + Acc, F@_1, F@_2, TrUserData);
-'dg_read_field_def_Ring.RingEntry'(<<0:1, X:7,
-				     Rest/binary>>,
-				   N, Acc, F@_1, F@_2, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-      10 ->
-	  'd_field_Ring.RingEntry_node_entry'(Rest, 0, 0, F@_1,
-					      F@_2, TrUserData);
-      18 ->
-	  'd_field_Ring.RingEntry_node_ip'(Rest, 0, 0, F@_1, F@_2,
-					   TrUserData);
-      _ ->
-	  case Key band 7 of
-	    0 ->
-		'skip_varint_Ring.RingEntry'(Rest, 0, 0, F@_1, F@_2,
-					     TrUserData);
-	    1 ->
-		'skip_64_Ring.RingEntry'(Rest, 0, 0, F@_1, F@_2,
-					 TrUserData);
-	    2 ->
-		'skip_length_delimited_Ring.RingEntry'(Rest, 0, 0, F@_1,
-						       F@_2, TrUserData);
-	    3 ->
-		'skip_group_Ring.RingEntry'(Rest, Key bsr 3, 0, F@_1,
-					    F@_2, TrUserData);
-	    5 ->
-		'skip_32_Ring.RingEntry'(Rest, 0, 0, F@_1, F@_2,
-					 TrUserData)
-	  end
-    end;
-'dg_read_field_def_Ring.RingEntry'(<<>>, 0, 0, F@_1,
-				   F@_2, _) ->
-    #{node_entry => F@_1, node_ip => F@_2}.
-
-'d_field_Ring.RingEntry_node_entry'(<<1:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    'd_field_Ring.RingEntry_node_entry'(Rest, N + 7,
-					X bsl N + Acc, F@_1, F@_2, TrUserData);
-'d_field_Ring.RingEntry_node_entry'(<<0:1, X:7,
-				      Rest/binary>>,
-				    N, Acc, _, F@_2, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {id(binary:copy(Bytes), TrUserData), Rest2}
-			 end,
-    'dfp_read_field_def_Ring.RingEntry'(RestF, 0, 0,
-					NewFValue, F@_2, TrUserData).
-
-'d_field_Ring.RingEntry_node_ip'(<<1:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    'd_field_Ring.RingEntry_node_ip'(Rest, N + 7,
-				     X bsl N + Acc, F@_1, F@_2, TrUserData);
-'d_field_Ring.RingEntry_node_ip'(<<0:1, X:7,
-				   Rest/binary>>,
-				 N, Acc, F@_1, _, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {id(binary:copy(Bytes), TrUserData), Rest2}
-			 end,
-    'dfp_read_field_def_Ring.RingEntry'(RestF, 0, 0, F@_1,
-					NewFValue, TrUserData).
-
-'skip_varint_Ring.RingEntry'(<<1:1, _:7, Rest/binary>>,
-			     Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'skip_varint_Ring.RingEntry'(Rest, Z1, Z2, F@_1, F@_2,
-				 TrUserData);
-'skip_varint_Ring.RingEntry'(<<0:1, _:7, Rest/binary>>,
-			     Z1, Z2, F@_1, F@_2, TrUserData) ->
-    'dfp_read_field_def_Ring.RingEntry'(Rest, Z1, Z2, F@_1,
-					F@_2, TrUserData).
-
-'skip_length_delimited_Ring.RingEntry'(<<1:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    'skip_length_delimited_Ring.RingEntry'(Rest, N + 7,
-					   X bsl N + Acc, F@_1, F@_2,
-					   TrUserData);
-'skip_length_delimited_Ring.RingEntry'(<<0:1, X:7,
-					 Rest/binary>>,
-				       N, Acc, F@_1, F@_2, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_Ring.RingEntry'(Rest2, 0, 0, F@_1,
-					F@_2, TrUserData).
-
-'skip_group_Ring.RingEntry'(Bin, FNum, Z2, F@_1, F@_2,
-			    TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_Ring.RingEntry'(Rest, 0, Z2, F@_1,
-					F@_2, TrUserData).
-
-'skip_32_Ring.RingEntry'(<<_:32, Rest/binary>>, Z1, Z2,
-			 F@_1, F@_2, TrUserData) ->
-    'dfp_read_field_def_Ring.RingEntry'(Rest, Z1, Z2, F@_1,
-					F@_2, TrUserData).
-
-'skip_64_Ring.RingEntry'(<<_:64, Rest/binary>>, Z1, Z2,
-			 F@_1, F@_2, TrUserData) ->
-    'dfp_read_field_def_Ring.RingEntry'(Rest, Z1, Z2, F@_1,
-					F@_2, TrUserData).
-
 d_msg_Ring(Bin, TrUserData) ->
     dfp_read_field_def_Ring(Bin, 0, 0, id([], TrUserData),
 			    TrUserData).
 
 dfp_read_field_def_Ring(<<10, Rest/binary>>, Z1, Z2,
 			F@_1, TrUserData) ->
-    d_field_Ring_ring(Rest, Z1, Z2, F@_1, TrUserData);
+    d_field_Ring_nodes(Rest, Z1, Z2, F@_1, TrUserData);
 dfp_read_field_def_Ring(<<>>, 0, 0, R1, TrUserData) ->
-    S1 = #{},
-    if R1 == '$undef' -> S1;
-       true -> S1#{ring => lists_reverse(R1, TrUserData)}
-    end;
+    #{nodes => lists_reverse(R1, TrUserData)};
 dfp_read_field_def_Ring(Other, Z1, Z2, F@_1,
 			TrUserData) ->
     dg_read_field_def_Ring(Other, Z1, Z2, F@_1, TrUserData).
@@ -717,7 +537,7 @@ dg_read_field_def_Ring(<<0:1, X:7, Rest/binary>>, N,
 		       Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-      10 -> d_field_Ring_ring(Rest, 0, 0, F@_1, TrUserData);
+      10 -> d_field_Ring_nodes(Rest, 0, 0, F@_1, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 -> skip_varint_Ring(Rest, 0, 0, F@_1, TrUserData);
@@ -731,24 +551,19 @@ dg_read_field_def_Ring(<<0:1, X:7, Rest/binary>>, N,
 	  end
     end;
 dg_read_field_def_Ring(<<>>, 0, 0, R1, TrUserData) ->
-    S1 = #{},
-    if R1 == '$undef' -> S1;
-       true -> S1#{ring => lists_reverse(R1, TrUserData)}
-    end.
+    #{nodes => lists_reverse(R1, TrUserData)}.
 
-d_field_Ring_ring(<<1:1, X:7, Rest/binary>>, N, Acc,
-		  F@_1, TrUserData)
+d_field_Ring_nodes(<<1:1, X:7, Rest/binary>>, N, Acc,
+		   F@_1, TrUserData)
     when N < 57 ->
-    d_field_Ring_ring(Rest, N + 7, X bsl N + Acc, F@_1,
-		      TrUserData);
-d_field_Ring_ring(<<0:1, X:7, Rest/binary>>, N, Acc,
-		  Prev, TrUserData) ->
+    d_field_Ring_nodes(Rest, N + 7, X bsl N + Acc, F@_1,
+		       TrUserData);
+d_field_Ring_nodes(<<0:1, X:7, Rest/binary>>, N, Acc,
+		   Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
-			   <<Bs:Len/binary, Rest2/binary>> = Rest,
-			   {id('d_msg_Ring.RingEntry'(Bs, TrUserData),
-			       TrUserData),
-			    Rest2}
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_Ring(RestF, 0, 0,
 			    cons(NewFValue, Prev, TrUserData), TrUserData).
@@ -1453,8 +1268,6 @@ merge_msgs(Prev, New, MsgName, Opts) ->
     case MsgName of
       'Ping' -> merge_msg_Ping(Prev, New, TrUserData);
       'GetRing' -> merge_msg_GetRing(Prev, New, TrUserData);
-      'Ring.RingEntry' ->
-	  'merge_msg_Ring.RingEntry'(Prev, New, TrUserData);
       'Ring' -> merge_msg_Ring(Prev, New, TrUserData);
       'Load' -> merge_msg_Load(Prev, New, TrUserData);
       'ReadOnlyTx' ->
@@ -1472,32 +1285,14 @@ merge_msg_Ping(_Prev, New, _TrUserData) -> New.
 -compile({nowarn_unused_function,merge_msg_GetRing/3}).
 merge_msg_GetRing(_Prev, New, _TrUserData) -> New.
 
--compile({nowarn_unused_function,'merge_msg_Ring.RingEntry'/3}).
-'merge_msg_Ring.RingEntry'(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{node_entry := NFnode_entry}} ->
-	       S1#{node_entry => NFnode_entry};
-	   {#{node_entry := PFnode_entry}, _} ->
-	       S1#{node_entry => PFnode_entry};
-	   _ -> S1
-	 end,
-    case {PMsg, NMsg} of
-      {_, #{node_ip := NFnode_ip}} ->
-	  S2#{node_ip => NFnode_ip};
-      {#{node_ip := PFnode_ip}, _} ->
-	  S2#{node_ip => PFnode_ip};
-      _ -> S2
-    end.
-
 -compile({nowarn_unused_function,merge_msg_Ring/3}).
 merge_msg_Ring(PMsg, NMsg, TrUserData) ->
     S1 = #{},
     case {PMsg, NMsg} of
-      {#{ring := PFring}, #{ring := NFring}} ->
-	  S1#{ring => 'erlang_++'(PFring, NFring, TrUserData)};
-      {_, #{ring := NFring}} -> S1#{ring => NFring};
-      {#{ring := PFring}, _} -> S1#{ring => PFring};
+      {#{nodes := PFnodes}, #{nodes := NFnodes}} ->
+	  S1#{nodes => 'erlang_++'(PFnodes, NFnodes, TrUserData)};
+      {_, #{nodes := NFnodes}} -> S1#{nodes => NFnodes};
+      {#{nodes := PFnodes}, _} -> S1#{nodes => PFnodes};
       {_, _} -> S1
     end.
 
@@ -1584,8 +1379,6 @@ verify_msg(Msg, MsgName, Opts) ->
     case MsgName of
       'Ping' -> v_msg_Ping(Msg, [MsgName], TrUserData);
       'GetRing' -> v_msg_GetRing(Msg, [MsgName], TrUserData);
-      'Ring.RingEntry' ->
-	  'v_msg_Ring.RingEntry'(Msg, [MsgName], TrUserData);
       'Ring' -> v_msg_Ring(Msg, [MsgName], TrUserData);
       'Load' -> v_msg_Load(Msg, [MsgName], TrUserData);
       'ReadOnlyTx' ->
@@ -1629,53 +1422,22 @@ v_msg_GetRing(M, Path, _TrUserData) when is_map(M) ->
 v_msg_GetRing(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'GetRing'}, X, Path).
 
--compile({nowarn_unused_function,'v_msg_Ring.RingEntry'/3}).
--dialyzer({nowarn_function,'v_msg_Ring.RingEntry'/3}).
-'v_msg_Ring.RingEntry'(#{} = M, Path, TrUserData) ->
-    case M of
-      #{node_entry := F1} ->
-	  v_type_bytes(F1, [node_entry | Path], TrUserData);
-      _ -> ok
-    end,
-    case M of
-      #{node_ip := F2} ->
-	  v_type_bytes(F2, [node_ip | Path], TrUserData);
-      _ -> ok
-    end,
-    lists:foreach(fun (node_entry) -> ok;
-		      (node_ip) -> ok;
-		      (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-'v_msg_Ring.RingEntry'(M, Path, _TrUserData)
-    when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'Ring.RingEntry'},
-		  M, Path);
-'v_msg_Ring.RingEntry'(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'Ring.RingEntry'}, X,
-		  Path).
-
 -compile({nowarn_unused_function,v_msg_Ring/3}).
 -dialyzer({nowarn_function,v_msg_Ring/3}).
 v_msg_Ring(#{} = M, Path, TrUserData) ->
     case M of
-      #{ring := F1} ->
+      #{nodes := F1} ->
 	  if is_list(F1) ->
-		 _ = ['v_msg_Ring.RingEntry'(Elem, [ring | Path],
-					     TrUserData)
+		 _ = [v_type_bytes(Elem, [nodes | Path], TrUserData)
 		      || Elem <- F1],
 		 ok;
 	     true ->
-		 mk_type_error({invalid_list_of,
-				{msg, 'Ring.RingEntry'}},
-			       F1, [ring | Path])
+		 mk_type_error({invalid_list_of, bytes}, F1,
+			       [nodes | Path])
 	  end;
       _ -> ok
     end,
-    lists:foreach(fun (ring) -> ok;
+    lists:foreach(fun (nodes) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
@@ -1906,15 +1668,9 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 
 get_msg_defs() ->
     [{{msg, 'Ping'}, []}, {{msg, 'GetRing'}, []},
-     {{msg, 'Ring.RingEntry'},
-      [#{name => node_entry, fnum => 1, rnum => 2,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => node_ip, fnum => 2, rnum => 3, type => bytes,
-	 occurrence => optional, opts => []}]},
      {{msg, 'Ring'},
-      [#{name => ring, fnum => 1, rnum => 2,
-	 type => {msg, 'Ring.RingEntry'}, occurrence => repeated,
-	 opts => []}]},
+      [#{name => nodes, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => repeated, opts => []}]},
      {{msg, 'Load'},
       [#{name => num_keys, fnum => 1, rnum => 2,
 	 type => uint32, occurrence => optional, opts => []},
@@ -1946,16 +1702,16 @@ get_msg_defs() ->
 
 
 get_msg_names() ->
-    ['Ping', 'GetRing', 'Ring.RingEntry', 'Ring', 'Load',
-     'ReadOnlyTx', 'KeyOp', 'ReadWriteTx', 'CommitResp'].
+    ['Ping', 'GetRing', 'Ring', 'Load', 'ReadOnlyTx',
+     'KeyOp', 'ReadWriteTx', 'CommitResp'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['Ping', 'GetRing', 'Ring.RingEntry', 'Ring', 'Load',
-     'ReadOnlyTx', 'KeyOp', 'ReadWriteTx', 'CommitResp'].
+    ['Ping', 'GetRing', 'Ring', 'Load', 'ReadOnlyTx',
+     'KeyOp', 'ReadWriteTx', 'CommitResp'].
 
 
 get_enum_names() -> [].
@@ -1975,15 +1731,9 @@ fetch_enum_def(EnumName) ->
 
 find_msg_def('Ping') -> [];
 find_msg_def('GetRing') -> [];
-find_msg_def('Ring.RingEntry') ->
-    [#{name => node_entry, fnum => 1, rnum => 2,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => node_ip, fnum => 2, rnum => 3, type => bytes,
-       occurrence => optional, opts => []}];
 find_msg_def('Ring') ->
-    [#{name => ring, fnum => 1, rnum => 2,
-       type => {msg, 'Ring.RingEntry'}, occurrence => repeated,
-       opts => []}];
+    [#{name => nodes, fnum => 1, rnum => 2, type => bytes,
+       occurrence => repeated, opts => []}];
 find_msg_def('Load') ->
     [#{name => num_keys, fnum => 1, rnum => 2,
        type => uint32, occurrence => optional, opts => []},

@@ -5,12 +5,7 @@ message Ping {}
 message GetRing {}
 
 message Ring {
-    message RingEntry {
-        bytes node_entry = 1;
-        bytes node_ip = 2;
-    }
-
-    repeated RingEntry ring = 1;
+    repeated bytes nodes = 1;
 }
 
 message Load {

@@ -43,11 +43,10 @@ to_client_enc(_, {request_to, Ip}) ->
     );
 
 to_client_enc('GetRing', Ring) when is_list(Ring) ->
-    BinNodes = [#{node_entry => Id, node_ip => Ip} || {Id, Ip} <- Ring],
     encode_raw_bits(
         'Ring',
         simple_msgs:encode_msg(
-            #{ring => BinNodes},
+            #{nodes => Ring},
             'Ring'
         )
     ).
@@ -69,8 +68,7 @@ from_server_dec('CommitResp', BinMsg) ->
     end;
 
 from_server_dec('GetRing', BinMsg) ->
-    Resp = maps:get(ring, simple_msgs:decode_msg(BinMsg, 'Ring')),
-    [{Id, Ip} || #{node_entry := Id, node_ip := Ip} <- Resp].
+    maps:get(nodes, simple_msgs:decode_msg(BinMsg, 'Ring')).
 
 -spec ping() -> binary().
 ping() ->
