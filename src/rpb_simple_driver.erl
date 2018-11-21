@@ -5,6 +5,7 @@
          from_server_dec/1]).
 
 -export([ping/0,
+         get_ring/0,
          load/2,
          read_only/1,
          read_write/2]).
@@ -30,23 +31,43 @@ to_client_enc(_, {error, Reason}) ->
             #{resp => {error_reason, common:encode_error(Reason)}},
             'CommitResp'
         )
+    );
+
+to_client_enc('GetRing', Ring) when is_list(Ring) ->
+    encode_raw_bits(
+        'Ring',
+        simple_msgs:encode_msg(
+            #{nodes => Ring},
+            'Ring'
+        )
     ).
 
 %% @doc Generic client side decode
 from_server_dec(Bin) ->
-    {'CommitResp', BinMsg} = decode_raw_bits(Bin),
+    {Type, Msg} = decode_raw_bits(Bin),
+    from_server_dec(Type, Msg).
+
+from_server_dec('CommitResp', BinMsg) ->
     Resp = maps:get(resp, simple_msgs:decode_msg(BinMsg, 'CommitResp')),
     case Resp of
         {success, Code} ->
             common:decode_success(Code);
         {error_reason, Code} ->
             {error, common:decode_error(Code)}
-    end.
+    end;
+
+from_server_dec('GetRing', BinMsg) ->
+    maps:get(nodes, simple_msgs:decode_msg(BinMsg, 'Ring')).
 
 -spec ping() -> binary().
 ping() ->
     Msg = simple_msgs:encode_msg(#{}, 'Ping'),
     encode_raw_bits('Ping', Msg).
+
+-spec get_ring() -> binary().
+get_ring() ->
+    Msg = simple_msgs:encode_msg(#{}, 'GetRing'),
+    encode_raw_bits('GetRing', Msg).
 
 load(NumKeys, BinSize) ->
     Msg = simple_msgs:encode_msg(#{num_keys => NumKeys, bin_size => BinSize}, 'Load'),
@@ -85,9 +106,11 @@ encode_msg_type('ReadOnlyTx') -> 1;
 encode_msg_type('ReadWriteTx') -> 2;
 encode_msg_type('Ping') -> 4;
 encode_msg_type('Load') -> 5;
+encode_msg_type('GetRing') -> 6;
 
 %% Server Responses
-encode_msg_type('CommitResp') -> 3.
+encode_msg_type('CommitResp') -> 3;
+encode_msg_type('Ring') -> 7.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -97,6 +120,8 @@ decode_type_num(1) -> 'ReadOnlyTx';
 decode_type_num(2) -> 'ReadWriteTx';
 decode_type_num(4) -> 'Ping';
 decode_type_num(5) -> 'Load';
+decode_type_num(6) -> 'GetRing';
 
 %% Server Responses
-decode_type_num(3) -> 'CommitResp'.
+decode_type_num(3) -> 'CommitResp';
+decode_type_num(7) -> 'GetRing'.
