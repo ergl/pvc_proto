@@ -36,6 +36,10 @@
       #{
        }.
 
+-type 'NTPing'() ::
+      #{stamp                   => iodata()         % = 1
+       }.
+
 -type 'Ring'() ::
       #{nodes                   => [iodata()]       % = 1
        }.
@@ -63,13 +67,13 @@
       #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['Ping'/0, 'GetRing'/0, 'Ring'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
+-export_type(['Ping'/0, 'GetRing'/0, 'NTPing'/0, 'Ring'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
 
--spec encode_msg('Ping'() | 'GetRing'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom()) -> binary().
+-spec encode_msg('Ping'() | 'GetRing'() | 'NTPing'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []).
 
--spec encode_msg('Ping'() | 'GetRing'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom(), list()) -> binary().
+-spec encode_msg('Ping'() | 'GetRing'() | 'NTPing'() | 'Ring'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -80,6 +84,8 @@ encode_msg(Msg, MsgName, Opts) ->
       'Ping' -> e_msg_Ping(id(Msg, TrUserData), TrUserData);
       'GetRing' ->
 	  e_msg_GetRing(id(Msg, TrUserData), TrUserData);
+      'NTPing' ->
+	  e_msg_NTPing(id(Msg, TrUserData), TrUserData);
       'Ring' -> e_msg_Ring(id(Msg, TrUserData), TrUserData);
       'Load' -> e_msg_Load(id(Msg, TrUserData), TrUserData);
       'ReadOnlyTx' ->
@@ -95,6 +101,23 @@ encode_msg(Msg, MsgName, Opts) ->
 e_msg_Ping(_Msg, _TrUserData) -> <<>>.
 
 e_msg_GetRing(_Msg, _TrUserData) -> <<>>.
+
+e_msg_NTPing(Msg, TrUserData) ->
+    e_msg_NTPing(Msg, <<>>, TrUserData).
+
+
+e_msg_NTPing(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{stamp := F1} ->
+	  begin
+	    TrF1 = id(F1, TrUserData),
+	    case iolist_size(TrF1) of
+	      0 -> Bin;
+	      _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+	    end
+	  end;
+      _ -> Bin
+    end.
 
 e_msg_Ring(Msg, TrUserData) ->
     e_msg_Ring(Msg, <<>>, TrUserData).
@@ -386,6 +409,8 @@ decode_msg_2_doit('Ping', Bin, TrUserData) ->
     id(d_msg_Ping(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('GetRing', Bin, TrUserData) ->
     id(d_msg_GetRing(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('NTPing', Bin, TrUserData) ->
+    id(d_msg_NTPing(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('Ring', Bin, TrUserData) ->
     id(d_msg_Ring(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('Load', Bin, TrUserData) ->
@@ -509,6 +534,96 @@ skip_32_GetRing(<<_:32, Rest/binary>>, Z1, Z2,
 skip_64_GetRing(<<_:64, Rest/binary>>, Z1, Z2,
 		TrUserData) ->
     dfp_read_field_def_GetRing(Rest, Z1, Z2, TrUserData).
+
+d_msg_NTPing(Bin, TrUserData) ->
+    dfp_read_field_def_NTPing(Bin, 0, 0,
+			      id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_NTPing(<<10, Rest/binary>>, Z1, Z2,
+			  F@_1, TrUserData) ->
+    d_field_NTPing_stamp(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_NTPing(<<>>, 0, 0, F@_1, _) ->
+    #{stamp => F@_1};
+dfp_read_field_def_NTPing(Other, Z1, Z2, F@_1,
+			  TrUserData) ->
+    dg_read_field_def_NTPing(Other, Z1, Z2, F@_1,
+			     TrUserData).
+
+dg_read_field_def_NTPing(<<1:1, X:7, Rest/binary>>, N,
+			 Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_NTPing(Rest, N + 7, X bsl N + Acc,
+			     F@_1, TrUserData);
+dg_read_field_def_NTPing(<<0:1, X:7, Rest/binary>>, N,
+			 Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_NTPing_stamp(Rest, 0, 0, F@_1, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 -> skip_varint_NTPing(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_NTPing(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_NTPing(Rest, 0, 0, F@_1,
+					     TrUserData);
+	    3 ->
+		skip_group_NTPing(Rest, Key bsr 3, 0, F@_1, TrUserData);
+	    5 -> skip_32_NTPing(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_NTPing(<<>>, 0, 0, F@_1, _) ->
+    #{stamp => F@_1}.
+
+d_field_NTPing_stamp(<<1:1, X:7, Rest/binary>>, N, Acc,
+		     F@_1, TrUserData)
+    when N < 57 ->
+    d_field_NTPing_stamp(Rest, N + 7, X bsl N + Acc, F@_1,
+			 TrUserData);
+d_field_NTPing_stamp(<<0:1, X:7, Rest/binary>>, N, Acc,
+		     _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_NTPing(RestF, 0, 0, NewFValue,
+			      TrUserData).
+
+skip_varint_NTPing(<<1:1, _:7, Rest/binary>>, Z1, Z2,
+		   F@_1, TrUserData) ->
+    skip_varint_NTPing(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_NTPing(<<0:1, _:7, Rest/binary>>, Z1, Z2,
+		   F@_1, TrUserData) ->
+    dfp_read_field_def_NTPing(Rest, Z1, Z2, F@_1,
+			      TrUserData).
+
+skip_length_delimited_NTPing(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_NTPing(Rest, N + 7, X bsl N + Acc,
+				 F@_1, TrUserData);
+skip_length_delimited_NTPing(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_NTPing(Rest2, 0, 0, F@_1,
+			      TrUserData).
+
+skip_group_NTPing(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_NTPing(Rest, 0, Z2, F@_1,
+			      TrUserData).
+
+skip_32_NTPing(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+	       TrUserData) ->
+    dfp_read_field_def_NTPing(Rest, Z1, Z2, F@_1,
+			      TrUserData).
+
+skip_64_NTPing(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+	       TrUserData) ->
+    dfp_read_field_def_NTPing(Rest, Z1, Z2, F@_1,
+			      TrUserData).
 
 d_msg_Ring(Bin, TrUserData) ->
     dfp_read_field_def_Ring(Bin, 0, 0, id([], TrUserData),
@@ -1240,6 +1355,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
     case MsgName of
       'Ping' -> merge_msg_Ping(Prev, New, TrUserData);
       'GetRing' -> merge_msg_GetRing(Prev, New, TrUserData);
+      'NTPing' -> merge_msg_NTPing(Prev, New, TrUserData);
       'Ring' -> merge_msg_Ring(Prev, New, TrUserData);
       'Load' -> merge_msg_Load(Prev, New, TrUserData);
       'ReadOnlyTx' ->
@@ -1256,6 +1372,15 @@ merge_msg_Ping(_Prev, New, _TrUserData) -> New.
 
 -compile({nowarn_unused_function,merge_msg_GetRing/3}).
 merge_msg_GetRing(_Prev, New, _TrUserData) -> New.
+
+-compile({nowarn_unused_function,merge_msg_NTPing/3}).
+merge_msg_NTPing(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{stamp := NFstamp}} -> S1#{stamp => NFstamp};
+      {#{stamp := PFstamp}, _} -> S1#{stamp => PFstamp};
+      _ -> S1
+    end.
 
 -compile({nowarn_unused_function,merge_msg_Ring/3}).
 merge_msg_Ring(PMsg, NMsg, TrUserData) ->
@@ -1351,6 +1476,7 @@ verify_msg(Msg, MsgName, Opts) ->
     case MsgName of
       'Ping' -> v_msg_Ping(Msg, [MsgName], TrUserData);
       'GetRing' -> v_msg_GetRing(Msg, [MsgName], TrUserData);
+      'NTPing' -> v_msg_NTPing(Msg, [MsgName], TrUserData);
       'Ring' -> v_msg_Ring(Msg, [MsgName], TrUserData);
       'Load' -> v_msg_Load(Msg, [MsgName], TrUserData);
       'ReadOnlyTx' ->
@@ -1393,6 +1519,27 @@ v_msg_GetRing(M, Path, _TrUserData) when is_map(M) ->
 		  M, Path);
 v_msg_GetRing(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'GetRing'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_NTPing/3}).
+-dialyzer({nowarn_function,v_msg_NTPing/3}).
+v_msg_NTPing(#{} = M, Path, TrUserData) ->
+    case M of
+      #{stamp := F1} ->
+	  v_type_bytes(F1, [stamp | Path], TrUserData);
+      _ -> ok
+    end,
+    lists:foreach(fun (stamp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_NTPing(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'NTPing'},
+		  M, Path);
+v_msg_NTPing(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'NTPing'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_Ring/3}).
 -dialyzer({nowarn_function,v_msg_Ring/3}).
@@ -1637,6 +1784,9 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 
 get_msg_defs() ->
     [{{msg, 'Ping'}, []}, {{msg, 'GetRing'}, []},
+     {{msg, 'NTPing'},
+      [#{name => stamp, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => optional, opts => []}]},
      {{msg, 'Ring'},
       [#{name => nodes, fnum => 1, rnum => 2, type => bytes,
 	 occurrence => repeated, opts => []}]},
@@ -1670,16 +1820,16 @@ get_msg_defs() ->
 
 
 get_msg_names() ->
-    ['Ping', 'GetRing', 'Ring', 'Load', 'ReadOnlyTx',
-     'KeyOp', 'ReadWriteTx', 'CommitResp'].
+    ['Ping', 'GetRing', 'NTPing', 'Ring', 'Load',
+     'ReadOnlyTx', 'KeyOp', 'ReadWriteTx', 'CommitResp'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['Ping', 'GetRing', 'Ring', 'Load', 'ReadOnlyTx',
-     'KeyOp', 'ReadWriteTx', 'CommitResp'].
+    ['Ping', 'GetRing', 'NTPing', 'Ring', 'Load',
+     'ReadOnlyTx', 'KeyOp', 'ReadWriteTx', 'CommitResp'].
 
 
 get_enum_names() -> [].
@@ -1699,6 +1849,9 @@ fetch_enum_def(EnumName) ->
 
 find_msg_def('Ping') -> [];
 find_msg_def('GetRing') -> [];
+find_msg_def('NTPing') ->
+    [#{name => stamp, fnum => 1, rnum => 2, type => bytes,
+       occurrence => optional, opts => []}];
 find_msg_def('Ring') ->
     [#{name => nodes, fnum => 1, rnum => 2, type => bytes,
        occurrence => repeated, opts => []}];

@@ -5,6 +5,7 @@
          from_server_dec/1]).
 
 -export([ping/0,
+         ntping/1,
          get_ring/0,
          load/2,
          read_only/1,
@@ -64,6 +65,12 @@ ping() ->
     Msg = simple_msgs:encode_msg(#{}, 'Ping'),
     encode_raw_bits('Ping', Msg).
 
+-spec ntping(erlang:timestamp()) -> binary().
+ntping(T={_,_,_}) ->
+    BinStamp = term_to_binary(T),
+    Msg = simple_msgs:encode_msg(#{stamp => BinStamp}, 'NTPing'),
+    encode_raw_bits('NTPing', Msg).
+
 -spec get_ring() -> binary().
 get_ring() ->
     Msg = simple_msgs:encode_msg(#{}, 'GetRing'),
@@ -107,6 +114,7 @@ encode_msg_type('ReadWriteTx') -> 2;
 encode_msg_type('Ping') -> 4;
 encode_msg_type('Load') -> 5;
 encode_msg_type('GetRing') -> 6;
+encode_msg_type('NTPing') -> 8;
 
 %% Server Responses
 encode_msg_type('CommitResp') -> 3;
@@ -121,6 +129,7 @@ decode_type_num(2) -> 'ReadWriteTx';
 decode_type_num(4) -> 'Ping';
 decode_type_num(5) -> 'Load';
 decode_type_num(6) -> 'GetRing';
+decode_type_num(8) -> 'NTPing';
 
 %% Server Responses
 decode_type_num(3) -> 'CommitResp';

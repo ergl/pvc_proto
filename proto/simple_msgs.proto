@@ -4,6 +4,10 @@ message Ping {}
 
 message GetRing {}
 
+message NTPing {
+    bytes stamp = 1;
+}
+
 message Ring {
     repeated bytes nodes = 1;
 }
