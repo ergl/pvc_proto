@@ -34,6 +34,13 @@ to_client_enc(_, {error, Reason}) ->
         )
     );
 
+to_client_enc('NTPing', T={_,_,_}) ->
+    BinStamp = term_to_binary(T),
+    encode_raw_bits(
+        'NTPing',
+        simple_msgs:encode_msg(#{stamp => BinStamp}, 'NTPing')
+    );
+
 to_client_enc('GetRing', Ring) when is_list(Ring) ->
     encode_raw_bits(
         'Ring',
@@ -56,6 +63,10 @@ from_server_dec('CommitResp', BinMsg) ->
         {error_reason, Code} ->
             {error, common:decode_error(Code)}
     end;
+
+from_server_dec('NTPing', BinMSg) ->
+    BinStamp = maps:get(stamp, simple_msgs:decode_msg(BinMSg, 'NTPing')),
+    binary_to_term(BinStamp);
 
 from_server_dec('Ring', BinMsg) ->
     maps:get(nodes, simple_msgs:decode_msg(BinMsg, 'Ring')).
