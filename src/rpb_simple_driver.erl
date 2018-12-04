@@ -57,7 +57,7 @@ from_server_dec('CommitResp', BinMsg) ->
             {error, common:decode_error(Code)}
     end;
 
-from_server_dec('GetRing', BinMsg) ->
+from_server_dec('Ring', BinMsg) ->
     maps:get(nodes, simple_msgs:decode_msg(BinMsg, 'Ring')).
 
 -spec ping() -> binary().
@@ -133,4 +133,4 @@ decode_type_num(8) -> 'NTPing';
 
 %% Server Responses
 decode_type_num(3) -> 'CommitResp';
-decode_type_num(7) -> 'GetRing'.
+decode_type_num(7) -> 'Ring'.
