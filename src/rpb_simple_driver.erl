@@ -9,12 +9,30 @@
          get_ring/0,
          load/2,
          read_only/1,
+         read_single/1,
          read_write/2]).
 
 -spec from_client_dec(binary()) -> {atom(), #{}}.
 from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, simple_msgs:decode_msg(BinMsg, Type)}.
+
+to_client_enc('ReadReq', {ok, T1={_,_,_}, T2={_,_,_}}) ->
+    encode_raw_bits(
+        'ReadResp',
+        simple_msgs:encode_msg(
+            #{committed => true,
+                start_stamp => term_to_binary(T1),
+                end_stamp=> term_to_binary(T2)},
+            'ReadResp'
+        )
+    );
+
+to_client_enc('ReadReq', {{error, _}, _, _}) ->
+    encode_raw_bits(
+        'ReadResp',
+        simple_msgs:encode_msg(#{}, 'ReadResp')
+    );
 
 to_client_enc(_, ok) ->
     encode_raw_bits(
@@ -64,6 +82,15 @@ from_server_dec('CommitResp', BinMsg) ->
             {error, common:decode_error(Code)}
     end;
 
+from_server_dec('ReadResp', <<>>) ->
+    error;
+
+from_server_dec('ReadResp', BinMsg) ->
+    #{committed := true,
+        start_stamp := Start,
+        end_stamp := End } = simple_msgs:decode_msg(BinMsg, 'ReadResp'),
+    {ok, binary_to_term(Start), binary_to_term(End)};
+
 from_server_dec('NTPing', BinMSg) ->
     BinStamp = maps:get(stamp, simple_msgs:decode_msg(BinMSg, 'NTPing')),
     binary_to_term(BinStamp);
@@ -96,6 +123,11 @@ read_only(Keys) when is_list(Keys) ->
     Msg = simple_msgs:encode_msg(#{keys => Keys}, 'ReadOnlyTx'),
     encode_raw_bits('ReadOnlyTx', Msg).
 
+-spec read_single(binary()) -> binary().
+read_single(Key) when is_binary(Key) ->
+    Msg = simple_msgs:encode_msg(#{key => Key}, 'ReadReq'),
+    encode_raw_bits('ReadReq', Msg).
+
 read_write(Keys, Updates) when is_list(Keys) andalso is_list(Updates) ->
     Ops = lists:map(fun({K, V}) ->
         #{key => K, value => V}
@@ -126,10 +158,12 @@ encode_msg_type('Ping') -> 4;
 encode_msg_type('Load') -> 5;
 encode_msg_type('GetRing') -> 6;
 encode_msg_type('NTPing') -> 8;
+encode_msg_type('ReadReq') -> 9;
 
 %% Server Responses
 encode_msg_type('CommitResp') -> 3;
-encode_msg_type('Ring') -> 7.
+encode_msg_type('Ring') -> 7;
+encode_msg_type('ReadResp') -> 10.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -141,7 +175,9 @@ decode_type_num(4) -> 'Ping';
 decode_type_num(5) -> 'Load';
 decode_type_num(6) -> 'GetRing';
 decode_type_num(8) -> 'NTPing';
+decode_type_num(9) -> 'ReadReq';
 
 %% Server Responses
 decode_type_num(3) -> 'CommitResp';
-decode_type_num(7) -> 'Ring'.
+decode_type_num(7) -> 'Ring';
+decode_type_num(10) -> 'ReadResp'.

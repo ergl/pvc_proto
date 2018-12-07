@@ -8,6 +8,16 @@ message NTPing {
     bytes stamp = 1;
 }
 
+message ReadReq {
+    bytes key = 1;
+}
+
+message ReadResp {
+    bytes start_stamp = 1;
+    bytes end_stamp = 2;
+    bool committed = 3;
+}
+
 message Ring {
     repeated bytes nodes = 1;
 }
