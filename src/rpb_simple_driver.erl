@@ -17,7 +17,8 @@ from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, simple_msgs:decode_msg(BinMsg, Type)}.
 
-to_client_enc('ReadReq', {ok, T1={_,_,_}, T2={_,_,_}}) ->
+to_client_enc(MsgTag, {ok, T1={_,_,_}, T2={_,_,_}}) when MsgTag =:= 'ReadReq'
+                                                  orelse MsgTag =:= 'Ping' ->
     encode_raw_bits(
         'ReadResp',
         simple_msgs:encode_msg(
@@ -28,7 +29,8 @@ to_client_enc('ReadReq', {ok, T1={_,_,_}, T2={_,_,_}}) ->
         )
     );
 
-to_client_enc('ReadReq', {{error, _}, _, _}) ->
+to_client_enc(MsgTag, {{error, _}, _, _}) when MsgTag =:= 'ReadReq'
+                                        orelse MsgTag =:= 'Ping' ->
     encode_raw_bits(
         'ReadResp',
         simple_msgs:encode_msg(#{}, 'ReadResp')
