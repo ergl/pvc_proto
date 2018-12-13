@@ -1,25 +1,29 @@
 syntax = "proto3";
 
-message Ping {}
-
-message GetRing {}
-
-message NTPing {
-    bytes stamp = 1;
+enum ByteTag {
+    no_op = 0;
+    ping = 1;
+    ring = 2;
 }
 
-message ReadReq {
+message ByteReq {
+    ByteTag tag = 1;
+}
+
+message ByteResp {
+    ByteTag tag = 1;
+    bytes payload = 2;
+}
+
+message TimedRead {
     bytes key = 1;
 }
 
-message ReadResp {
-    bytes start_stamp = 1;
-    bytes end_stamp = 2;
-    bool committed = 3;
-}
-
-message Ring {
-    repeated bytes nodes = 1;
+message TimedReadResp {
+    oneof resp {
+        uint32 error_reason = 1;
+        bytes payload = 2;
+    }
 }
 
 message Load {
