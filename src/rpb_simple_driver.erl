@@ -59,15 +59,15 @@ from_client_dec(Bin) ->
     {Type, simple_msgs:decode_msg(BinMsg, Type)}.
 
 %% @doc Generic server side encode
--spec to_client_enc(atom(), any()) -> msg().
-to_client_enc('ByteReq', {Tag, Bin}) ->
-    encode_pb_msg('ByteResp', #{tag => Tag, payload => Bin});
+-spec to_client_enc(atom(), term()) -> msg().
+to_client_enc('ByteReq', {Tag, Term}) ->
+    encode_pb_msg('ByteResp', #{tag => Tag, payload => term_to_binary(Term)});
 
 to_client_enc('TimedRead', {error, Reason}) ->
     encode_pb_msg('TimedReadResp', #{resp => {error_reason, common:encode_error(Reason)}});
 
-to_client_enc('TimedRead', {ok, Bin}) ->
-    encode_pb_msg('TimedReadResp', #{resp => {payload, Bin}});
+to_client_enc('TimedRead', {ok, Term}) ->
+    encode_pb_msg('TimedReadResp', #{resp => {payload, term_to_binary(Term)}});
 
 to_client_enc(_, ok) ->
     encode_pb_msg('CommitResp', #{resp => {success, common:encode_success(ok)}});
@@ -82,7 +82,7 @@ from_server_dec(Bin) ->
 
 decode_from_server('ByteResp', BinMsg) ->
     #{tag := Tag, payload := Payload} = simple_msgs:decode_msg(BinMsg, 'ByteResp'),
-    {Tag, Payload};
+    {Tag, binary_to_term(Payload)};
 
 decode_from_server('TimedReadResp', BinMsg) ->
     Resp = maps:get(resp, simple_msgs:decode_msg(BinMsg, 'TimedReadResp')),
@@ -90,7 +90,7 @@ decode_from_server('TimedReadResp', BinMsg) ->
         {error_reason, Code} ->
             {error, common:decode_error(Code)};
         {payload, Payload} ->
-            {ok, Payload}
+            {ok, binary_to_term(Payload)}
     end;
 
 decode_from_server('CommitResp', BinMsg) ->
