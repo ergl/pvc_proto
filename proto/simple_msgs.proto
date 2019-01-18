@@ -26,6 +26,23 @@ message TimedReadResp {
     }
 }
 
+message RemoteRead {
+    bytes key = 1;
+    // Erlang binary
+    bytes has_read = 2;
+    // Erlang binary
+    bytes vc_aggr = 3;
+}
+
+message RemoteReadResp {
+    oneof resp {
+        // Erlang binary
+        bytes payload = 1;
+        // Read failed (maxvc_bad_vc)
+        uint32 error_reason = 2;
+    }
+}
+
 message Load {
     uint32 num_keys = 1;
     uint32 bin_size = 2;

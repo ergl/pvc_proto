@@ -42,6 +42,7 @@ encode_error(timeout) -> 4;
 encode_error(pvc_conflict) -> 5;
 encode_error(pvc_stale_vc) -> 6;
 encode_error(pvc_bad_vc) -> 7;
+encode_error(maxvc_bad_vc) -> 8;
 encode_error(_Other) -> 0.
 
 %% @doc Get original error types
@@ -53,4 +54,5 @@ decode_error(3) -> non_unique_username;
 decode_error(4) -> timeout;
 decode_error(5) -> pvc_conflict;
 decode_error(6) -> pvc_stale_vc;
-decode_error(7) -> pvc_bad_vc.
+decode_error(7) -> pvc_bad_vc;
+decode_error(8) -> maxvc_bad_vc.

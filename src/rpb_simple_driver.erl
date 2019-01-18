@@ -16,6 +16,9 @@
          read_only/1,
          read_write/2]).
 
+%% PVC <-> PVC messages
+-export([remote_read/3]).
+
 -type msg() :: binary().
 -export_type([msg/0]).
 
@@ -50,13 +53,27 @@ read_write(Keys, Updates) when is_list(Keys) andalso is_list(Updates) ->
     Ops = lists:map(fun({K, V}) -> #{key => K, value => V} end, Updates),
     encode_pb_msg('ReadWriteTx', #{read_keys => Keys, ops => Ops}).
 
+-spec remote_read(binary(), [any()], term()) -> msg().
+remote_read(Key, HasRead, VCAggr) ->
+    encode_pb_msg('RemoteRead', #{key => Key,
+                                  has_read => term_to_binary(HasRead),
+                                  vc_aggr => term_to_binary(VCAggr)}).
+
 %%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Generic server side decode
 -spec from_client_dec(msg()) -> {atom(), #{}}.
 from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
-    {Type, simple_msgs:decode_msg(BinMsg, Type)}.
+    {Type, from_client_dec(Type, BinMsg)}.
+
+from_client_dec('RemoteRead', Msg) ->
+    Map = simple_msgs:decode_msg(Msg, 'RemoteRead'),
+    Map#{has_read := binary_to_term(maps:get(has_read, Map)),
+         vc_aggr := binary_to_term(maps:get(vc_aggr, Map))};
+
+from_client_dec(Type, BinMsg) ->
+    simple_msgs:decode_msg(BinMsg, Type).
 
 %% @doc Generic server side encode
 -spec to_client_enc(atom(), term()) -> msg().
@@ -68,6 +85,12 @@ to_client_enc('TimedRead', {error, Reason}) ->
 
 to_client_enc('TimedRead', {ok, Term}) ->
     encode_pb_msg('TimedReadResp', #{resp => {payload, term_to_binary(Term)}});
+
+to_client_enc('RemoteRead', {error, maxvc_bad_vc}) ->
+    encode_pb_msg('RemoteReadResp', #{resp => {error_reason, common:encode_error(maxvc_bad_vc)}});
+
+to_client_enc('RemoteRead', {ok, Payload}) ->
+    encode_pb_msg('RemoteReadResp', #{resp => {payload, term_to_binary(Payload)}});
 
 to_client_enc(_, ok) ->
     encode_pb_msg('CommitResp', #{resp => {success, common:encode_success(ok)}});
@@ -86,6 +109,15 @@ decode_from_server('ByteResp', BinMsg) ->
 
 decode_from_server('TimedReadResp', BinMsg) ->
     Resp = maps:get(resp, simple_msgs:decode_msg(BinMsg, 'TimedReadResp')),
+    case Resp of
+        {error_reason, Code} ->
+            {error, common:decode_error(Code)};
+        {payload, Payload} ->
+            {ok, binary_to_term(Payload)}
+    end;
+
+decode_from_server('RemoteReadResp', BinMsg) ->
+    Resp = maps:get(resp, simple_msgs:decode_msg(BinMsg, 'RemoteReadResp')),
     case Resp of
         {error_reason, Code} ->
             {error, common:decode_error(Code)};
@@ -131,11 +163,13 @@ encode_msg_type('TimedRead') -> 2;
 encode_msg_type('Load') -> 3;
 encode_msg_type('ReadOnlyTx') -> 4;
 encode_msg_type('ReadWriteTx') -> 5;
+encode_msg_type('RemoteRead') -> 6;
 
 %% Server Responses
-encode_msg_type('ByteResp') -> 6;
-encode_msg_type('TimedReadResp') -> 7;
-encode_msg_type('CommitResp') -> 8.
+encode_msg_type('ByteResp') -> 7;
+encode_msg_type('TimedReadResp') -> 8;
+encode_msg_type('RemoteReadResp') -> 9;
+encode_msg_type('CommitResp') -> 10.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -146,8 +180,10 @@ decode_type_num(2) -> 'TimedRead';
 decode_type_num(3) -> 'Load';
 decode_type_num(4) -> 'ReadOnlyTx';
 decode_type_num(5) -> 'ReadWriteTx';
+decode_type_num(6) -> 'RemoteRead';
 
 %% Server Responses
-decode_type_num(6) -> 'ByteResp';
-decode_type_num(7) -> 'TimedReadResp';
-decode_type_num(8) -> 'CommitResp'.
+decode_type_num(7) -> 'ByteResp';
+decode_type_num(8) -> 'TimedReadResp';
+decode_type_num(9) -> 'RemoteReadResp';
+decode_type_num(10) -> 'CommitResp'.

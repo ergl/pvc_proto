@@ -46,6 +46,16 @@
       #{resp                    => {error_reason, non_neg_integer()} | {payload, iodata()} % oneof
        }.
 
+-type 'RemoteRead'() ::
+      #{key                     => iodata(),        % = 1
+        has_read                => iodata(),        % = 2
+        vc_aggr                 => iodata()         % = 3
+       }.
+
+-type 'RemoteReadResp'() ::
+      #{resp                    => {payload, iodata()} | {error_reason, non_neg_integer()} % oneof
+       }.
+
 -type 'Load'() ::
       #{num_keys                => non_neg_integer(), % = 1, 32 bits
         bin_size                => non_neg_integer() % = 2, 32 bits
@@ -69,13 +79,13 @@
       #{resp                    => {success, non_neg_integer()} | {error_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ByteReq'/0, 'ByteResp'/0, 'TimedRead'/0, 'TimedReadResp'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
+-export_type(['ByteReq'/0, 'ByteResp'/0, 'TimedRead'/0, 'TimedReadResp'/0, 'RemoteRead'/0, 'RemoteReadResp'/0, 'Load'/0, 'ReadOnlyTx'/0, 'KeyOp'/0, 'ReadWriteTx'/0, 'CommitResp'/0]).
 
--spec encode_msg('ByteReq'() | 'ByteResp'() | 'TimedRead'() | 'TimedReadResp'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom()) -> binary().
+-spec encode_msg('ByteReq'() | 'ByteResp'() | 'TimedRead'() | 'TimedReadResp'() | 'RemoteRead'() | 'RemoteReadResp'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ByteReq'() | 'ByteResp'() | 'TimedRead'() | 'TimedReadResp'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom(), list()) -> binary().
+-spec encode_msg('ByteReq'() | 'ByteResp'() | 'TimedRead'() | 'TimedReadResp'() | 'RemoteRead'() | 'RemoteReadResp'() | 'Load'() | 'ReadOnlyTx'() | 'KeyOp'() | 'ReadWriteTx'() | 'CommitResp'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -91,6 +101,10 @@ encode_msg(Msg, MsgName, Opts) ->
 	  e_msg_TimedRead(id(Msg, TrUserData), TrUserData);
       'TimedReadResp' ->
 	  e_msg_TimedReadResp(id(Msg, TrUserData), TrUserData);
+      'RemoteRead' ->
+	  e_msg_RemoteRead(id(Msg, TrUserData), TrUserData);
+      'RemoteReadResp' ->
+	  e_msg_RemoteReadResp(id(Msg, TrUserData), TrUserData);
       'Load' -> e_msg_Load(id(Msg, TrUserData), TrUserData);
       'ReadOnlyTx' ->
 	  e_msg_ReadOnlyTx(id(Msg, TrUserData), TrUserData);
@@ -183,6 +197,67 @@ e_msg_TimedReadResp(#{} = M, Bin, TrUserData) ->
 		begin
 		  TrTF1 = id(TF1, TrUserData),
 		  e_type_bytes(TrTF1, <<Bin/binary, 18>>, TrUserData)
+		end
+	  end;
+      _ -> Bin
+    end.
+
+e_msg_RemoteRead(Msg, TrUserData) ->
+    e_msg_RemoteRead(Msg, <<>>, TrUserData).
+
+
+e_msg_RemoteRead(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{key := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    B2 = case M of
+	   #{has_read := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+		 end
+	       end;
+	   _ -> B1
+	 end,
+    case M of
+      #{vc_aggr := F3} ->
+	  begin
+	    TrF3 = id(F3, TrUserData),
+	    case iolist_size(TrF3) of
+	      0 -> B2;
+	      _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
+	    end
+	  end;
+      _ -> B2
+    end.
+
+e_msg_RemoteReadResp(Msg, TrUserData) ->
+    e_msg_RemoteReadResp(Msg, <<>>, TrUserData).
+
+
+e_msg_RemoteReadResp(#{} = M, Bin, TrUserData) ->
+    case M of
+      #{resp := F1} ->
+	  case id(F1, TrUserData) of
+	    {payload, TF1} ->
+		begin
+		  TrTF1 = id(TF1, TrUserData),
+		  e_type_bytes(TrTF1, <<Bin/binary, 10>>, TrUserData)
+		end;
+	    {error_reason, TF1} ->
+		begin
+		  TrTF1 = id(TF1, TrUserData),
+		  e_varint(TrTF1, <<Bin/binary, 16>>, TrUserData)
 		end
 	  end;
       _ -> Bin
@@ -469,6 +544,10 @@ decode_msg_2_doit('TimedRead', Bin, TrUserData) ->
     id(d_msg_TimedRead(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('TimedReadResp', Bin, TrUserData) ->
     id(d_msg_TimedReadResp(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('RemoteRead', Bin, TrUserData) ->
+    id(d_msg_RemoteRead(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('RemoteReadResp', Bin, TrUserData) ->
+    id(d_msg_RemoteReadResp(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('Load', Bin, TrUserData) ->
     id(d_msg_Load(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ReadOnlyTx', Bin, TrUserData) ->
@@ -930,6 +1009,292 @@ skip_64_TimedReadResp(<<_:64, Rest/binary>>, Z1, Z2,
 		      F@_1, TrUserData) ->
     dfp_read_field_def_TimedReadResp(Rest, Z1, Z2, F@_1,
 				     TrUserData).
+
+d_msg_RemoteRead(Bin, TrUserData) ->
+    dfp_read_field_def_RemoteRead(Bin, 0, 0,
+				  id(<<>>, TrUserData), id(<<>>, TrUserData),
+				  id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_RemoteRead(<<10, Rest/binary>>, Z1,
+			      Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_RemoteRead_key(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			   TrUserData);
+dfp_read_field_def_RemoteRead(<<18, Rest/binary>>, Z1,
+			      Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_RemoteRead_has_read(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, TrUserData);
+dfp_read_field_def_RemoteRead(<<26, Rest/binary>>, Z1,
+			      Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_RemoteRead_vc_aggr(Rest, Z1, Z2, F@_1, F@_2,
+			       F@_3, TrUserData);
+dfp_read_field_def_RemoteRead(<<>>, 0, 0, F@_1, F@_2,
+			      F@_3, _) ->
+    #{key => F@_1, has_read => F@_2, vc_aggr => F@_3};
+dfp_read_field_def_RemoteRead(Other, Z1, Z2, F@_1, F@_2,
+			      F@_3, TrUserData) ->
+    dg_read_field_def_RemoteRead(Other, Z1, Z2, F@_1, F@_2,
+				 F@_3, TrUserData).
+
+dg_read_field_def_RemoteRead(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_RemoteRead(Rest, N + 7, X bsl N + Acc,
+				 F@_1, F@_2, F@_3, TrUserData);
+dg_read_field_def_RemoteRead(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_RemoteRead_key(Rest, 0, 0, F@_1, F@_2, F@_3,
+				 TrUserData);
+      18 ->
+	  d_field_RemoteRead_has_read(Rest, 0, 0, F@_1, F@_2,
+				      F@_3, TrUserData);
+      26 ->
+	  d_field_RemoteRead_vc_aggr(Rest, 0, 0, F@_1, F@_2, F@_3,
+				     TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3,
+				       TrUserData);
+	    1 ->
+		skip_64_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3,
+				   TrUserData);
+	    2 ->
+		skip_length_delimited_RemoteRead(Rest, 0, 0, F@_1, F@_2,
+						 F@_3, TrUserData);
+	    3 ->
+		skip_group_RemoteRead(Rest, Key bsr 3, 0, F@_1, F@_2,
+				      F@_3, TrUserData);
+	    5 ->
+		skip_32_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3,
+				   TrUserData)
+	  end
+    end;
+dg_read_field_def_RemoteRead(<<>>, 0, 0, F@_1, F@_2,
+			     F@_3, _) ->
+    #{key => F@_1, has_read => F@_2, vc_aggr => F@_3}.
+
+d_field_RemoteRead_key(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_RemoteRead_key(Rest, N + 7, X bsl N + Acc, F@_1,
+			   F@_2, F@_3, TrUserData);
+d_field_RemoteRead_key(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, _, F@_2, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_RemoteRead(RestF, 0, 0, NewFValue,
+				  F@_2, F@_3, TrUserData).
+
+d_field_RemoteRead_has_read(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_RemoteRead_has_read(Rest, N + 7, X bsl N + Acc,
+				F@_1, F@_2, F@_3, TrUserData);
+d_field_RemoteRead_has_read(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_RemoteRead(RestF, 0, 0, F@_1,
+				  NewFValue, F@_3, TrUserData).
+
+d_field_RemoteRead_vc_aggr(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_RemoteRead_vc_aggr(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, F@_3, TrUserData);
+d_field_RemoteRead_vc_aggr(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_RemoteRead(RestF, 0, 0, F@_1, F@_2,
+				  NewFValue, TrUserData).
+
+skip_varint_RemoteRead(<<1:1, _:7, Rest/binary>>, Z1,
+		       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    skip_varint_RemoteRead(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			   TrUserData);
+skip_varint_RemoteRead(<<0:1, _:7, Rest/binary>>, Z1,
+		       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_RemoteRead(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, TrUserData).
+
+skip_length_delimited_RemoteRead(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_RemoteRead(Rest, N + 7,
+				     X bsl N + Acc, F@_1, F@_2, F@_3,
+				     TrUserData);
+skip_length_delimited_RemoteRead(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_RemoteRead(Rest2, 0, 0, F@_1, F@_2,
+				  F@_3, TrUserData).
+
+skip_group_RemoteRead(Bin, FNum, Z2, F@_1, F@_2, F@_3,
+		      TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_RemoteRead(Rest, 0, Z2, F@_1, F@_2,
+				  F@_3, TrUserData).
+
+skip_32_RemoteRead(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
+		   F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_RemoteRead(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, TrUserData).
+
+skip_64_RemoteRead(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
+		   F@_2, F@_3, TrUserData) ->
+    dfp_read_field_def_RemoteRead(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, TrUserData).
+
+d_msg_RemoteReadResp(Bin, TrUserData) ->
+    dfp_read_field_def_RemoteReadResp(Bin, 0, 0,
+				      id('$undef', TrUserData), TrUserData).
+
+dfp_read_field_def_RemoteReadResp(<<10, Rest/binary>>,
+				  Z1, Z2, F@_1, TrUserData) ->
+    d_field_RemoteReadResp_payload(Rest, Z1, Z2, F@_1,
+				   TrUserData);
+dfp_read_field_def_RemoteReadResp(<<16, Rest/binary>>,
+				  Z1, Z2, F@_1, TrUserData) ->
+    d_field_RemoteReadResp_error_reason(Rest, Z1, Z2, F@_1,
+					TrUserData);
+dfp_read_field_def_RemoteReadResp(<<>>, 0, 0, F@_1,
+				  _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end;
+dfp_read_field_def_RemoteReadResp(Other, Z1, Z2, F@_1,
+				  TrUserData) ->
+    dg_read_field_def_RemoteReadResp(Other, Z1, Z2, F@_1,
+				     TrUserData).
+
+dg_read_field_def_RemoteReadResp(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_RemoteReadResp(Rest, N + 7,
+				     X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_RemoteReadResp(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  d_field_RemoteReadResp_payload(Rest, 0, 0, F@_1,
+					 TrUserData);
+      16 ->
+	  d_field_RemoteReadResp_error_reason(Rest, 0, 0, F@_1,
+					      TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_RemoteReadResp(Rest, 0, 0, F@_1,
+					   TrUserData);
+	    1 ->
+		skip_64_RemoteReadResp(Rest, 0, 0, F@_1, TrUserData);
+	    2 ->
+		skip_length_delimited_RemoteReadResp(Rest, 0, 0, F@_1,
+						     TrUserData);
+	    3 ->
+		skip_group_RemoteReadResp(Rest, Key bsr 3, 0, F@_1,
+					  TrUserData);
+	    5 ->
+		skip_32_RemoteReadResp(Rest, 0, 0, F@_1, TrUserData)
+	  end
+    end;
+dg_read_field_def_RemoteReadResp(<<>>, 0, 0, F@_1, _) ->
+    S1 = #{},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{resp => F@_1}
+    end.
+
+d_field_RemoteReadResp_payload(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_RemoteReadResp_payload(Rest, N + 7,
+				   X bsl N + Acc, F@_1, TrUserData);
+d_field_RemoteReadResp_payload(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_RemoteReadResp(RestF, 0, 0,
+				      id({payload, NewFValue}, TrUserData),
+				      TrUserData).
+
+d_field_RemoteReadResp_error_reason(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    d_field_RemoteReadResp_error_reason(Rest, N + 7,
+					X bsl N + Acc, F@_1, TrUserData);
+d_field_RemoteReadResp_error_reason(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+			  Rest},
+    dfp_read_field_def_RemoteReadResp(RestF, 0, 0,
+				      id({error_reason, NewFValue}, TrUserData),
+				      TrUserData).
+
+skip_varint_RemoteReadResp(<<1:1, _:7, Rest/binary>>,
+			   Z1, Z2, F@_1, TrUserData) ->
+    skip_varint_RemoteReadResp(Rest, Z1, Z2, F@_1,
+			       TrUserData);
+skip_varint_RemoteReadResp(<<0:1, _:7, Rest/binary>>,
+			   Z1, Z2, F@_1, TrUserData) ->
+    dfp_read_field_def_RemoteReadResp(Rest, Z1, Z2, F@_1,
+				      TrUserData).
+
+skip_length_delimited_RemoteReadResp(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_RemoteReadResp(Rest, N + 7,
+					 X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_RemoteReadResp(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_RemoteReadResp(Rest2, 0, 0, F@_1,
+				      TrUserData).
+
+skip_group_RemoteReadResp(Bin, FNum, Z2, F@_1,
+			  TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_RemoteReadResp(Rest, 0, Z2, F@_1,
+				      TrUserData).
+
+skip_32_RemoteReadResp(<<_:32, Rest/binary>>, Z1, Z2,
+		       F@_1, TrUserData) ->
+    dfp_read_field_def_RemoteReadResp(Rest, Z1, Z2, F@_1,
+				      TrUserData).
+
+skip_64_RemoteReadResp(<<_:64, Rest/binary>>, Z1, Z2,
+		       F@_1, TrUserData) ->
+    dfp_read_field_def_RemoteReadResp(Rest, Z1, Z2, F@_1,
+				      TrUserData).
 
 d_msg_Load(Bin, TrUserData) ->
     dfp_read_field_def_Load(Bin, 0, 0, id(0, TrUserData),
@@ -1587,6 +1952,10 @@ merge_msgs(Prev, New, MsgName, Opts) ->
 	  merge_msg_TimedRead(Prev, New, TrUserData);
       'TimedReadResp' ->
 	  merge_msg_TimedReadResp(Prev, New, TrUserData);
+      'RemoteRead' ->
+	  merge_msg_RemoteRead(Prev, New, TrUserData);
+      'RemoteReadResp' ->
+	  merge_msg_RemoteReadResp(Prev, New, TrUserData);
       'Load' -> merge_msg_Load(Prev, New, TrUserData);
       'ReadOnlyTx' ->
 	  merge_msg_ReadOnlyTx(Prev, New, TrUserData);
@@ -1633,6 +2002,38 @@ merge_msg_TimedRead(PMsg, NMsg, _) ->
 
 -compile({nowarn_unused_function,merge_msg_TimedReadResp/3}).
 merge_msg_TimedReadResp(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+      {_, #{resp := NFresp}} -> S1#{resp => NFresp};
+      {#{resp := PFresp}, _} -> S1#{resp => PFresp};
+      _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_RemoteRead/3}).
+merge_msg_RemoteRead(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{key := NFkey}} -> S1#{key => NFkey};
+	   {#{key := PFkey}, _} -> S1#{key => PFkey};
+	   _ -> S1
+	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{has_read := NFhas_read}} ->
+	       S2#{has_read => NFhas_read};
+	   {#{has_read := PFhas_read}, _} ->
+	       S2#{has_read => PFhas_read};
+	   _ -> S2
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{vc_aggr := NFvc_aggr}} ->
+	  S3#{vc_aggr => NFvc_aggr};
+      {#{vc_aggr := PFvc_aggr}, _} ->
+	  S3#{vc_aggr => PFvc_aggr};
+      _ -> S3
+    end.
+
+-compile({nowarn_unused_function,merge_msg_RemoteReadResp/3}).
+merge_msg_RemoteReadResp(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
@@ -1728,6 +2129,10 @@ verify_msg(Msg, MsgName, Opts) ->
 	  v_msg_TimedRead(Msg, [MsgName], TrUserData);
       'TimedReadResp' ->
 	  v_msg_TimedReadResp(Msg, [MsgName], TrUserData);
+      'RemoteRead' ->
+	  v_msg_RemoteRead(Msg, [MsgName], TrUserData);
+      'RemoteReadResp' ->
+	  v_msg_RemoteReadResp(Msg, [MsgName], TrUserData);
       'Load' -> v_msg_Load(Msg, [MsgName], TrUserData);
       'ReadOnlyTx' ->
 	  v_msg_ReadOnlyTx(Msg, [MsgName], TrUserData);
@@ -1835,6 +2240,67 @@ v_msg_TimedReadResp(M, Path, _TrUserData)
 		  M, Path);
 v_msg_TimedReadResp(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'TimedReadResp'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_RemoteRead/3}).
+-dialyzer({nowarn_function,v_msg_RemoteRead/3}).
+v_msg_RemoteRead(#{} = M, Path, TrUserData) ->
+    case M of
+      #{key := F1} ->
+	  v_type_bytes(F1, [key | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{has_read := F2} ->
+	  v_type_bytes(F2, [has_read | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{vc_aggr := F3} ->
+	  v_type_bytes(F3, [vc_aggr | Path], TrUserData);
+      _ -> ok
+    end,
+    lists:foreach(fun (key) -> ok;
+		      (has_read) -> ok;
+		      (vc_aggr) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_RemoteRead(M, Path, _TrUserData) when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'RemoteRead'},
+		  M, Path);
+v_msg_RemoteRead(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'RemoteRead'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_RemoteReadResp/3}).
+-dialyzer({nowarn_function,v_msg_RemoteReadResp/3}).
+v_msg_RemoteReadResp(#{} = M, Path, TrUserData) ->
+    case M of
+      #{resp := {payload, OF1}} ->
+	  v_type_bytes(OF1, [payload, resp | Path], TrUserData);
+      #{resp := {error_reason, OF1}} ->
+	  v_type_uint32(OF1, [error_reason, resp | Path],
+			TrUserData);
+      #{resp := F1} ->
+	  mk_type_error(invalid_oneof, F1, [resp | Path]);
+      _ -> ok
+    end,
+    lists:foreach(fun (resp) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_RemoteReadResp(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'RemoteReadResp'},
+		  M, Path);
+v_msg_RemoteReadResp(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'RemoteReadResp'}, X,
+		  Path).
 
 -compile({nowarn_unused_function,v_msg_Load/3}).
 -dialyzer({nowarn_function,v_msg_Load/3}).
@@ -2096,6 +2562,20 @@ get_msg_defs() ->
 		type => uint32, occurrence => optional, opts => []},
 	      #{name => payload, fnum => 2, rnum => 2, type => bytes,
 		occurrence => optional, opts => []}]}]},
+     {{msg, 'RemoteRead'},
+      [#{name => key, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => optional, opts => []},
+       #{name => has_read, fnum => 2, rnum => 3, type => bytes,
+	 occurrence => optional, opts => []},
+       #{name => vc_aggr, fnum => 3, rnum => 4, type => bytes,
+	 occurrence => optional, opts => []}]},
+     {{msg, 'RemoteReadResp'},
+      [#{name => resp, rnum => 2,
+	 fields =>
+	     [#{name => payload, fnum => 1, rnum => 2, type => bytes,
+		occurrence => optional, opts => []},
+	      #{name => error_reason, fnum => 2, rnum => 2,
+		type => uint32, occurrence => optional, opts => []}]}]},
      {{msg, 'Load'},
       [#{name => num_keys, fnum => 1, rnum => 2,
 	 type => uint32, occurrence => optional, opts => []},
@@ -2127,8 +2607,8 @@ get_msg_defs() ->
 
 get_msg_names() ->
     ['ByteReq', 'ByteResp', 'TimedRead', 'TimedReadResp',
-     'Load', 'ReadOnlyTx', 'KeyOp', 'ReadWriteTx',
-     'CommitResp'].
+     'RemoteRead', 'RemoteReadResp', 'Load', 'ReadOnlyTx',
+     'KeyOp', 'ReadWriteTx', 'CommitResp'].
 
 
 get_group_names() -> [].
@@ -2136,8 +2616,8 @@ get_group_names() -> [].
 
 get_msg_or_group_names() ->
     ['ByteReq', 'ByteResp', 'TimedRead', 'TimedReadResp',
-     'Load', 'ReadOnlyTx', 'KeyOp', 'ReadWriteTx',
-     'CommitResp'].
+     'RemoteRead', 'RemoteReadResp', 'Load', 'ReadOnlyTx',
+     'KeyOp', 'ReadWriteTx', 'CommitResp'].
 
 
 get_enum_names() -> ['ByteTag'].
@@ -2177,6 +2657,20 @@ find_msg_def('TimedReadResp') ->
 	      type => uint32, occurrence => optional, opts => []},
 	    #{name => payload, fnum => 2, rnum => 2, type => bytes,
 	      occurrence => optional, opts => []}]}];
+find_msg_def('RemoteRead') ->
+    [#{name => key, fnum => 1, rnum => 2, type => bytes,
+       occurrence => optional, opts => []},
+     #{name => has_read, fnum => 2, rnum => 3, type => bytes,
+       occurrence => optional, opts => []},
+     #{name => vc_aggr, fnum => 3, rnum => 4, type => bytes,
+       occurrence => optional, opts => []}];
+find_msg_def('RemoteReadResp') ->
+    [#{name => resp, rnum => 2,
+       fields =>
+	   [#{name => payload, fnum => 1, rnum => 2, type => bytes,
+	      occurrence => optional, opts => []},
+	    #{name => error_reason, fnum => 2, rnum => 2,
+	      type => uint32, occurrence => optional, opts => []}]}];
 find_msg_def('Load') ->
     [#{name => num_keys, fnum => 1, rnum => 2,
        type => uint32, occurrence => optional, opts => []},
