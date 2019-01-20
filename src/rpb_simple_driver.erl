@@ -17,7 +17,7 @@
          read_write/2]).
 
 %% PVC <-> PVC messages
--export([remote_read/3]).
+-export([remote_read/4]).
 
 -type msg() :: binary().
 -export_type([msg/0]).
@@ -53,9 +53,10 @@ read_write(Keys, Updates) when is_list(Keys) andalso is_list(Updates) ->
     Ops = lists:map(fun({K, V}) -> #{key => K, value => V} end, Updates),
     encode_pb_msg('ReadWriteTx', #{read_keys => Keys, ops => Ops}).
 
--spec remote_read(binary(), [any()], term()) -> msg().
-remote_read(Key, HasRead, VCAggr) ->
-    encode_pb_msg('RemoteRead', #{key => Key,
+-spec remote_read(integer(), binary(), [any()], term()) -> msg().
+remote_read(Partition, Key, HasRead, VCAggr) ->
+    encode_pb_msg('RemoteRead', #{partition => term_to_binary(Partition),
+                                  key => Key,
                                   has_read => term_to_binary(HasRead),
                                   vc_aggr => term_to_binary(VCAggr)}).
 
@@ -69,7 +70,8 @@ from_client_dec(Bin) ->
 
 from_client_dec('RemoteRead', Msg) ->
     Map = simple_msgs:decode_msg(Msg, 'RemoteRead'),
-    Map#{has_read := binary_to_term(maps:get(has_read, Map)),
+    Map#{partition := binary_to_term(maps:get(partition, Map)),
+         has_read := binary_to_term(maps:get(has_read, Map)),
          vc_aggr := binary_to_term(maps:get(vc_aggr, Map))};
 
 from_client_dec(Type, BinMsg) ->

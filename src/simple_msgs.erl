@@ -47,9 +47,10 @@
        }.
 
 -type 'RemoteRead'() ::
-      #{key                     => iodata(),        % = 1
-        has_read                => iodata(),        % = 2
-        vc_aggr                 => iodata()         % = 3
+      #{partition               => iodata(),        % = 1
+        key                     => iodata(),        % = 2
+        has_read                => iodata(),        % = 3
+        vc_aggr                 => iodata()         % = 4
        }.
 
 -type 'RemoteReadResp'() ::
@@ -208,7 +209,7 @@ e_msg_RemoteRead(Msg, TrUserData) ->
 
 e_msg_RemoteRead(#{} = M, Bin, TrUserData) ->
     B1 = case M of
-	   #{key := F1} ->
+	   #{partition := F1} ->
 	       begin
 		 TrF1 = id(F1, TrUserData),
 		 case iolist_size(TrF1) of
@@ -219,7 +220,7 @@ e_msg_RemoteRead(#{} = M, Bin, TrUserData) ->
 	   _ -> Bin
 	 end,
     B2 = case M of
-	   #{has_read := F2} ->
+	   #{key := F2} ->
 	       begin
 		 TrF2 = id(F2, TrUserData),
 		 case iolist_size(TrF2) of
@@ -229,16 +230,27 @@ e_msg_RemoteRead(#{} = M, Bin, TrUserData) ->
 	       end;
 	   _ -> B1
 	 end,
+    B3 = case M of
+	   #{has_read := F3} ->
+	       begin
+		 TrF3 = id(F3, TrUserData),
+		 case iolist_size(TrF3) of
+		   0 -> B2;
+		   _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
+		 end
+	       end;
+	   _ -> B2
+	 end,
     case M of
-      #{vc_aggr := F3} ->
+      #{vc_aggr := F4} ->
 	  begin
-	    TrF3 = id(F3, TrUserData),
-	    case iolist_size(TrF3) of
-	      0 -> B2;
-	      _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
+	    TrF4 = id(F4, TrUserData),
+	    case iolist_size(TrF4) of
+	      0 -> B3;
+	      _ -> e_type_bytes(TrF4, <<B3/binary, 34>>, TrUserData)
 	    end
 	  end;
-      _ -> B2
+      _ -> B3
     end.
 
 e_msg_RemoteReadResp(Msg, TrUserData) ->
@@ -1013,153 +1025,178 @@ skip_64_TimedReadResp(<<_:64, Rest/binary>>, Z1, Z2,
 d_msg_RemoteRead(Bin, TrUserData) ->
     dfp_read_field_def_RemoteRead(Bin, 0, 0,
 				  id(<<>>, TrUserData), id(<<>>, TrUserData),
-				  id(<<>>, TrUserData), TrUserData).
+				  id(<<>>, TrUserData), id(<<>>, TrUserData),
+				  TrUserData).
 
 dfp_read_field_def_RemoteRead(<<10, Rest/binary>>, Z1,
-			      Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_RemoteRead_key(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			   TrUserData);
+			      Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    d_field_RemoteRead_partition(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, F@_4, TrUserData);
 dfp_read_field_def_RemoteRead(<<18, Rest/binary>>, Z1,
-			      Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_RemoteRead_has_read(Rest, Z1, Z2, F@_1, F@_2,
-				F@_3, TrUserData);
+			      Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    d_field_RemoteRead_key(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			   F@_4, TrUserData);
 dfp_read_field_def_RemoteRead(<<26, Rest/binary>>, Z1,
-			      Z2, F@_1, F@_2, F@_3, TrUserData) ->
+			      Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    d_field_RemoteRead_has_read(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, F@_4, TrUserData);
+dfp_read_field_def_RemoteRead(<<34, Rest/binary>>, Z1,
+			      Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     d_field_RemoteRead_vc_aggr(Rest, Z1, Z2, F@_1, F@_2,
-			       F@_3, TrUserData);
+			       F@_3, F@_4, TrUserData);
 dfp_read_field_def_RemoteRead(<<>>, 0, 0, F@_1, F@_2,
-			      F@_3, _) ->
-    #{key => F@_1, has_read => F@_2, vc_aggr => F@_3};
+			      F@_3, F@_4, _) ->
+    #{partition => F@_1, key => F@_2, has_read => F@_3,
+      vc_aggr => F@_4};
 dfp_read_field_def_RemoteRead(Other, Z1, Z2, F@_1, F@_2,
-			      F@_3, TrUserData) ->
+			      F@_3, F@_4, TrUserData) ->
     dg_read_field_def_RemoteRead(Other, Z1, Z2, F@_1, F@_2,
-				 F@_3, TrUserData).
+				 F@_3, F@_4, TrUserData).
 
 dg_read_field_def_RemoteRead(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
+			     N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_RemoteRead(Rest, N + 7, X bsl N + Acc,
-				 F@_1, F@_2, F@_3, TrUserData);
+				 F@_1, F@_2, F@_3, F@_4, TrUserData);
 dg_read_field_def_RemoteRead(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+			     N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_RemoteRead_key(Rest, 0, 0, F@_1, F@_2, F@_3,
-				 TrUserData);
+	  d_field_RemoteRead_partition(Rest, 0, 0, F@_1, F@_2,
+				       F@_3, F@_4, TrUserData);
       18 ->
-	  d_field_RemoteRead_has_read(Rest, 0, 0, F@_1, F@_2,
-				      F@_3, TrUserData);
+	  d_field_RemoteRead_key(Rest, 0, 0, F@_1, F@_2, F@_3,
+				 F@_4, TrUserData);
       26 ->
+	  d_field_RemoteRead_has_read(Rest, 0, 0, F@_1, F@_2,
+				      F@_3, F@_4, TrUserData);
+      34 ->
 	  d_field_RemoteRead_vc_aggr(Rest, 0, 0, F@_1, F@_2, F@_3,
-				     TrUserData);
+				     F@_4, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
 		skip_varint_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3,
-				       TrUserData);
+				       F@_4, TrUserData);
 	    1 ->
-		skip_64_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3,
+		skip_64_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
 				   TrUserData);
 	    2 ->
 		skip_length_delimited_RemoteRead(Rest, 0, 0, F@_1, F@_2,
-						 F@_3, TrUserData);
+						 F@_3, F@_4, TrUserData);
 	    3 ->
 		skip_group_RemoteRead(Rest, Key bsr 3, 0, F@_1, F@_2,
-				      F@_3, TrUserData);
+				      F@_3, F@_4, TrUserData);
 	    5 ->
-		skip_32_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3,
+		skip_32_RemoteRead(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4,
 				   TrUserData)
 	  end
     end;
 dg_read_field_def_RemoteRead(<<>>, 0, 0, F@_1, F@_2,
-			     F@_3, _) ->
-    #{key => F@_1, has_read => F@_2, vc_aggr => F@_3}.
+			     F@_3, F@_4, _) ->
+    #{partition => F@_1, key => F@_2, has_read => F@_3,
+      vc_aggr => F@_4}.
 
-d_field_RemoteRead_key(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, F@_3, TrUserData)
+d_field_RemoteRead_partition(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
     when N < 57 ->
-    d_field_RemoteRead_key(Rest, N + 7, X bsl N + Acc, F@_1,
-			   F@_2, F@_3, TrUserData);
-d_field_RemoteRead_key(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, _, F@_2, F@_3, TrUserData) ->
+    d_field_RemoteRead_partition(Rest, N + 7, X bsl N + Acc,
+				 F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_RemoteRead_partition(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_RemoteRead(RestF, 0, 0, NewFValue,
-				  F@_2, F@_3, TrUserData).
+				  F@_2, F@_3, F@_4, TrUserData).
 
-d_field_RemoteRead_has_read(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, F@_2, F@_3, TrUserData)
+d_field_RemoteRead_key(<<1:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
     when N < 57 ->
-    d_field_RemoteRead_has_read(Rest, N + 7, X bsl N + Acc,
-				F@_1, F@_2, F@_3, TrUserData);
-d_field_RemoteRead_has_read(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, F@_1, _, F@_3, TrUserData) ->
+    d_field_RemoteRead_key(Rest, N + 7, X bsl N + Acc, F@_1,
+			   F@_2, F@_3, F@_4, TrUserData);
+d_field_RemoteRead_key(<<0:1, X:7, Rest/binary>>, N,
+		       Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_RemoteRead(RestF, 0, 0, F@_1,
-				  NewFValue, F@_3, TrUserData).
+				  NewFValue, F@_3, F@_4, TrUserData).
 
-d_field_RemoteRead_vc_aggr(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, F@_3, TrUserData)
+d_field_RemoteRead_has_read(<<1:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
     when N < 57 ->
-    d_field_RemoteRead_vc_aggr(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, F@_3, TrUserData);
-d_field_RemoteRead_vc_aggr(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, _, TrUserData) ->
+    d_field_RemoteRead_has_read(Rest, N + 7, X bsl N + Acc,
+				F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_RemoteRead_has_read(<<0:1, X:7, Rest/binary>>,
+			    N, Acc, F@_1, F@_2, _, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_RemoteRead(RestF, 0, 0, F@_1, F@_2,
-				  NewFValue, TrUserData).
+				  NewFValue, F@_4, TrUserData).
+
+d_field_RemoteRead_vc_aggr(<<1:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 57 ->
+    d_field_RemoteRead_vc_aggr(Rest, N + 7, X bsl N + Acc,
+			       F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_RemoteRead_vc_aggr(<<0:1, X:7, Rest/binary>>, N,
+			   Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_RemoteRead(RestF, 0, 0, F@_1, F@_2,
+				  F@_3, NewFValue, TrUserData).
 
 skip_varint_RemoteRead(<<1:1, _:7, Rest/binary>>, Z1,
-		       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+		       Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     skip_varint_RemoteRead(Rest, Z1, Z2, F@_1, F@_2, F@_3,
-			   TrUserData);
+			   F@_4, TrUserData);
 skip_varint_RemoteRead(<<0:1, _:7, Rest/binary>>, Z1,
-		       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+		       Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     dfp_read_field_def_RemoteRead(Rest, Z1, Z2, F@_1, F@_2,
-				  F@_3, TrUserData).
+				  F@_3, F@_4, TrUserData).
 
 skip_length_delimited_RemoteRead(<<1:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, F@_3, TrUserData)
+				 N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
     when N < 57 ->
     skip_length_delimited_RemoteRead(Rest, N + 7,
-				     X bsl N + Acc, F@_1, F@_2, F@_3,
+				     X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
 				     TrUserData);
 skip_length_delimited_RemoteRead(<<0:1, X:7,
 				   Rest/binary>>,
-				 N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+				 N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_RemoteRead(Rest2, 0, 0, F@_1, F@_2,
-				  F@_3, TrUserData).
+				  F@_3, F@_4, TrUserData).
 
 skip_group_RemoteRead(Bin, FNum, Z2, F@_1, F@_2, F@_3,
-		      TrUserData) ->
+		      F@_4, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
     dfp_read_field_def_RemoteRead(Rest, 0, Z2, F@_1, F@_2,
-				  F@_3, TrUserData).
+				  F@_3, F@_4, TrUserData).
 
 skip_32_RemoteRead(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		   F@_2, F@_3, TrUserData) ->
+		   F@_2, F@_3, F@_4, TrUserData) ->
     dfp_read_field_def_RemoteRead(Rest, Z1, Z2, F@_1, F@_2,
-				  F@_3, TrUserData).
+				  F@_3, F@_4, TrUserData).
 
 skip_64_RemoteRead(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		   F@_2, F@_3, TrUserData) ->
+		   F@_2, F@_3, F@_4, TrUserData) ->
     dfp_read_field_def_RemoteRead(Rest, Z1, Z2, F@_1, F@_2,
-				  F@_3, TrUserData).
+				  F@_3, F@_4, TrUserData).
 
 d_msg_RemoteReadResp(Bin, TrUserData) ->
     dfp_read_field_def_RemoteReadResp(Bin, 0, 0,
@@ -2013,23 +2050,30 @@ merge_msg_TimedReadResp(PMsg, NMsg, _) ->
 merge_msg_RemoteRead(PMsg, NMsg, _) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
-	   {_, #{key := NFkey}} -> S1#{key => NFkey};
-	   {#{key := PFkey}, _} -> S1#{key => PFkey};
+	   {_, #{partition := NFpartition}} ->
+	       S1#{partition => NFpartition};
+	   {#{partition := PFpartition}, _} ->
+	       S1#{partition => PFpartition};
 	   _ -> S1
 	 end,
     S3 = case {PMsg, NMsg} of
-	   {_, #{has_read := NFhas_read}} ->
-	       S2#{has_read => NFhas_read};
-	   {#{has_read := PFhas_read}, _} ->
-	       S2#{has_read => PFhas_read};
+	   {_, #{key := NFkey}} -> S2#{key => NFkey};
+	   {#{key := PFkey}, _} -> S2#{key => PFkey};
 	   _ -> S2
+	 end,
+    S4 = case {PMsg, NMsg} of
+	   {_, #{has_read := NFhas_read}} ->
+	       S3#{has_read => NFhas_read};
+	   {#{has_read := PFhas_read}, _} ->
+	       S3#{has_read => PFhas_read};
+	   _ -> S3
 	 end,
     case {PMsg, NMsg} of
       {_, #{vc_aggr := NFvc_aggr}} ->
-	  S3#{vc_aggr => NFvc_aggr};
+	  S4#{vc_aggr => NFvc_aggr};
       {#{vc_aggr := PFvc_aggr}, _} ->
-	  S3#{vc_aggr => PFvc_aggr};
-      _ -> S3
+	  S4#{vc_aggr => PFvc_aggr};
+      _ -> S4
     end.
 
 -compile({nowarn_unused_function,merge_msg_RemoteReadResp/3}).
@@ -2245,21 +2289,27 @@ v_msg_TimedReadResp(X, Path, _TrUserData) ->
 -dialyzer({nowarn_function,v_msg_RemoteRead/3}).
 v_msg_RemoteRead(#{} = M, Path, TrUserData) ->
     case M of
-      #{key := F1} ->
-	  v_type_bytes(F1, [key | Path], TrUserData);
+      #{partition := F1} ->
+	  v_type_bytes(F1, [partition | Path], TrUserData);
       _ -> ok
     end,
     case M of
-      #{has_read := F2} ->
-	  v_type_bytes(F2, [has_read | Path], TrUserData);
+      #{key := F2} ->
+	  v_type_bytes(F2, [key | Path], TrUserData);
       _ -> ok
     end,
     case M of
-      #{vc_aggr := F3} ->
-	  v_type_bytes(F3, [vc_aggr | Path], TrUserData);
+      #{has_read := F3} ->
+	  v_type_bytes(F3, [has_read | Path], TrUserData);
       _ -> ok
     end,
-    lists:foreach(fun (key) -> ok;
+    case M of
+      #{vc_aggr := F4} ->
+	  v_type_bytes(F4, [vc_aggr | Path], TrUserData);
+      _ -> ok
+    end,
+    lists:foreach(fun (partition) -> ok;
+		      (key) -> ok;
 		      (has_read) -> ok;
 		      (vc_aggr) -> ok;
 		      (OtherKey) ->
@@ -2563,11 +2613,13 @@ get_msg_defs() ->
 	      #{name => payload, fnum => 2, rnum => 2, type => bytes,
 		occurrence => optional, opts => []}]}]},
      {{msg, 'RemoteRead'},
-      [#{name => key, fnum => 1, rnum => 2, type => bytes,
+      [#{name => partition, fnum => 1, rnum => 2,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => key, fnum => 2, rnum => 3, type => bytes,
 	 occurrence => optional, opts => []},
-       #{name => has_read, fnum => 2, rnum => 3, type => bytes,
+       #{name => has_read, fnum => 3, rnum => 4, type => bytes,
 	 occurrence => optional, opts => []},
-       #{name => vc_aggr, fnum => 3, rnum => 4, type => bytes,
+       #{name => vc_aggr, fnum => 4, rnum => 5, type => bytes,
 	 occurrence => optional, opts => []}]},
      {{msg, 'RemoteReadResp'},
       [#{name => resp, rnum => 2,
@@ -2658,11 +2710,13 @@ find_msg_def('TimedReadResp') ->
 	    #{name => payload, fnum => 2, rnum => 2, type => bytes,
 	      occurrence => optional, opts => []}]}];
 find_msg_def('RemoteRead') ->
-    [#{name => key, fnum => 1, rnum => 2, type => bytes,
+    [#{name => partition, fnum => 1, rnum => 2,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => key, fnum => 2, rnum => 3, type => bytes,
        occurrence => optional, opts => []},
-     #{name => has_read, fnum => 2, rnum => 3, type => bytes,
+     #{name => has_read, fnum => 3, rnum => 4, type => bytes,
        occurrence => optional, opts => []},
-     #{name => vc_aggr, fnum => 3, rnum => 4, type => bytes,
+     #{name => vc_aggr, fnum => 4, rnum => 5, type => bytes,
        occurrence => optional, opts => []}];
 find_msg_def('RemoteReadResp') ->
     [#{name => resp, rnum => 2,

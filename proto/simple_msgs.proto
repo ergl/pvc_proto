@@ -27,11 +27,12 @@ message TimedReadResp {
 }
 
 message RemoteRead {
-    bytes key = 1;
+    bytes partition = 1;
+    bytes key = 2;
     // Erlang binary
-    bytes has_read = 2;
+    bytes has_read = 3;
     // Erlang binary
-    bytes vc_aggr = 3;
+    bytes vc_aggr = 4;
 }
 
 message RemoteReadResp {
