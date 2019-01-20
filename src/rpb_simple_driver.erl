@@ -53,8 +53,11 @@ read_write(Keys, Updates) when is_list(Keys) andalso is_list(Updates) ->
     Ops = lists:map(fun({K, V}) -> #{key => K, value => V} end, Updates),
     encode_pb_msg('ReadWriteTx', #{read_keys => Keys, ops => Ops}).
 
--spec remote_read(integer(), binary(), [any()], term()) -> msg().
+-spec remote_read(integer(), term(), [any()], term()) -> msg().
 remote_read(Partition, Key, HasRead, VCAggr) ->
+    remote_read(Partition, term_to_binary(Key), HasRead, VCAggr);
+
+remote_read(Partition, Key, HasRead, VCAggr) when is_binary(Key) ->
     encode_pb_msg('RemoteRead', #{partition => term_to_binary(Partition),
                                   key => Key,
                                   has_read => term_to_binary(HasRead),
