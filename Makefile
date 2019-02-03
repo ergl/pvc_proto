@@ -1,4 +1,4 @@
-PACKAGE         ?= rubis_proto
+PACKAGE         ?= pvc_proto
 VERSION         ?= $(shell git describe --tags)
 BASE_DIR         = $(shell pwd)
 ERLANG_BIN       = $(shell dirname $(shell which erl))
@@ -39,6 +39,6 @@ lint:
 	${REBAR} as lint lint
 
 shell:
-	${REBAR} shell --apps rubis_proto
+	${REBAR} shell --apps pvc_proto
 
 include tools.mk

@@ -1,7 +1,7 @@
-rubis_proto
+pvc_proto
 =====
 
-Protocol Buffer Library for the RUBIS benchmark on Antidote.
+Protocol Buffer message definitions for the PVC protocol and related benchmarks for Antidote.
 
 Build
 -----

@@ -1,4 +1,4 @@
--module(rpb_simple_driver).
+-module(ppb_simple_driver).
 
 -export([from_client_dec/1,
          to_client_enc/2,

@@ -1,4 +1,4 @@
--module(rpb_rubis_driver).
+-module(ppb_rubis_driver).
 
 -export([from_client_dec/1,
          to_client_enc/2,

@@ -1,4 +1,4 @@
--module(rubis_proto).
+-module(pvc_proto).
 
 %% API
 %% Generic client - server side methods
