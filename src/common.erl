@@ -1,18 +1,13 @@
 -module(common).
 
 %% API
--export([
-    encode_driver_module/1,
-    decode_driver_module/1
-]).
+-export([encode_driver_module/1,
+         decode_driver_module/1]).
 
--export([
-    encode_success/1,
-    decode_success/1,
-
-    encode_error/1,
-    decode_error/1
-]).
+-export([encode_success/1,
+         decode_success/1,
+         encode_error/1,
+         decode_error/1]).
 
 -spec encode_driver_module(atom()) -> non_neg_integer().
 encode_driver_module(ppb_rubis_driver) -> 1;
