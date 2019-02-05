@@ -28,6 +28,15 @@
 -export_type([]).
 
 %% message types
+-type 'ConnectRequest'() ::
+      #{
+       }.
+
+-type 'ConnectResponse'() ::
+      #{num_partitions          => non_neg_integer(), % = 1, 32 bits
+        ring_payload            => iodata()         % = 2
+       }.
+
 -type 'ReadRequest'() ::
       #{partition               => iodata(),        % = 1
         key                     => iodata(),        % = 2
@@ -70,13 +79,13 @@
         payload                 => {abort, 'Decide.DecideAbort'()} | {commit, 'Decide.DecideCommit'()} % oneof
        }.
 
--export_type(['ReadRequest'/0, 'ReadReturn.ReadPayload'/0, 'ReadReturn'/0, 'Prepare'/0, 'Vote'/0, 'Decide.DecideAbort'/0, 'Decide.DecideCommit'/0, 'Decide'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'ReadRequest'/0, 'ReadReturn.ReadPayload'/0, 'ReadReturn'/0, 'Prepare'/0, 'Vote'/0, 'Decide.DecideAbort'/0, 'Decide.DecideCommit'/0, 'Decide'/0]).
 
--spec encode_msg('ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'Prepare'() | 'Vote'() | 'Decide.DecideAbort'() | 'Decide.DecideCommit'() | 'Decide'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'Prepare'() | 'Vote'() | 'Decide.DecideAbort'() | 'Decide.DecideCommit'() | 'Decide'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'Prepare'() | 'Vote'() | 'Decide.DecideAbort'() | 'Decide.DecideCommit'() | 'Decide'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'Prepare'() | 'Vote'() | 'Decide.DecideAbort'() | 'Decide.DecideCommit'() | 'Decide'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -84,6 +93,10 @@ encode_msg(Msg, MsgName, Opts) ->
     end,
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
+      'ConnectRequest' ->
+	  e_msg_ConnectRequest(id(Msg, TrUserData), TrUserData);
+      'ConnectResponse' ->
+	  e_msg_ConnectResponse(id(Msg, TrUserData), TrUserData);
       'ReadRequest' ->
 	  e_msg_ReadRequest(id(Msg, TrUserData), TrUserData);
       'ReadReturn.ReadPayload' ->
@@ -104,6 +117,35 @@ encode_msg(Msg, MsgName, Opts) ->
 	  e_msg_Decide(id(Msg, TrUserData), TrUserData)
     end.
 
+
+e_msg_ConnectRequest(_Msg, _TrUserData) -> <<>>.
+
+e_msg_ConnectResponse(Msg, TrUserData) ->
+    e_msg_ConnectResponse(Msg, <<>>, TrUserData).
+
+
+e_msg_ConnectResponse(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{num_partitions := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 if TrF1 =:= 0 -> Bin;
+		    true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    case M of
+      #{ring_payload := F2} ->
+	  begin
+	    TrF2 = id(F2, TrUserData),
+	    case iolist_size(TrF2) of
+	      0 -> B1;
+	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+	    end
+	  end;
+      _ -> B1
+    end.
 
 e_msg_ReadRequest(Msg, TrUserData) ->
     e_msg_ReadRequest(Msg, <<>>, TrUserData).
@@ -491,6 +533,10 @@ decode_msg_1_catch(Bin, MsgName, TrUserData) ->
 
 -endif.
 
+decode_msg_2_doit('ConnectRequest', Bin, TrUserData) ->
+    id(d_msg_ConnectRequest(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ConnectResponse', Bin, TrUserData) ->
+    id(d_msg_ConnectResponse(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ReadRequest', Bin, TrUserData) ->
     id(d_msg_ReadRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ReadReturn.ReadPayload', Bin,
@@ -515,6 +561,209 @@ decode_msg_2_doit('Decide', Bin, TrUserData) ->
     id(d_msg_Decide(Bin, TrUserData), TrUserData).
 
 
+
+d_msg_ConnectRequest(Bin, TrUserData) ->
+    dfp_read_field_def_ConnectRequest(Bin, 0, 0,
+				      TrUserData).
+
+dfp_read_field_def_ConnectRequest(<<>>, 0, 0, _) -> #{};
+dfp_read_field_def_ConnectRequest(Other, Z1, Z2,
+				  TrUserData) ->
+    dg_read_field_def_ConnectRequest(Other, Z1, Z2,
+				     TrUserData).
+
+dg_read_field_def_ConnectRequest(<<1:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ConnectRequest(Rest, N + 7,
+				     X bsl N + Acc, TrUserData);
+dg_read_field_def_ConnectRequest(<<0:1, X:7,
+				   Rest/binary>>,
+				 N, Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+      0 -> skip_varint_ConnectRequest(Rest, 0, 0, TrUserData);
+      1 -> skip_64_ConnectRequest(Rest, 0, 0, TrUserData);
+      2 ->
+	  skip_length_delimited_ConnectRequest(Rest, 0, 0,
+					       TrUserData);
+      3 ->
+	  skip_group_ConnectRequest(Rest, Key bsr 3, 0,
+				    TrUserData);
+      5 -> skip_32_ConnectRequest(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_ConnectRequest(<<>>, 0, 0, _) -> #{}.
+
+skip_varint_ConnectRequest(<<1:1, _:7, Rest/binary>>,
+			   Z1, Z2, TrUserData) ->
+    skip_varint_ConnectRequest(Rest, Z1, Z2, TrUserData);
+skip_varint_ConnectRequest(<<0:1, _:7, Rest/binary>>,
+			   Z1, Z2, TrUserData) ->
+    dfp_read_field_def_ConnectRequest(Rest, Z1, Z2,
+				      TrUserData).
+
+skip_length_delimited_ConnectRequest(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ConnectRequest(Rest, N + 7,
+					 X bsl N + Acc, TrUserData);
+skip_length_delimited_ConnectRequest(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ConnectRequest(Rest2, 0, 0,
+				      TrUserData).
+
+skip_group_ConnectRequest(Bin, FNum, Z2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ConnectRequest(Rest, 0, Z2,
+				      TrUserData).
+
+skip_32_ConnectRequest(<<_:32, Rest/binary>>, Z1, Z2,
+		       TrUserData) ->
+    dfp_read_field_def_ConnectRequest(Rest, Z1, Z2,
+				      TrUserData).
+
+skip_64_ConnectRequest(<<_:64, Rest/binary>>, Z1, Z2,
+		       TrUserData) ->
+    dfp_read_field_def_ConnectRequest(Rest, Z1, Z2,
+				      TrUserData).
+
+d_msg_ConnectResponse(Bin, TrUserData) ->
+    dfp_read_field_def_ConnectResponse(Bin, 0, 0,
+				       id(0, TrUserData), id(<<>>, TrUserData),
+				       TrUserData).
+
+dfp_read_field_def_ConnectResponse(<<8, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, TrUserData) ->
+    d_field_ConnectResponse_num_partitions(Rest, Z1, Z2,
+					   F@_1, F@_2, TrUserData);
+dfp_read_field_def_ConnectResponse(<<18, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, TrUserData) ->
+    d_field_ConnectResponse_ring_payload(Rest, Z1, Z2, F@_1,
+					 F@_2, TrUserData);
+dfp_read_field_def_ConnectResponse(<<>>, 0, 0, F@_1,
+				   F@_2, _) ->
+    #{num_partitions => F@_1, ring_payload => F@_2};
+dfp_read_field_def_ConnectResponse(Other, Z1, Z2, F@_1,
+				   F@_2, TrUserData) ->
+    dg_read_field_def_ConnectResponse(Other, Z1, Z2, F@_1,
+				      F@_2, TrUserData).
+
+dg_read_field_def_ConnectResponse(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ConnectResponse(Rest, N + 7,
+				      X bsl N + Acc, F@_1, F@_2, TrUserData);
+dg_read_field_def_ConnectResponse(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_ConnectResponse_num_partitions(Rest, 0, 0, F@_1,
+						 F@_2, TrUserData);
+      18 ->
+	  d_field_ConnectResponse_ring_payload(Rest, 0, 0, F@_1,
+					       F@_2, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ConnectResponse(Rest, 0, 0, F@_1, F@_2,
+					    TrUserData);
+	    1 ->
+		skip_64_ConnectResponse(Rest, 0, 0, F@_1, F@_2,
+					TrUserData);
+	    2 ->
+		skip_length_delimited_ConnectResponse(Rest, 0, 0, F@_1,
+						      F@_2, TrUserData);
+	    3 ->
+		skip_group_ConnectResponse(Rest, Key bsr 3, 0, F@_1,
+					   F@_2, TrUserData);
+	    5 ->
+		skip_32_ConnectResponse(Rest, 0, 0, F@_1, F@_2,
+					TrUserData)
+	  end
+    end;
+dg_read_field_def_ConnectResponse(<<>>, 0, 0, F@_1,
+				  F@_2, _) ->
+    #{num_partitions => F@_1, ring_payload => F@_2}.
+
+d_field_ConnectResponse_num_partitions(<<1:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    d_field_ConnectResponse_num_partitions(Rest, N + 7,
+					   X bsl N + Acc, F@_1, F@_2,
+					   TrUserData);
+d_field_ConnectResponse_num_partitions(<<0:1, X:7,
+					 Rest/binary>>,
+				       N, Acc, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+			  Rest},
+    dfp_read_field_def_ConnectResponse(RestF, 0, 0,
+				       NewFValue, F@_2, TrUserData).
+
+d_field_ConnectResponse_ring_payload(<<1:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    d_field_ConnectResponse_ring_payload(Rest, N + 7,
+					 X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_ConnectResponse_ring_payload(<<0:1, X:7,
+				       Rest/binary>>,
+				     N, Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_ConnectResponse(RestF, 0, 0, F@_1,
+				       NewFValue, TrUserData).
+
+skip_varint_ConnectResponse(<<1:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, F@_2, TrUserData) ->
+    skip_varint_ConnectResponse(Rest, Z1, Z2, F@_1, F@_2,
+				TrUserData);
+skip_varint_ConnectResponse(<<0:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1,
+				       F@_2, TrUserData).
+
+skip_length_delimited_ConnectResponse(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ConnectResponse(Rest, N + 7,
+					  X bsl N + Acc, F@_1, F@_2,
+					  TrUserData);
+skip_length_delimited_ConnectResponse(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, F@_2, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ConnectResponse(Rest2, 0, 0, F@_1,
+				       F@_2, TrUserData).
+
+skip_group_ConnectResponse(Bin, FNum, Z2, F@_1, F@_2,
+			   TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ConnectResponse(Rest, 0, Z2, F@_1,
+				       F@_2, TrUserData).
+
+skip_32_ConnectResponse(<<_:32, Rest/binary>>, Z1, Z2,
+			F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1,
+				       F@_2, TrUserData).
+
+skip_64_ConnectResponse(<<_:64, Rest/binary>>, Z1, Z2,
+			F@_1, F@_2, TrUserData) ->
+    dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1,
+				       F@_2, TrUserData).
 
 d_msg_ReadRequest(Bin, TrUserData) ->
     dfp_read_field_def_ReadRequest(Bin, 0, 0,
@@ -1764,6 +2013,10 @@ merge_msgs(Prev, New, MsgName) when is_atom(MsgName) ->
 merge_msgs(Prev, New, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
+      'ConnectRequest' ->
+	  merge_msg_ConnectRequest(Prev, New, TrUserData);
+      'ConnectResponse' ->
+	  merge_msg_ConnectResponse(Prev, New, TrUserData);
       'ReadRequest' ->
 	  merge_msg_ReadRequest(Prev, New, TrUserData);
       'ReadReturn.ReadPayload' ->
@@ -1778,6 +2031,28 @@ merge_msgs(Prev, New, MsgName, Opts) ->
       'Decide.DecideCommit' ->
 	  'merge_msg_Decide.DecideCommit'(Prev, New, TrUserData);
       'Decide' -> merge_msg_Decide(Prev, New, TrUserData)
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ConnectRequest/3}).
+merge_msg_ConnectRequest(_Prev, New, _TrUserData) ->
+    New.
+
+-compile({nowarn_unused_function,merge_msg_ConnectResponse/3}).
+merge_msg_ConnectResponse(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{num_partitions := NFnum_partitions}} ->
+	       S1#{num_partitions => NFnum_partitions};
+	   {#{num_partitions := PFnum_partitions}, _} ->
+	       S1#{num_partitions => PFnum_partitions};
+	   _ -> S1
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{ring_payload := NFring_payload}} ->
+	  S2#{ring_payload => NFring_payload};
+      {#{ring_payload := PFring_payload}, _} ->
+	  S2#{ring_payload => PFring_payload};
+      _ -> S2
     end.
 
 -compile({nowarn_unused_function,merge_msg_ReadRequest/3}).
@@ -1949,6 +2224,10 @@ verify_msg(Msg, MsgName) when is_atom(MsgName) ->
 verify_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
+      'ConnectRequest' ->
+	  v_msg_ConnectRequest(Msg, [MsgName], TrUserData);
+      'ConnectResponse' ->
+	  v_msg_ConnectResponse(Msg, [MsgName], TrUserData);
       'ReadRequest' ->
 	  v_msg_ReadRequest(Msg, [MsgName], TrUserData);
       'ReadReturn.ReadPayload' ->
@@ -1966,6 +2245,52 @@ verify_msg(Msg, MsgName, Opts) ->
       _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
 
+
+-compile({nowarn_unused_function,v_msg_ConnectRequest/3}).
+-dialyzer({nowarn_function,v_msg_ConnectRequest/3}).
+v_msg_ConnectRequest(#{} = M, Path, _) ->
+    lists:foreach(fun (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ConnectRequest(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ConnectRequest'},
+		  M, Path);
+v_msg_ConnectRequest(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ConnectRequest'}, X,
+		  Path).
+
+-compile({nowarn_unused_function,v_msg_ConnectResponse/3}).
+-dialyzer({nowarn_function,v_msg_ConnectResponse/3}).
+v_msg_ConnectResponse(#{} = M, Path, TrUserData) ->
+    case M of
+      #{num_partitions := F1} ->
+	  v_type_uint32(F1, [num_partitions | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{ring_payload := F2} ->
+	  v_type_bytes(F2, [ring_payload | Path], TrUserData);
+      _ -> ok
+    end,
+    lists:foreach(fun (num_partitions) -> ok;
+		      (ring_payload) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ConnectResponse(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ConnectResponse'},
+		  M, Path);
+v_msg_ConnectResponse(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ConnectResponse'}, X,
+		  Path).
 
 -compile({nowarn_unused_function,v_msg_ReadRequest/3}).
 -dialyzer({nowarn_function,v_msg_ReadRequest/3}).
@@ -2293,7 +2618,13 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 'erlang_++'(A, B, _TrUserData) -> A ++ B.
 
 get_msg_defs() ->
-    [{{msg, 'ReadRequest'},
+    [{{msg, 'ConnectRequest'}, []},
+     {{msg, 'ConnectResponse'},
+      [#{name => num_partitions, fnum => 1, rnum => 2,
+	 type => uint32, occurrence => optional, opts => []},
+       #{name => ring_payload, fnum => 2, rnum => 3,
+	 type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'ReadRequest'},
       [#{name => partition, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
        #{name => key, fnum => 2, rnum => 3, type => bytes,
@@ -2353,18 +2684,20 @@ get_msg_defs() ->
 
 
 get_msg_names() ->
-    ['ReadRequest', 'ReadReturn.ReadPayload', 'ReadReturn',
-     'Prepare', 'Vote', 'Decide.DecideAbort',
-     'Decide.DecideCommit', 'Decide'].
+    ['ConnectRequest', 'ConnectResponse', 'ReadRequest',
+     'ReadReturn.ReadPayload', 'ReadReturn', 'Prepare',
+     'Vote', 'Decide.DecideAbort', 'Decide.DecideCommit',
+     'Decide'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['ReadRequest', 'ReadReturn.ReadPayload', 'ReadReturn',
-     'Prepare', 'Vote', 'Decide.DecideAbort',
-     'Decide.DecideCommit', 'Decide'].
+    ['ConnectRequest', 'ConnectResponse', 'ReadRequest',
+     'ReadReturn.ReadPayload', 'ReadReturn', 'Prepare',
+     'Vote', 'Decide.DecideAbort', 'Decide.DecideCommit',
+     'Decide'].
 
 
 get_enum_names() -> [].
@@ -2382,6 +2715,12 @@ fetch_enum_def(EnumName) ->
     erlang:error({no_such_enum, EnumName}).
 
 
+find_msg_def('ConnectRequest') -> [];
+find_msg_def('ConnectResponse') ->
+    [#{name => num_partitions, fnum => 1, rnum => 2,
+       type => uint32, occurrence => optional, opts => []},
+     #{name => ring_payload, fnum => 2, rnum => 3,
+       type => bytes, occurrence => optional, opts => []}];
 find_msg_def('ReadRequest') ->
     [#{name => partition, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},

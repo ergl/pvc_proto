@@ -8,6 +8,16 @@ syntax = "proto3";
 
 // TODO: Add connection/partition info
 
+// Emtpy message for requesting a connection
+// A connection requested to only one node in the cluster
+message ConnectRequest {}
+
+message ConnectResponse {
+    uint32 num_partitions = 1;
+    // Ring structure is sent using raw erlang encoding
+    bytes ring_payload = 2;
+}
+
 // Request a read for the given key
 // Key must be "owned" by the given partition
 //
