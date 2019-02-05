@@ -76,6 +76,7 @@
 
 -type 'Decide'() ::
       #{partition               => iodata(),        % = 1
+        transaction_id          => iodata(),        % = 2
         payload                 => {abort, 'Decide.DecideAbort'()} | {commit, 'Decide.DecideCommit'()} % oneof
        }.
 
@@ -377,23 +378,34 @@ e_msg_Decide(#{} = M, Bin, TrUserData) ->
 	       end;
 	   _ -> Bin
 	 end,
+    B2 = case M of
+	   #{transaction_id := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+		 end
+	       end;
+	   _ -> B1
+	 end,
     case M of
-      #{payload := F2} ->
-	  case id(F2, TrUserData) of
-	    {abort, TF2} ->
+      #{payload := F3} ->
+	  case id(F3, TrUserData) of
+	    {abort, TF3} ->
 		begin
-		  TrTF2 = id(TF2, TrUserData),
-		  e_mfield_Decide_abort(TrTF2, <<B1/binary, 18>>,
+		  TrTF3 = id(TF3, TrUserData),
+		  e_mfield_Decide_abort(TrTF3, <<B2/binary, 26>>,
 					TrUserData)
 		end;
-	    {commit, TF2} ->
+	    {commit, TF3} ->
 		begin
-		  TrTF2 = id(TF2, TrUserData),
-		  e_mfield_Decide_commit(TrTF2, <<B1/binary, 26>>,
+		  TrTF3 = id(TF3, TrUserData),
+		  e_mfield_Decide_commit(TrTF3, <<B2/binary, 34>>,
 					 TrUserData)
 		end
 	  end;
-      _ -> B1
+      _ -> B2
     end.
 
 e_mfield_ReadReturn_payload(Msg, Bin, TrUserData) ->
@@ -1780,91 +1792,119 @@ skip_64_Vote(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2,
 
 d_msg_Decide(Bin, TrUserData) ->
     dfp_read_field_def_Decide(Bin, 0, 0,
-			      id(<<>>, TrUserData), id('$undef', TrUserData),
-			      TrUserData).
+			      id(<<>>, TrUserData), id(<<>>, TrUserData),
+			      id('$undef', TrUserData), TrUserData).
 
 dfp_read_field_def_Decide(<<10, Rest/binary>>, Z1, Z2,
-			  F@_1, F@_2, TrUserData) ->
-    d_field_Decide_partition(Rest, Z1, Z2, F@_1, F@_2,
+			  F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_Decide_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3,
 			     TrUserData);
 dfp_read_field_def_Decide(<<18, Rest/binary>>, Z1, Z2,
-			  F@_1, F@_2, TrUserData) ->
-    d_field_Decide_abort(Rest, Z1, Z2, F@_1, F@_2,
-			 TrUserData);
+			  F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_Decide_transaction_id(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, TrUserData);
 dfp_read_field_def_Decide(<<26, Rest/binary>>, Z1, Z2,
-			  F@_1, F@_2, TrUserData) ->
-    d_field_Decide_commit(Rest, Z1, Z2, F@_1, F@_2,
+			  F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_Decide_abort(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			 TrUserData);
+dfp_read_field_def_Decide(<<34, Rest/binary>>, Z1, Z2,
+			  F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_Decide_commit(Rest, Z1, Z2, F@_1, F@_2, F@_3,
 			  TrUserData);
-dfp_read_field_def_Decide(<<>>, 0, 0, F@_1, F@_2, _) ->
-    S1 = #{partition => F@_1},
-    if F@_2 == '$undef' -> S1;
-       true -> S1#{payload => F@_2}
+dfp_read_field_def_Decide(<<>>, 0, 0, F@_1, F@_2, F@_3,
+			  _) ->
+    S1 = #{partition => F@_1, transaction_id => F@_2},
+    if F@_3 == '$undef' -> S1;
+       true -> S1#{payload => F@_3}
     end;
 dfp_read_field_def_Decide(Other, Z1, Z2, F@_1, F@_2,
-			  TrUserData) ->
+			  F@_3, TrUserData) ->
     dg_read_field_def_Decide(Other, Z1, Z2, F@_1, F@_2,
-			     TrUserData).
+			     F@_3, TrUserData).
 
 dg_read_field_def_Decide(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, TrUserData)
+			 Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_Decide(Rest, N + 7, X bsl N + Acc,
-			     F@_1, F@_2, TrUserData);
+			     F@_1, F@_2, F@_3, TrUserData);
 dg_read_field_def_Decide(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, TrUserData) ->
+			 Acc, F@_1, F@_2, F@_3, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
-	  d_field_Decide_partition(Rest, 0, 0, F@_1, F@_2,
+	  d_field_Decide_partition(Rest, 0, 0, F@_1, F@_2, F@_3,
 				   TrUserData);
       18 ->
-	  d_field_Decide_abort(Rest, 0, 0, F@_1, F@_2,
-			       TrUserData);
+	  d_field_Decide_transaction_id(Rest, 0, 0, F@_1, F@_2,
+					F@_3, TrUserData);
       26 ->
-	  d_field_Decide_commit(Rest, 0, 0, F@_1, F@_2,
+	  d_field_Decide_abort(Rest, 0, 0, F@_1, F@_2, F@_3,
+			       TrUserData);
+      34 ->
+	  d_field_Decide_commit(Rest, 0, 0, F@_1, F@_2, F@_3,
 				TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_Decide(Rest, 0, 0, F@_1, F@_2, TrUserData);
-	    1 -> skip_64_Decide(Rest, 0, 0, F@_1, F@_2, TrUserData);
+		skip_varint_Decide(Rest, 0, 0, F@_1, F@_2, F@_3,
+				   TrUserData);
+	    1 ->
+		skip_64_Decide(Rest, 0, 0, F@_1, F@_2, F@_3,
+			       TrUserData);
 	    2 ->
 		skip_length_delimited_Decide(Rest, 0, 0, F@_1, F@_2,
-					     TrUserData);
+					     F@_3, TrUserData);
 	    3 ->
-		skip_group_Decide(Rest, Key bsr 3, 0, F@_1, F@_2,
+		skip_group_Decide(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3,
 				  TrUserData);
-	    5 -> skip_32_Decide(Rest, 0, 0, F@_1, F@_2, TrUserData)
+	    5 ->
+		skip_32_Decide(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
 	  end
     end;
-dg_read_field_def_Decide(<<>>, 0, 0, F@_1, F@_2, _) ->
-    S1 = #{partition => F@_1},
-    if F@_2 == '$undef' -> S1;
-       true -> S1#{payload => F@_2}
+dg_read_field_def_Decide(<<>>, 0, 0, F@_1, F@_2, F@_3,
+			 _) ->
+    S1 = #{partition => F@_1, transaction_id => F@_2},
+    if F@_3 == '$undef' -> S1;
+       true -> S1#{payload => F@_3}
     end.
 
 d_field_Decide_partition(<<1:1, X:7, Rest/binary>>, N,
-			 Acc, F@_1, F@_2, TrUserData)
+			 Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     d_field_Decide_partition(Rest, N + 7, X bsl N + Acc,
-			     F@_1, F@_2, TrUserData);
+			     F@_1, F@_2, F@_3, TrUserData);
 d_field_Decide_partition(<<0:1, X:7, Rest/binary>>, N,
-			 Acc, _, F@_2, TrUserData) ->
+			 Acc, _, F@_2, F@_3, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_Decide(RestF, 0, 0, NewFValue, F@_2,
-			      TrUserData).
+			      F@_3, TrUserData).
+
+d_field_Decide_transaction_id(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_Decide_transaction_id(Rest, N + 7,
+				  X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+d_field_Decide_transaction_id(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_Decide(RestF, 0, 0, F@_1, NewFValue,
+			      F@_3, TrUserData).
 
 d_field_Decide_abort(<<1:1, X:7, Rest/binary>>, N, Acc,
-		     F@_1, F@_2, TrUserData)
+		     F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     d_field_Decide_abort(Rest, N + 7, X bsl N + Acc, F@_1,
-			 F@_2, TrUserData);
+			 F@_2, F@_3, TrUserData);
 d_field_Decide_abort(<<0:1, X:7, Rest/binary>>, N, Acc,
-		     F@_1, Prev, TrUserData) ->
+		     F@_1, F@_2, Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bs:Len/binary, Rest2/binary>> = Rest,
@@ -1872,7 +1912,7 @@ d_field_Decide_abort(<<0:1, X:7, Rest/binary>>, N, Acc,
 			       TrUserData),
 			    Rest2}
 			 end,
-    dfp_read_field_def_Decide(RestF, 0, 0, F@_1,
+    dfp_read_field_def_Decide(RestF, 0, 0, F@_1, F@_2,
 			      case Prev of
 				'$undef' -> id({abort, NewFValue}, TrUserData);
 				{abort, MVPrev} ->
@@ -1886,12 +1926,12 @@ d_field_Decide_abort(<<0:1, X:7, Rest/binary>>, N, Acc,
 			      TrUserData).
 
 d_field_Decide_commit(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, TrUserData)
+		      F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     d_field_Decide_commit(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, TrUserData);
+			  F@_2, F@_3, TrUserData);
 d_field_Decide_commit(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, Prev, TrUserData) ->
+		      F@_1, F@_2, Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bs:Len/binary, Rest2/binary>> = Rest,
@@ -1899,7 +1939,7 @@ d_field_Decide_commit(<<0:1, X:7, Rest/binary>>, N, Acc,
 			       TrUserData),
 			    Rest2}
 			 end,
-    dfp_read_field_def_Decide(RestF, 0, 0, F@_1,
+    dfp_read_field_def_Decide(RestF, 0, 0, F@_1, F@_2,
 			      case Prev of
 				'$undef' -> id({commit, NewFValue}, TrUserData);
 				{commit, MVPrev} ->
@@ -1913,41 +1953,41 @@ d_field_Decide_commit(<<0:1, X:7, Rest/binary>>, N, Acc,
 			      TrUserData).
 
 skip_varint_Decide(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		   F@_1, F@_2, TrUserData) ->
-    skip_varint_Decide(Rest, Z1, Z2, F@_1, F@_2,
+		   F@_1, F@_2, F@_3, TrUserData) ->
+    skip_varint_Decide(Rest, Z1, Z2, F@_1, F@_2, F@_3,
 		       TrUserData);
 skip_varint_Decide(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		   F@_1, F@_2, TrUserData) ->
+		   F@_1, F@_2, F@_3, TrUserData) ->
     dfp_read_field_def_Decide(Rest, Z1, Z2, F@_1, F@_2,
-			      TrUserData).
+			      F@_3, TrUserData).
 
 skip_length_delimited_Decide(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, TrUserData)
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     skip_length_delimited_Decide(Rest, N + 7, X bsl N + Acc,
-				 F@_1, F@_2, TrUserData);
+				 F@_1, F@_2, F@_3, TrUserData);
 skip_length_delimited_Decide(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, TrUserData) ->
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_Decide(Rest2, 0, 0, F@_1, F@_2,
+    dfp_read_field_def_Decide(Rest2, 0, 0, F@_1, F@_2, F@_3,
 			      TrUserData).
 
-skip_group_Decide(Bin, FNum, Z2, F@_1, F@_2,
+skip_group_Decide(Bin, FNum, Z2, F@_1, F@_2, F@_3,
 		  TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_Decide(Rest, 0, Z2, F@_1, F@_2,
+    dfp_read_field_def_Decide(Rest, 0, Z2, F@_1, F@_2, F@_3,
 			      TrUserData).
 
 skip_32_Decide(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-	       F@_2, TrUserData) ->
+	       F@_2, F@_3, TrUserData) ->
     dfp_read_field_def_Decide(Rest, Z1, Z2, F@_1, F@_2,
-			      TrUserData).
+			      F@_3, TrUserData).
 
 skip_64_Decide(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-	       F@_2, TrUserData) ->
+	       F@_2, F@_3, TrUserData) ->
     dfp_read_field_def_Decide(Rest, Z1, Z2, F@_1, F@_2,
-			      TrUserData).
+			      F@_3, TrUserData).
 
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
@@ -2197,24 +2237,31 @@ merge_msg_Decide(PMsg, NMsg, TrUserData) ->
 	       S1#{partition => PFpartition};
 	   _ -> S1
 	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{transaction_id := NFtransaction_id}} ->
+	       S2#{transaction_id => NFtransaction_id};
+	   {#{transaction_id := PFtransaction_id}, _} ->
+	       S2#{transaction_id => PFtransaction_id};
+	   _ -> S2
+	 end,
     case {PMsg, NMsg} of
       {#{payload := {abort, OPFpayload}},
        #{payload := {abort, ONFpayload}}} ->
-	  S2#{payload =>
+	  S3#{payload =>
 		  {abort,
 		   'merge_msg_Decide.DecideAbort'(OPFpayload, ONFpayload,
 						  TrUserData)}};
       {#{payload := {commit, OPFpayload}},
        #{payload := {commit, ONFpayload}}} ->
-	  S2#{payload =>
+	  S3#{payload =>
 		  {commit,
 		   'merge_msg_Decide.DecideCommit'(OPFpayload, ONFpayload,
 						   TrUserData)}};
       {_, #{payload := NFpayload}} ->
-	  S2#{payload => NFpayload};
+	  S3#{payload => NFpayload};
       {#{payload := PFpayload}, _} ->
-	  S2#{payload => PFpayload};
-      {_, _} -> S2
+	  S3#{payload => PFpayload};
+      {_, _} -> S3
     end.
 
 
@@ -2516,17 +2563,23 @@ v_msg_Decide(#{} = M, Path, TrUserData) ->
       _ -> ok
     end,
     case M of
-      #{payload := {abort, OF2}} ->
-	  'v_msg_Decide.DecideAbort'(OF2, [abort, payload | Path],
+      #{transaction_id := F2} ->
+	  v_type_bytes(F2, [transaction_id | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{payload := {abort, OF3}} ->
+	  'v_msg_Decide.DecideAbort'(OF3, [abort, payload | Path],
 				     TrUserData);
-      #{payload := {commit, OF2}} ->
-	  'v_msg_Decide.DecideCommit'(OF2,
+      #{payload := {commit, OF3}} ->
+	  'v_msg_Decide.DecideCommit'(OF3,
 				      [commit, payload | Path], TrUserData);
-      #{payload := F2} ->
-	  mk_type_error(invalid_oneof, F2, [payload | Path]);
+      #{payload := F3} ->
+	  mk_type_error(invalid_oneof, F3, [payload | Path]);
       _ -> ok
     end,
     lists:foreach(fun (partition) -> ok;
+		      (transaction_id) -> ok;
 		      (payload) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -2673,12 +2726,14 @@ get_msg_defs() ->
      {{msg, 'Decide'},
       [#{name => partition, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
-       #{name => payload, rnum => 3,
+       #{name => transaction_id, fnum => 2, rnum => 3,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => payload, rnum => 4,
 	 fields =>
-	     [#{name => abort, fnum => 2, rnum => 3,
+	     [#{name => abort, fnum => 3, rnum => 4,
 		type => {msg, 'Decide.DecideAbort'},
 		occurrence => optional, opts => []},
-	      #{name => commit, fnum => 3, rnum => 3,
+	      #{name => commit, fnum => 4, rnum => 4,
 		type => {msg, 'Decide.DecideCommit'},
 		occurrence => optional, opts => []}]}]}].
 
@@ -2770,12 +2825,14 @@ find_msg_def('Decide.DecideCommit') ->
 find_msg_def('Decide') ->
     [#{name => partition, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
-     #{name => payload, rnum => 3,
+     #{name => transaction_id, fnum => 2, rnum => 3,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => payload, rnum => 4,
        fields =>
-	   [#{name => abort, fnum => 2, rnum => 3,
+	   [#{name => abort, fnum => 3, rnum => 4,
 	      type => {msg, 'Decide.DecideAbort'},
 	      occurrence => optional, opts => []},
-	    #{name => commit, fnum => 3, rnum => 3,
+	    #{name => commit, fnum => 4, rnum => 4,
 	      type => {msg, 'Decide.DecideCommit'},
 	      occurrence => optional, opts => []}]}];
 find_msg_def(_) -> error.

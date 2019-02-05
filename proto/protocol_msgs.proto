@@ -80,8 +80,9 @@ message Decide {
     }
 
     bytes partition = 1;
+    bytes transaction_id = 2;
     oneof payload {
-        DecideAbort abort = 2;
-        DecideCommit commit = 3;
+        DecideAbort abort = 3;
+        DecideCommit commit = 4;
     }
 }
