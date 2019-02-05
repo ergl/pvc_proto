@@ -30,19 +30,21 @@ encode_success(_) -> 1.
 -spec decode_success(non_neg_integer()) -> atom().
 decode_success(_) -> ok.
 
-%% TODO: Add ppb_protocol_driver errors
 %% @doc Encode server errors as ints
 -spec encode_error(atom()) -> non_neg_integer().
+%% Rubis errors
 encode_error(user_not_found) -> 1;
 encode_error(wrong_password) -> 2;
 encode_error(non_unique_username) -> 3;
+%% Misc errors
+%% TODO(borja): Can remove?
 encode_error(timeout) -> 4;
+%% Protocol errors
 encode_error(pvc_conflict) -> 5;
 encode_error(pvc_stale_vc) -> 6;
 encode_error(pvc_bad_vc) -> 7;
 encode_error(_Other) -> 0.
 
-%% TODO: Add ppb_protocol_driver errors
 %% @doc Get original error types
 -spec decode_error(non_neg_integer()) -> atom().
 decode_error(0) -> unknown;
