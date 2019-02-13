@@ -106,11 +106,11 @@ to_client_enc('ReadRequest', {ok, Value, VCdep, MaxVC}) ->
 to_client_enc('ReadRequest', {error, Reason}) ->
     encode_pb_msg('ReadReturn', #{resp => {abort, common:encode_error(Reason)}});
 
-to_client_enc('Prepare', {vote, From, {error, Reason}}) ->
+to_client_enc('Prepare', {error, From, Reason}) ->
     encode_pb_msg('Vote', #{partition => term_to_binary(From),
                             payload => {abort, common:encode_error(Reason)}});
 
-to_client_enc('Prepare', {vote, From, {ok, SeqNumber}}) ->
+to_client_enc('Prepare', {ok, From, SeqNumber}) ->
     encode_pb_msg('Vote', #{partition => term_to_binary(From),
                             payload => {seq_number, SeqNumber}}).
 
