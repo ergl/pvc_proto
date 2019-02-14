@@ -62,7 +62,6 @@ message Prepare {
 }
 
 // Votes casted by partitions during the prepare phase
-// TODO(borja): Do we need Partition info for abort?
 message Vote {
     bytes partition = 1;
     oneof payload {
