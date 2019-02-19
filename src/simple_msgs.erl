@@ -33,8 +33,7 @@
        }.
 
 -type 'Load'() ::
-      #{num_keys                => non_neg_integer(), % = 1, 32 bits
-        bin_size                => non_neg_integer() % = 2, 32 bits
+      #{bin_size                => non_neg_integer() % = 1, 32 bits
        }.
 
 -type 'ReadOnlyTx'() ::
@@ -88,25 +87,15 @@ e_msg_Load(Msg, TrUserData) ->
 
 
 e_msg_Load(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-	   #{num_keys := F1} ->
-	       begin
-		 TrF1 = id(F1, TrUserData),
-		 if TrF1 =:= 0 -> Bin;
-		    true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
-		 end
-	       end;
-	   _ -> Bin
-	 end,
     case M of
-      #{bin_size := F2} ->
+      #{bin_size := F1} ->
 	  begin
-	    TrF2 = id(F2, TrUserData),
-	    if TrF2 =:= 0 -> B1;
-	       true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+	    TrF1 = id(F1, TrUserData),
+	    if TrF1 =:= 0 -> Bin;
+	       true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
 	    end
 	  end;
-      _ -> B1
+      _ -> Bin
     end.
 
 e_msg_ReadOnlyTx(Msg, TrUserData) ->
@@ -419,114 +408,84 @@ skip_64_Ping(<<_:64, Rest/binary>>, Z1, Z2,
 
 d_msg_Load(Bin, TrUserData) ->
     dfp_read_field_def_Load(Bin, 0, 0, id(0, TrUserData),
-			    id(0, TrUserData), TrUserData).
+			    TrUserData).
 
 dfp_read_field_def_Load(<<8, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, TrUserData) ->
-    d_field_Load_num_keys(Rest, Z1, Z2, F@_1, F@_2,
-			  TrUserData);
-dfp_read_field_def_Load(<<16, Rest/binary>>, Z1, Z2,
-			F@_1, F@_2, TrUserData) ->
-    d_field_Load_bin_size(Rest, Z1, Z2, F@_1, F@_2,
-			  TrUserData);
-dfp_read_field_def_Load(<<>>, 0, 0, F@_1, F@_2, _) ->
-    #{num_keys => F@_1, bin_size => F@_2};
-dfp_read_field_def_Load(Other, Z1, Z2, F@_1, F@_2,
+			F@_1, TrUserData) ->
+    d_field_Load_bin_size(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_Load(<<>>, 0, 0, F@_1, _) ->
+    #{bin_size => F@_1};
+dfp_read_field_def_Load(Other, Z1, Z2, F@_1,
 			TrUserData) ->
-    dg_read_field_def_Load(Other, Z1, Z2, F@_1, F@_2,
-			   TrUserData).
+    dg_read_field_def_Load(Other, Z1, Z2, F@_1, TrUserData).
 
 dg_read_field_def_Load(<<1:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, TrUserData)
+		       Acc, F@_1, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_Load(Rest, N + 7, X bsl N + Acc, F@_1,
-			   F@_2, TrUserData);
+			   TrUserData);
 dg_read_field_def_Load(<<0:1, X:7, Rest/binary>>, N,
-		       Acc, F@_1, F@_2, TrUserData) ->
+		       Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       8 ->
-	  d_field_Load_num_keys(Rest, 0, 0, F@_1, F@_2,
-				TrUserData);
-      16 ->
-	  d_field_Load_bin_size(Rest, 0, 0, F@_1, F@_2,
-				TrUserData);
+	  d_field_Load_bin_size(Rest, 0, 0, F@_1, TrUserData);
       _ ->
 	  case Key band 7 of
-	    0 ->
-		skip_varint_Load(Rest, 0, 0, F@_1, F@_2, TrUserData);
-	    1 -> skip_64_Load(Rest, 0, 0, F@_1, F@_2, TrUserData);
+	    0 -> skip_varint_Load(Rest, 0, 0, F@_1, TrUserData);
+	    1 -> skip_64_Load(Rest, 0, 0, F@_1, TrUserData);
 	    2 ->
-		skip_length_delimited_Load(Rest, 0, 0, F@_1, F@_2,
+		skip_length_delimited_Load(Rest, 0, 0, F@_1,
 					   TrUserData);
 	    3 ->
-		skip_group_Load(Rest, Key bsr 3, 0, F@_1, F@_2,
-				TrUserData);
-	    5 -> skip_32_Load(Rest, 0, 0, F@_1, F@_2, TrUserData)
+		skip_group_Load(Rest, Key bsr 3, 0, F@_1, TrUserData);
+	    5 -> skip_32_Load(Rest, 0, 0, F@_1, TrUserData)
 	  end
     end;
-dg_read_field_def_Load(<<>>, 0, 0, F@_1, F@_2, _) ->
-    #{num_keys => F@_1, bin_size => F@_2}.
-
-d_field_Load_num_keys(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, TrUserData)
-    when N < 57 ->
-    d_field_Load_num_keys(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, TrUserData);
-d_field_Load_num_keys(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      _, F@_2, TrUserData) ->
-    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
-			  Rest},
-    dfp_read_field_def_Load(RestF, 0, 0, NewFValue, F@_2,
-			    TrUserData).
+dg_read_field_def_Load(<<>>, 0, 0, F@_1, _) ->
+    #{bin_size => F@_1}.
 
 d_field_Load_bin_size(<<1:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, F@_2, TrUserData)
+		      F@_1, TrUserData)
     when N < 57 ->
     d_field_Load_bin_size(Rest, N + 7, X bsl N + Acc, F@_1,
-			  F@_2, TrUserData);
+			  TrUserData);
 d_field_Load_bin_size(<<0:1, X:7, Rest/binary>>, N, Acc,
-		      F@_1, _, TrUserData) ->
+		      _, TrUserData) ->
     {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
 			  Rest},
-    dfp_read_field_def_Load(RestF, 0, 0, F@_1, NewFValue,
+    dfp_read_field_def_Load(RestF, 0, 0, NewFValue,
 			    TrUserData).
 
 skip_varint_Load(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		 F@_1, F@_2, TrUserData) ->
-    skip_varint_Load(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+		 F@_1, TrUserData) ->
+    skip_varint_Load(Rest, Z1, Z2, F@_1, TrUserData);
 skip_varint_Load(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		 F@_1, F@_2, TrUserData) ->
-    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, F@_2,
-			    TrUserData).
+		 F@_1, TrUserData) ->
+    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, TrUserData).
 
 skip_length_delimited_Load(<<1:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, TrUserData)
+			   Acc, F@_1, TrUserData)
     when N < 57 ->
     skip_length_delimited_Load(Rest, N + 7, X bsl N + Acc,
-			       F@_1, F@_2, TrUserData);
+			       F@_1, TrUserData);
 skip_length_delimited_Load(<<0:1, X:7, Rest/binary>>, N,
-			   Acc, F@_1, F@_2, TrUserData) ->
+			   Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_Load(Rest2, 0, 0, F@_1, F@_2,
-			    TrUserData).
+    dfp_read_field_def_Load(Rest2, 0, 0, F@_1, TrUserData).
 
-skip_group_Load(Bin, FNum, Z2, F@_1, F@_2,
-		TrUserData) ->
+skip_group_Load(Bin, FNum, Z2, F@_1, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_Load(Rest, 0, Z2, F@_1, F@_2,
-			    TrUserData).
+    dfp_read_field_def_Load(Rest, 0, Z2, F@_1, TrUserData).
 
-skip_32_Load(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2,
+skip_32_Load(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
 	     TrUserData) ->
-    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, F@_2,
-			    TrUserData).
+    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_64_Load(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2,
+skip_64_Load(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 	     TrUserData) ->
-    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, F@_2,
-			    TrUserData).
+    dfp_read_field_def_Load(Rest, Z1, Z2, F@_1, TrUserData).
 
 d_msg_ReadOnlyTx(Bin, TrUserData) ->
     dfp_read_field_def_ReadOnlyTx(Bin, 0, 0,
@@ -1079,19 +1038,12 @@ merge_msg_Ping(_Prev, New, _TrUserData) -> New.
 -compile({nowarn_unused_function,merge_msg_Load/3}).
 merge_msg_Load(PMsg, NMsg, _) ->
     S1 = #{},
-    S2 = case {PMsg, NMsg} of
-	   {_, #{num_keys := NFnum_keys}} ->
-	       S1#{num_keys => NFnum_keys};
-	   {#{num_keys := PFnum_keys}, _} ->
-	       S1#{num_keys => PFnum_keys};
-	   _ -> S1
-	 end,
     case {PMsg, NMsg} of
       {_, #{bin_size := NFbin_size}} ->
-	  S2#{bin_size => NFbin_size};
+	  S1#{bin_size => NFbin_size};
       {#{bin_size := PFbin_size}, _} ->
-	  S2#{bin_size => PFbin_size};
-      _ -> S2
+	  S1#{bin_size => PFbin_size};
+      _ -> S1
     end.
 
 -compile({nowarn_unused_function,merge_msg_ReadOnlyTx/3}).
@@ -1189,17 +1141,11 @@ v_msg_Ping(X, Path, _TrUserData) ->
 -dialyzer({nowarn_function,v_msg_Load/3}).
 v_msg_Load(#{} = M, Path, TrUserData) ->
     case M of
-      #{num_keys := F1} ->
-	  v_type_uint32(F1, [num_keys | Path], TrUserData);
+      #{bin_size := F1} ->
+	  v_type_uint32(F1, [bin_size | Path], TrUserData);
       _ -> ok
     end,
-    case M of
-      #{bin_size := F2} ->
-	  v_type_uint32(F2, [bin_size | Path], TrUserData);
-      _ -> ok
-    end,
-    lists:foreach(fun (num_keys) -> ok;
-		      (bin_size) -> ok;
+    lists:foreach(fun (bin_size) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
@@ -1401,9 +1347,7 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 get_msg_defs() ->
     [{{msg, 'Ping'}, []},
      {{msg, 'Load'},
-      [#{name => num_keys, fnum => 1, rnum => 2,
-	 type => uint32, occurrence => optional, opts => []},
-       #{name => bin_size, fnum => 2, rnum => 3,
+      [#{name => bin_size, fnum => 1, rnum => 2,
 	 type => uint32, occurrence => optional, opts => []}]},
      {{msg, 'ReadOnlyTx'},
       [#{name => keys, fnum => 1, rnum => 2, type => bytes,
@@ -1459,9 +1403,7 @@ fetch_enum_def(EnumName) ->
 
 find_msg_def('Ping') -> [];
 find_msg_def('Load') ->
-    [#{name => num_keys, fnum => 1, rnum => 2,
-       type => uint32, occurrence => optional, opts => []},
-     #{name => bin_size, fnum => 2, rnum => 3,
+    [#{name => bin_size, fnum => 1, rnum => 2,
        type => uint32, occurrence => optional, opts => []}];
 find_msg_def('ReadOnlyTx') ->
     [#{name => keys, fnum => 1, rnum => 2, type => bytes,

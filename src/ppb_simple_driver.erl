@@ -5,7 +5,7 @@
          from_server_dec/1]).
 
 -export([ping/0,
-         load/2,
+         load/1,
          read_only/1,
          read_write/2]).
 
@@ -48,8 +48,8 @@ ping() ->
     Msg = simple_msgs:encode_msg(#{}, 'Ping'),
     encode_raw_bits('Ping', Msg).
 
-load(NumKeys, BinSize) ->
-    Msg = simple_msgs:encode_msg(#{num_keys => NumKeys, bin_size => BinSize}, 'Load'),
+load(BinSize) ->
+    Msg = simple_msgs:encode_msg(#{bin_size => BinSize}, 'Load'),
     encode_raw_bits('Load', Msg).
 
 -spec read_only([binary()]) -> binary().
