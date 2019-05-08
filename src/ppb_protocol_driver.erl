@@ -9,6 +9,7 @@
 -export([connect/0,
          read_request/4,
          prepare/4,
+         prepare_node/3,
          decide_abort/2,
          decide_commit/3]).
 
@@ -40,6 +41,17 @@ prepare(Partition, TxId, WriteSet, Version) ->
                                    writeset => term_to_binary(WriteSet),
                                    partition_version => Version}, 'Prepare'),
     encode_raw_bits('Prepare', Msg).
+
+-spec prepare_node(term(), term(), [{term(), term()}, ...]) -> msg().
+prepare_node(TxId, PrepareVC, Prepares) ->
+    PrepareMaps = [#{partition => term_to_binary(Partition),
+                     writeset => term_to_binary(WS)} || {Partition, WS} <- Prepares],
+
+    Msg = ?proto_msgs:encode_msg(#{transaction_id => term_to_binary(TxId),
+                                   prepare_vc => term_to_binary(PrepareVC),
+                                   prepares => PrepareMaps}, 'PrepareNode'),
+
+    encode_raw_bits('PrepareNode', Msg).
 
 -spec decide_abort(term(), term()) -> msg().
 decide_abort(Partition, TxId) ->
@@ -74,6 +86,19 @@ decode_from_client('Prepare', Msg) ->
     maps:map(fun
         (partition_version, V) -> V;
         (_, Value) -> binary_to_term(Value)
+    end, Map);
+
+decode_from_client('PrepareNode', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'PrepareNode'),
+    maps:map(fun(Key, Value) ->
+        case Key of
+            prepares ->
+                [begin
+                    maps:map(fun(_, V) -> binary_to_term(V) end, M)
+                 end || M <- Value];
+            _->
+                binary_to_term(Value)
+        end
     end, Map);
 
 decode_from_client('Decide', Msg) ->
@@ -114,6 +139,8 @@ to_client_enc('Prepare', {ok, From, SeqNumber}) ->
     encode_pb_msg('Vote', #{partition => term_to_binary(From),
                             payload => {seq_number, SeqNumber}}).
 
+%% TODO(borja): Implement to_client_enc for 'PrepareNode'
+
 %% @doc Generic client side decode
 from_server_dec(Bin) ->
     {Type, Msg} = decode_raw_bits(Bin),
@@ -140,6 +167,8 @@ decode_from_server('Vote', BinMsg) ->
         {seq_number, Num} ->
             {ok, binary_to_term(PartitionBytes), Num}
     end.
+
+%% TODO(borja): Implement decode_from_server for 'VoteBatch'
 
 %%====================================================================
 %% Internal functions
@@ -172,7 +201,9 @@ encode_msg_type('ReadRequest') -> 3;
 encode_msg_type('ReadReturn') -> 4;
 encode_msg_type('Prepare') -> 5;
 encode_msg_type('Vote') -> 6;
-encode_msg_type('Decide') -> 7.
+encode_msg_type('PrepareNode') -> 7;
+encode_msg_type('VoteBatch') -> 8;
+encode_msg_type('Decide') -> 9.
 
 
 %% @doc Get original message type
@@ -183,4 +214,6 @@ decode_type_num(3) -> 'ReadRequest';
 decode_type_num(4) -> 'ReadReturn';
 decode_type_num(5) -> 'Prepare';
 decode_type_num(6) -> 'Vote';
-decode_type_num(7) -> 'Decide'.
+decode_type_num(7) -> 'PrepareNode';
+decode_type_num(8) -> 'VoteBatch';
+decode_type_num(9) -> 'Decide'.
