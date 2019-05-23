@@ -63,13 +63,13 @@
 
 -type 'PrepareNode.PrepareSingle'() ::
       #{partition               => iodata(),        % = 1
-        writeset                => iodata()         % = 2
+        writeset                => iodata(),        % = 2
+        version                 => non_neg_integer() % = 3, 32 bits
        }.
 
 -type 'PrepareNode'() ::
       #{transaction_id          => iodata(),        % = 1
-        prepare_vc              => iodata(),        % = 2
-        prepares                => ['PrepareNode.PrepareSingle'()] % = 3
+        prepares                => ['PrepareNode.PrepareSingle'()] % = 2
        }.
 
 -type 'Vote'() ::
@@ -78,7 +78,7 @@
        }.
 
 -type 'VoteBatch'() ::
-      #{payload                 => {abort, non_neg_integer()} | {vote_vc, iodata()} % oneof
+      #{votes                   => ['Vote'()]       % = 1
        }.
 
 -type 'Decide.DecideAbort'() ::
@@ -350,16 +350,26 @@ e_msg_Prepare(#{} = M, Bin, TrUserData) ->
 	       end;
 	   _ -> Bin
 	 end,
+    B2 = case M of
+	   #{writeset := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+		 end
+	       end;
+	   _ -> B1
+	 end,
     case M of
-      #{writeset := F2} ->
+      #{version := F3} ->
 	  begin
-	    TrF2 = id(F2, TrUserData),
-	    case iolist_size(TrF2) of
-	      0 -> B1;
-	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+	    TrF3 = id(F3, TrUserData),
+	    if TrF3 =:= 0 -> B2;
+	       true -> e_varint(TrF3, <<B2/binary, 24>>, TrUserData)
 	    end
 	  end;
-      _ -> B1
+      _ -> B2
     end.
 
 e_msg_PrepareNode(Msg, TrUserData) ->
@@ -378,25 +388,14 @@ e_msg_PrepareNode(#{} = M, Bin, TrUserData) ->
 	       end;
 	   _ -> Bin
 	 end,
-    B2 = case M of
-	   #{prepare_vc := F2} ->
-	       begin
-		 TrF2 = id(F2, TrUserData),
-		 case iolist_size(TrF2) of
-		   0 -> B1;
-		   _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
-		 end
-	       end;
-	   _ -> B1
-	 end,
     case M of
-      #{prepares := F3} ->
-	  TrF3 = id(F3, TrUserData),
-	  if TrF3 == [] -> B2;
+      #{prepares := F2} ->
+	  TrF2 = id(F2, TrUserData),
+	  if TrF2 == [] -> B1;
 	     true ->
-		 e_field_PrepareNode_prepares(TrF3, B2, TrUserData)
+		 e_field_PrepareNode_prepares(TrF2, B1, TrUserData)
 	  end;
-      _ -> B2
+      _ -> B1
     end.
 
 e_msg_Vote(Msg, TrUserData) ->
@@ -438,18 +437,10 @@ e_msg_VoteBatch(Msg, TrUserData) ->
 
 e_msg_VoteBatch(#{} = M, Bin, TrUserData) ->
     case M of
-      #{payload := F1} ->
-	  case id(F1, TrUserData) of
-	    {abort, TF1} ->
-		begin
-		  TrTF1 = id(TF1, TrUserData),
-		  e_varint(TrTF1, <<Bin/binary, 8>>, TrUserData)
-		end;
-	    {vote_vc, TF1} ->
-		begin
-		  TrTF1 = id(TF1, TrUserData),
-		  e_type_bytes(TrTF1, <<Bin/binary, 18>>, TrUserData)
-		end
+      #{votes := F1} ->
+	  TrF1 = id(F1, TrUserData),
+	  if TrF1 == [] -> Bin;
+	     true -> e_field_VoteBatch_votes(TrF1, Bin, TrUserData)
 	  end;
       _ -> Bin
     end.
@@ -533,13 +524,26 @@ e_mfield_PrepareNode_prepares(Msg, Bin, TrUserData) ->
 
 e_field_PrepareNode_prepares([Elem | Rest], Bin,
 			     TrUserData) ->
-    Bin2 = <<Bin/binary, 26>>,
+    Bin2 = <<Bin/binary, 18>>,
     Bin3 = e_mfield_PrepareNode_prepares(id(Elem,
 					    TrUserData),
 					 Bin2, TrUserData),
     e_field_PrepareNode_prepares(Rest, Bin3, TrUserData);
 e_field_PrepareNode_prepares([], Bin, _TrUserData) ->
     Bin.
+
+e_mfield_VoteBatch_votes(Msg, Bin, TrUserData) ->
+    SubBin = e_msg_Vote(Msg, <<>>, TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
+e_field_VoteBatch_votes([Elem | Rest], Bin,
+			TrUserData) ->
+    Bin2 = <<Bin/binary, 10>>,
+    Bin3 = e_mfield_VoteBatch_votes(id(Elem, TrUserData),
+				    Bin2, TrUserData),
+    e_field_VoteBatch_votes(Rest, Bin3, TrUserData);
+e_field_VoteBatch_votes([], Bin, _TrUserData) -> Bin.
 
 e_mfield_Decide_abort(_Msg, Bin, _TrUserData) ->
     <<Bin/binary, 0>>.
@@ -1596,272 +1600,292 @@ skip_64_Prepare(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
     'dfp_read_field_def_PrepareNode.PrepareSingle'(Bin, 0,
 						   0, id(<<>>, TrUserData),
 						   id(<<>>, TrUserData),
+						   id(0, TrUserData),
 						   TrUserData).
 
 'dfp_read_field_def_PrepareNode.PrepareSingle'(<<10,
 						 Rest/binary>>,
-					       Z1, Z2, F@_1, F@_2,
+					       Z1, Z2, F@_1, F@_2, F@_3,
 					       TrUserData) ->
     'd_field_PrepareNode.PrepareSingle_partition'(Rest, Z1,
-						  Z2, F@_1, F@_2, TrUserData);
+						  Z2, F@_1, F@_2, F@_3,
+						  TrUserData);
 'dfp_read_field_def_PrepareNode.PrepareSingle'(<<18,
 						 Rest/binary>>,
-					       Z1, Z2, F@_1, F@_2,
+					       Z1, Z2, F@_1, F@_2, F@_3,
 					       TrUserData) ->
     'd_field_PrepareNode.PrepareSingle_writeset'(Rest, Z1,
-						 Z2, F@_1, F@_2, TrUserData);
+						 Z2, F@_1, F@_2, F@_3,
+						 TrUserData);
+'dfp_read_field_def_PrepareNode.PrepareSingle'(<<24,
+						 Rest/binary>>,
+					       Z1, Z2, F@_1, F@_2, F@_3,
+					       TrUserData) ->
+    'd_field_PrepareNode.PrepareSingle_version'(Rest, Z1,
+						Z2, F@_1, F@_2, F@_3,
+						TrUserData);
 'dfp_read_field_def_PrepareNode.PrepareSingle'(<<>>, 0,
-					       0, F@_1, F@_2, _) ->
-    #{partition => F@_1, writeset => F@_2};
+					       0, F@_1, F@_2, F@_3, _) ->
+    #{partition => F@_1, writeset => F@_2, version => F@_3};
 'dfp_read_field_def_PrepareNode.PrepareSingle'(Other,
-					       Z1, Z2, F@_1, F@_2,
+					       Z1, Z2, F@_1, F@_2, F@_3,
 					       TrUserData) ->
     'dg_read_field_def_PrepareNode.PrepareSingle'(Other, Z1,
-						  Z2, F@_1, F@_2, TrUserData).
+						  Z2, F@_1, F@_2, F@_3,
+						  TrUserData).
 
 'dg_read_field_def_PrepareNode.PrepareSingle'(<<1:1,
 						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, TrUserData)
+					      N, Acc, F@_1, F@_2, F@_3,
+					      TrUserData)
     when N < 32 - 7 ->
     'dg_read_field_def_PrepareNode.PrepareSingle'(Rest,
 						  N + 7, X bsl N + Acc, F@_1,
-						  F@_2, TrUserData);
+						  F@_2, F@_3, TrUserData);
 'dg_read_field_def_PrepareNode.PrepareSingle'(<<0:1,
 						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, TrUserData) ->
+					      N, Acc, F@_1, F@_2, F@_3,
+					      TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
 	  'd_field_PrepareNode.PrepareSingle_partition'(Rest, 0,
-							0, F@_1, F@_2,
+							0, F@_1, F@_2, F@_3,
 							TrUserData);
       18 ->
 	  'd_field_PrepareNode.PrepareSingle_writeset'(Rest, 0, 0,
-						       F@_1, F@_2, TrUserData);
+						       F@_1, F@_2, F@_3,
+						       TrUserData);
+      24 ->
+	  'd_field_PrepareNode.PrepareSingle_version'(Rest, 0, 0,
+						      F@_1, F@_2, F@_3,
+						      TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
 		'skip_varint_PrepareNode.PrepareSingle'(Rest, 0, 0,
-							F@_1, F@_2, TrUserData);
+							F@_1, F@_2, F@_3,
+							TrUserData);
 	    1 ->
 		'skip_64_PrepareNode.PrepareSingle'(Rest, 0, 0, F@_1,
-						    F@_2, TrUserData);
+						    F@_2, F@_3, TrUserData);
 	    2 ->
 		'skip_length_delimited_PrepareNode.PrepareSingle'(Rest,
 								  0, 0, F@_1,
-								  F@_2,
+								  F@_2, F@_3,
 								  TrUserData);
 	    3 ->
 		'skip_group_PrepareNode.PrepareSingle'(Rest, Key bsr 3,
-						       0, F@_1, F@_2,
+						       0, F@_1, F@_2, F@_3,
 						       TrUserData);
 	    5 ->
 		'skip_32_PrepareNode.PrepareSingle'(Rest, 0, 0, F@_1,
-						    F@_2, TrUserData)
+						    F@_2, F@_3, TrUserData)
 	  end
     end;
 'dg_read_field_def_PrepareNode.PrepareSingle'(<<>>, 0,
-					      0, F@_1, F@_2, _) ->
-    #{partition => F@_1, writeset => F@_2}.
+					      0, F@_1, F@_2, F@_3, _) ->
+    #{partition => F@_1, writeset => F@_2, version => F@_3}.
 
 'd_field_PrepareNode.PrepareSingle_partition'(<<1:1,
 						X:7, Rest/binary>>,
-					      N, Acc, F@_1, F@_2, TrUserData)
+					      N, Acc, F@_1, F@_2, F@_3,
+					      TrUserData)
     when N < 57 ->
     'd_field_PrepareNode.PrepareSingle_partition'(Rest,
 						  N + 7, X bsl N + Acc, F@_1,
-						  F@_2, TrUserData);
+						  F@_2, F@_3, TrUserData);
 'd_field_PrepareNode.PrepareSingle_partition'(<<0:1,
 						X:7, Rest/binary>>,
-					      N, Acc, _, F@_2, TrUserData) ->
+					      N, Acc, _, F@_2, F@_3,
+					      TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     'dfp_read_field_def_PrepareNode.PrepareSingle'(RestF, 0,
-						   0, NewFValue, F@_2,
+						   0, NewFValue, F@_2, F@_3,
 						   TrUserData).
 
 'd_field_PrepareNode.PrepareSingle_writeset'(<<1:1, X:7,
 					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, TrUserData)
+					     N, Acc, F@_1, F@_2, F@_3,
+					     TrUserData)
     when N < 57 ->
     'd_field_PrepareNode.PrepareSingle_writeset'(Rest,
 						 N + 7, X bsl N + Acc, F@_1,
-						 F@_2, TrUserData);
+						 F@_2, F@_3, TrUserData);
 'd_field_PrepareNode.PrepareSingle_writeset'(<<0:1, X:7,
 					       Rest/binary>>,
-					     N, Acc, F@_1, _, TrUserData) ->
+					     N, Acc, F@_1, _, F@_3,
+					     TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     'dfp_read_field_def_PrepareNode.PrepareSingle'(RestF, 0,
-						   0, F@_1, NewFValue,
+						   0, F@_1, NewFValue, F@_3,
+						   TrUserData).
+
+'d_field_PrepareNode.PrepareSingle_version'(<<1:1, X:7,
+					      Rest/binary>>,
+					    N, Acc, F@_1, F@_2, F@_3,
+					    TrUserData)
+    when N < 57 ->
+    'd_field_PrepareNode.PrepareSingle_version'(Rest, N + 7,
+						X bsl N + Acc, F@_1, F@_2, F@_3,
+						TrUserData);
+'d_field_PrepareNode.PrepareSingle_version'(<<0:1, X:7,
+					      Rest/binary>>,
+					    N, Acc, F@_1, F@_2, _,
+					    TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+			  Rest},
+    'dfp_read_field_def_PrepareNode.PrepareSingle'(RestF, 0,
+						   0, F@_1, F@_2, NewFValue,
 						   TrUserData).
 
 'skip_varint_PrepareNode.PrepareSingle'(<<1:1, _:7,
 					  Rest/binary>>,
-					Z1, Z2, F@_1, F@_2, TrUserData) ->
+					Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
     'skip_varint_PrepareNode.PrepareSingle'(Rest, Z1, Z2,
-					    F@_1, F@_2, TrUserData);
+					    F@_1, F@_2, F@_3, TrUserData);
 'skip_varint_PrepareNode.PrepareSingle'(<<0:1, _:7,
 					  Rest/binary>>,
-					Z1, Z2, F@_1, F@_2, TrUserData) ->
+					Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
     'dfp_read_field_def_PrepareNode.PrepareSingle'(Rest, Z1,
-						   Z2, F@_1, F@_2, TrUserData).
+						   Z2, F@_1, F@_2, F@_3,
+						   TrUserData).
 
 'skip_length_delimited_PrepareNode.PrepareSingle'(<<1:1,
 						    X:7, Rest/binary>>,
-						  N, Acc, F@_1, F@_2,
+						  N, Acc, F@_1, F@_2, F@_3,
 						  TrUserData)
     when N < 57 ->
     'skip_length_delimited_PrepareNode.PrepareSingle'(Rest,
 						      N + 7, X bsl N + Acc,
-						      F@_1, F@_2, TrUserData);
+						      F@_1, F@_2, F@_3,
+						      TrUserData);
 'skip_length_delimited_PrepareNode.PrepareSingle'(<<0:1,
 						    X:7, Rest/binary>>,
-						  N, Acc, F@_1, F@_2,
+						  N, Acc, F@_1, F@_2, F@_3,
 						  TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     'dfp_read_field_def_PrepareNode.PrepareSingle'(Rest2, 0,
-						   0, F@_1, F@_2, TrUserData).
+						   0, F@_1, F@_2, F@_3,
+						   TrUserData).
 
 'skip_group_PrepareNode.PrepareSingle'(Bin, FNum, Z2,
-				       F@_1, F@_2, TrUserData) ->
+				       F@_1, F@_2, F@_3, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
     'dfp_read_field_def_PrepareNode.PrepareSingle'(Rest, 0,
-						   Z2, F@_1, F@_2, TrUserData).
+						   Z2, F@_1, F@_2, F@_3,
+						   TrUserData).
 
 'skip_32_PrepareNode.PrepareSingle'(<<_:32,
 				      Rest/binary>>,
-				    Z1, Z2, F@_1, F@_2, TrUserData) ->
+				    Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
     'dfp_read_field_def_PrepareNode.PrepareSingle'(Rest, Z1,
-						   Z2, F@_1, F@_2, TrUserData).
+						   Z2, F@_1, F@_2, F@_3,
+						   TrUserData).
 
 'skip_64_PrepareNode.PrepareSingle'(<<_:64,
 				      Rest/binary>>,
-				    Z1, Z2, F@_1, F@_2, TrUserData) ->
+				    Z1, Z2, F@_1, F@_2, F@_3, TrUserData) ->
     'dfp_read_field_def_PrepareNode.PrepareSingle'(Rest, Z1,
-						   Z2, F@_1, F@_2, TrUserData).
+						   Z2, F@_1, F@_2, F@_3,
+						   TrUserData).
 
 d_msg_PrepareNode(Bin, TrUserData) ->
     dfp_read_field_def_PrepareNode(Bin, 0, 0,
-				   id(<<>>, TrUserData), id(<<>>, TrUserData),
-				   id([], TrUserData), TrUserData).
+				   id(<<>>, TrUserData), id([], TrUserData),
+				   TrUserData).
 
 dfp_read_field_def_PrepareNode(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+			       Z2, F@_1, F@_2, TrUserData) ->
     d_field_PrepareNode_transaction_id(Rest, Z1, Z2, F@_1,
-				       F@_2, F@_3, TrUserData);
+				       F@_2, TrUserData);
 dfp_read_field_def_PrepareNode(<<18, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    d_field_PrepareNode_prepare_vc(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData);
-dfp_read_field_def_PrepareNode(<<26, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+			       Z2, F@_1, F@_2, TrUserData) ->
     d_field_PrepareNode_prepares(Rest, Z1, Z2, F@_1, F@_2,
-				 F@_3, TrUserData);
-dfp_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, F@_2,
-			       R1, TrUserData) ->
-    S1 = #{transaction_id => F@_1, prepare_vc => F@_2},
+				 TrUserData);
+dfp_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, R1,
+			       TrUserData) ->
+    S1 = #{transaction_id => F@_1},
     if R1 == '$undef' -> S1;
        true -> S1#{prepares => lists_reverse(R1, TrUserData)}
     end;
 dfp_read_field_def_PrepareNode(Other, Z1, Z2, F@_1,
-			       F@_2, F@_3, TrUserData) ->
+			       F@_2, TrUserData) ->
     dg_read_field_def_PrepareNode(Other, Z1, Z2, F@_1, F@_2,
-				  F@_3, TrUserData).
+				  TrUserData).
 
 dg_read_field_def_PrepareNode(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, TrUserData)
+			      N, Acc, F@_1, F@_2, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_PrepareNode(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+				  X bsl N + Acc, F@_1, F@_2, TrUserData);
 dg_read_field_def_PrepareNode(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+			      N, Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
 	  d_field_PrepareNode_transaction_id(Rest, 0, 0, F@_1,
-					     F@_2, F@_3, TrUserData);
+					     F@_2, TrUserData);
       18 ->
-	  d_field_PrepareNode_prepare_vc(Rest, 0, 0, F@_1, F@_2,
-					 F@_3, TrUserData);
-      26 ->
 	  d_field_PrepareNode_prepares(Rest, 0, 0, F@_1, F@_2,
-				       F@_3, TrUserData);
+				       TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_PrepareNode(Rest, 0, 0, F@_1, F@_2, F@_3,
+		skip_varint_PrepareNode(Rest, 0, 0, F@_1, F@_2,
 					TrUserData);
 	    1 ->
-		skip_64_PrepareNode(Rest, 0, 0, F@_1, F@_2, F@_3,
-				    TrUserData);
+		skip_64_PrepareNode(Rest, 0, 0, F@_1, F@_2, TrUserData);
 	    2 ->
 		skip_length_delimited_PrepareNode(Rest, 0, 0, F@_1,
-						  F@_2, F@_3, TrUserData);
+						  F@_2, TrUserData);
 	    3 ->
 		skip_group_PrepareNode(Rest, Key bsr 3, 0, F@_1, F@_2,
-				       F@_3, TrUserData);
+				       TrUserData);
 	    5 ->
-		skip_32_PrepareNode(Rest, 0, 0, F@_1, F@_2, F@_3,
-				    TrUserData)
+		skip_32_PrepareNode(Rest, 0, 0, F@_1, F@_2, TrUserData)
 	  end
     end;
-dg_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, F@_2,
-			      R1, TrUserData) ->
-    S1 = #{transaction_id => F@_1, prepare_vc => F@_2},
+dg_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, R1,
+			      TrUserData) ->
+    S1 = #{transaction_id => F@_1},
     if R1 == '$undef' -> S1;
        true -> S1#{prepares => lists_reverse(R1, TrUserData)}
     end.
 
 d_field_PrepareNode_transaction_id(<<1:1, X:7,
 				     Rest/binary>>,
-				   N, Acc, F@_1, F@_2, F@_3, TrUserData)
+				   N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
     d_field_PrepareNode_transaction_id(Rest, N + 7,
-				       X bsl N + Acc, F@_1, F@_2, F@_3,
-				       TrUserData);
+				       X bsl N + Acc, F@_1, F@_2, TrUserData);
 d_field_PrepareNode_transaction_id(<<0:1, X:7,
 				     Rest/binary>>,
-				   N, Acc, _, F@_2, F@_3, TrUserData) ->
+				   N, Acc, _, F@_2, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_PrepareNode(RestF, 0, 0, NewFValue,
-				   F@_2, F@_3, TrUserData).
-
-d_field_PrepareNode_prepare_vc(<<1:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, F@_2, F@_3, TrUserData)
-    when N < 57 ->
-    d_field_PrepareNode_prepare_vc(Rest, N + 7,
-				   X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_PrepareNode_prepare_vc(<<0:1, X:7,
-				 Rest/binary>>,
-			       N, Acc, F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin
-			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {id(binary:copy(Bytes), TrUserData), Rest2}
-			 end,
-    dfp_read_field_def_PrepareNode(RestF, 0, 0, F@_1,
-				   NewFValue, F@_3, TrUserData).
+				   F@_2, TrUserData).
 
 d_field_PrepareNode_prepares(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
+			     N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
     d_field_PrepareNode_prepares(Rest, N + 7, X bsl N + Acc,
-				 F@_1, F@_2, F@_3, TrUserData);
+				 F@_1, F@_2, TrUserData);
 d_field_PrepareNode_prepares(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, Prev, TrUserData) ->
+			     N, Acc, F@_1, Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bs:Len/binary, Rest2/binary>> = Rest,
@@ -1870,49 +1894,48 @@ d_field_PrepareNode_prepares(<<0:1, X:7, Rest/binary>>,
 			       TrUserData),
 			    Rest2}
 			 end,
-    dfp_read_field_def_PrepareNode(RestF, 0, 0, F@_1, F@_2,
+    dfp_read_field_def_PrepareNode(RestF, 0, 0, F@_1,
 				   cons(NewFValue, Prev, TrUserData),
 				   TrUserData).
 
 skip_varint_PrepareNode(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    skip_varint_PrepareNode(Rest, Z1, Z2, F@_1, F@_2, F@_3,
+			Z2, F@_1, F@_2, TrUserData) ->
+    skip_varint_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
 			    TrUserData);
 skip_varint_PrepareNode(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, F@_3, TrUserData) ->
+			Z2, F@_1, F@_2, TrUserData) ->
     dfp_read_field_def_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
+				   TrUserData).
 
 skip_length_delimited_PrepareNode(<<1:1, X:7,
 				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, F@_3, TrUserData)
+				  N, Acc, F@_1, F@_2, TrUserData)
     when N < 57 ->
     skip_length_delimited_PrepareNode(Rest, N + 7,
-				      X bsl N + Acc, F@_1, F@_2, F@_3,
-				      TrUserData);
+				      X bsl N + Acc, F@_1, F@_2, TrUserData);
 skip_length_delimited_PrepareNode(<<0:1, X:7,
 				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+				  N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_PrepareNode(Rest2, 0, 0, F@_1, F@_2,
-				   F@_3, TrUserData).
+				   TrUserData).
 
-skip_group_PrepareNode(Bin, FNum, Z2, F@_1, F@_2, F@_3,
+skip_group_PrepareNode(Bin, FNum, Z2, F@_1, F@_2,
 		       TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
     dfp_read_field_def_PrepareNode(Rest, 0, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
+				   TrUserData).
 
 skip_32_PrepareNode(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, F@_3, TrUserData) ->
+		    F@_2, TrUserData) ->
     dfp_read_field_def_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
+				   TrUserData).
 
 skip_64_PrepareNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, F@_3, TrUserData) ->
+		    F@_2, TrUserData) ->
     dfp_read_field_def_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
-				   F@_3, TrUserData).
+				   TrUserData).
 
 d_msg_Vote(Bin, TrUserData) ->
     dfp_read_field_def_Vote(Bin, 0, 0, id(<<>>, TrUserData),
@@ -2055,19 +2078,16 @@ skip_64_Vote(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2,
 
 d_msg_VoteBatch(Bin, TrUserData) ->
     dfp_read_field_def_VoteBatch(Bin, 0, 0,
-				 id('$undef', TrUserData), TrUserData).
+				 id([], TrUserData), TrUserData).
 
-dfp_read_field_def_VoteBatch(<<8, Rest/binary>>, Z1, Z2,
-			     F@_1, TrUserData) ->
-    d_field_VoteBatch_abort(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_VoteBatch(<<18, Rest/binary>>, Z1,
+dfp_read_field_def_VoteBatch(<<10, Rest/binary>>, Z1,
 			     Z2, F@_1, TrUserData) ->
-    d_field_VoteBatch_vote_vc(Rest, Z1, Z2, F@_1,
-			      TrUserData);
-dfp_read_field_def_VoteBatch(<<>>, 0, 0, F@_1, _) ->
+    d_field_VoteBatch_votes(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_VoteBatch(<<>>, 0, 0, R1,
+			     TrUserData) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{payload => F@_1}
+    if R1 == '$undef' -> S1;
+       true -> S1#{votes => lists_reverse(R1, TrUserData)}
     end;
 dfp_read_field_def_VoteBatch(Other, Z1, Z2, F@_1,
 			     TrUserData) ->
@@ -2083,10 +2103,8 @@ dg_read_field_def_VoteBatch(<<0:1, X:7, Rest/binary>>,
 			    N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-      8 ->
-	  d_field_VoteBatch_abort(Rest, 0, 0, F@_1, TrUserData);
-      18 ->
-	  d_field_VoteBatch_vote_vc(Rest, 0, 0, F@_1, TrUserData);
+      10 ->
+	  d_field_VoteBatch_votes(Rest, 0, 0, F@_1, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
@@ -2101,40 +2119,27 @@ dg_read_field_def_VoteBatch(<<0:1, X:7, Rest/binary>>,
 	    5 -> skip_32_VoteBatch(Rest, 0, 0, F@_1, TrUserData)
 	  end
     end;
-dg_read_field_def_VoteBatch(<<>>, 0, 0, F@_1, _) ->
+dg_read_field_def_VoteBatch(<<>>, 0, 0, R1,
+			    TrUserData) ->
     S1 = #{},
-    if F@_1 == '$undef' -> S1;
-       true -> S1#{payload => F@_1}
+    if R1 == '$undef' -> S1;
+       true -> S1#{votes => lists_reverse(R1, TrUserData)}
     end.
 
-d_field_VoteBatch_abort(<<1:1, X:7, Rest/binary>>, N,
+d_field_VoteBatch_votes(<<1:1, X:7, Rest/binary>>, N,
 			Acc, F@_1, TrUserData)
     when N < 57 ->
-    d_field_VoteBatch_abort(Rest, N + 7, X bsl N + Acc,
+    d_field_VoteBatch_votes(Rest, N + 7, X bsl N + Acc,
 			    F@_1, TrUserData);
-d_field_VoteBatch_abort(<<0:1, X:7, Rest/binary>>, N,
-			Acc, _, TrUserData) ->
-    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
-			  Rest},
-    dfp_read_field_def_VoteBatch(RestF, 0, 0,
-				 id({abort, NewFValue}, TrUserData),
-				 TrUserData).
-
-d_field_VoteBatch_vote_vc(<<1:1, X:7, Rest/binary>>, N,
-			  Acc, F@_1, TrUserData)
-    when N < 57 ->
-    d_field_VoteBatch_vote_vc(Rest, N + 7, X bsl N + Acc,
-			      F@_1, TrUserData);
-d_field_VoteBatch_vote_vc(<<0:1, X:7, Rest/binary>>, N,
-			  Acc, _, TrUserData) ->
+d_field_VoteBatch_votes(<<0:1, X:7, Rest/binary>>, N,
+			Acc, Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
-			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
-			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			   <<Bs:Len/binary, Rest2/binary>> = Rest,
+			   {id(d_msg_Vote(Bs, TrUserData), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_VoteBatch(RestF, 0, 0,
-				 id({vote_vc, NewFValue}, TrUserData),
-				 TrUserData).
+				 cons(NewFValue, Prev, TrUserData), TrUserData).
 
 skip_varint_VoteBatch(<<1:1, _:7, Rest/binary>>, Z1, Z2,
 		      F@_1, TrUserData) ->
@@ -2787,12 +2792,19 @@ merge_msg_Prepare(PMsg, NMsg, _) ->
 	       S1#{partition => PFpartition};
 	   _ -> S1
 	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{writeset := NFwriteset}} ->
+	       S2#{writeset => NFwriteset};
+	   {#{writeset := PFwriteset}, _} ->
+	       S2#{writeset => PFwriteset};
+	   _ -> S2
+	 end,
     case {PMsg, NMsg} of
-      {_, #{writeset := NFwriteset}} ->
-	  S2#{writeset => NFwriteset};
-      {#{writeset := PFwriteset}, _} ->
-	  S2#{writeset => PFwriteset};
-      _ -> S2
+      {_, #{version := NFversion}} ->
+	  S3#{version => NFversion};
+      {#{version := PFversion}, _} ->
+	  S3#{version => PFversion};
+      _ -> S3
     end.
 
 -compile({nowarn_unused_function,merge_msg_PrepareNode/3}).
@@ -2805,23 +2817,16 @@ merge_msg_PrepareNode(PMsg, NMsg, TrUserData) ->
 	       S1#{transaction_id => PFtransaction_id};
 	   _ -> S1
 	 end,
-    S3 = case {PMsg, NMsg} of
-	   {_, #{prepare_vc := NFprepare_vc}} ->
-	       S2#{prepare_vc => NFprepare_vc};
-	   {#{prepare_vc := PFprepare_vc}, _} ->
-	       S2#{prepare_vc => PFprepare_vc};
-	   _ -> S2
-	 end,
     case {PMsg, NMsg} of
       {#{prepares := PFprepares},
        #{prepares := NFprepares}} ->
-	  S3#{prepares =>
+	  S2#{prepares =>
 		  'erlang_++'(PFprepares, NFprepares, TrUserData)};
       {_, #{prepares := NFprepares}} ->
-	  S3#{prepares => NFprepares};
+	  S2#{prepares => NFprepares};
       {#{prepares := PFprepares}, _} ->
-	  S3#{prepares => PFprepares};
-      {_, _} -> S3
+	  S2#{prepares => PFprepares};
+      {_, _} -> S2
     end.
 
 -compile({nowarn_unused_function,merge_msg_Vote/3}).
@@ -2843,14 +2848,14 @@ merge_msg_Vote(PMsg, NMsg, _) ->
     end.
 
 -compile({nowarn_unused_function,merge_msg_VoteBatch/3}).
-merge_msg_VoteBatch(PMsg, NMsg, _) ->
+merge_msg_VoteBatch(PMsg, NMsg, TrUserData) ->
     S1 = #{},
     case {PMsg, NMsg} of
-      {_, #{payload := NFpayload}} ->
-	  S1#{payload => NFpayload};
-      {#{payload := PFpayload}, _} ->
-	  S1#{payload => PFpayload};
-      _ -> S1
+      {#{votes := PFvotes}, #{votes := NFvotes}} ->
+	  S1#{votes => 'erlang_++'(PFvotes, NFvotes, TrUserData)};
+      {_, #{votes := NFvotes}} -> S1#{votes => NFvotes};
+      {#{votes := PFvotes}, _} -> S1#{votes => PFvotes};
+      {_, _} -> S1
     end.
 
 -compile({nowarn_unused_function,'merge_msg_Decide.DecideAbort'/3}).
@@ -3144,8 +3149,14 @@ v_msg_Prepare(X, Path, _TrUserData) ->
 	  v_type_bytes(F2, [writeset | Path], TrUserData);
       _ -> ok
     end,
+    case M of
+      #{version := F3} ->
+	  v_type_uint64(F3, [version | Path], TrUserData);
+      _ -> ok
+    end,
     lists:foreach(fun (partition) -> ok;
 		      (writeset) -> ok;
+		      (version) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
@@ -3171,27 +3182,21 @@ v_msg_PrepareNode(#{} = M, Path, TrUserData) ->
       _ -> ok
     end,
     case M of
-      #{prepare_vc := F2} ->
-	  v_type_bytes(F2, [prepare_vc | Path], TrUserData);
-      _ -> ok
-    end,
-    case M of
-      #{prepares := F3} ->
-	  if is_list(F3) ->
+      #{prepares := F2} ->
+	  if is_list(F2) ->
 		 _ = ['v_msg_PrepareNode.PrepareSingle'(Elem,
 							[prepares | Path],
 							TrUserData)
-		      || Elem <- F3],
+		      || Elem <- F2],
 		 ok;
 	     true ->
 		 mk_type_error({invalid_list_of,
 				{msg, 'PrepareNode.PrepareSingle'}},
-			       F3, [prepares | Path])
+			       F2, [prepares | Path])
 	  end;
       _ -> ok
     end,
     lists:foreach(fun (transaction_id) -> ok;
-		      (prepare_vc) -> ok;
 		      (prepares) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -3242,16 +3247,18 @@ v_msg_Vote(X, Path, _TrUserData) ->
 -dialyzer({nowarn_function,v_msg_VoteBatch/3}).
 v_msg_VoteBatch(#{} = M, Path, TrUserData) ->
     case M of
-      #{payload := {abort, OF1}} ->
-	  v_type_uint32(OF1, [abort, payload | Path], TrUserData);
-      #{payload := {vote_vc, OF1}} ->
-	  v_type_bytes(OF1, [vote_vc, payload | Path],
-		       TrUserData);
-      #{payload := F1} ->
-	  mk_type_error(invalid_oneof, F1, [payload | Path]);
+      #{votes := F1} ->
+	  if is_list(F1) ->
+		 _ = [v_msg_Vote(Elem, [votes | Path], TrUserData)
+		      || Elem <- F1],
+		 ok;
+	     true ->
+		 mk_type_error({invalid_list_of, {msg, 'Vote'}}, F1,
+			       [votes | Path])
+	  end;
       _ -> ok
     end,
-    lists:foreach(fun (payload) -> ok;
+    lists:foreach(fun (votes) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
 		  end,
@@ -3465,13 +3472,13 @@ get_msg_defs() ->
       [#{name => partition, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
        #{name => writeset, fnum => 2, rnum => 3, type => bytes,
+	 occurrence => optional, opts => []},
+       #{name => version, fnum => 3, rnum => 4, type => uint64,
 	 occurrence => optional, opts => []}]},
      {{msg, 'PrepareNode'},
       [#{name => transaction_id, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
-       #{name => prepare_vc, fnum => 2, rnum => 3,
-	 type => bytes, occurrence => optional, opts => []},
-       #{name => prepares, fnum => 3, rnum => 4,
+       #{name => prepares, fnum => 2, rnum => 3,
 	 type => {msg, 'PrepareNode.PrepareSingle'},
 	 occurrence => repeated, opts => []}]},
      {{msg, 'Vote'},
@@ -3484,12 +3491,9 @@ get_msg_defs() ->
 	      #{name => seq_number, fnum => 3, rnum => 3,
 		type => uint64, occurrence => optional, opts => []}]}]},
      {{msg, 'VoteBatch'},
-      [#{name => payload, rnum => 2,
-	 fields =>
-	     [#{name => abort, fnum => 1, rnum => 2, type => uint32,
-		occurrence => optional, opts => []},
-	      #{name => vote_vc, fnum => 2, rnum => 2, type => bytes,
-		occurrence => optional, opts => []}]}]},
+      [#{name => votes, fnum => 1, rnum => 2,
+	 type => {msg, 'Vote'}, occurrence => repeated,
+	 opts => []}]},
      {{msg, 'Decide.DecideAbort'}, []},
      {{msg, 'Decide.DecideCommit'},
       [#{name => commit_vc, fnum => 1, rnum => 2,
@@ -3586,13 +3590,13 @@ find_msg_def('PrepareNode.PrepareSingle') ->
     [#{name => partition, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
      #{name => writeset, fnum => 2, rnum => 3, type => bytes,
+       occurrence => optional, opts => []},
+     #{name => version, fnum => 3, rnum => 4, type => uint64,
        occurrence => optional, opts => []}];
 find_msg_def('PrepareNode') ->
     [#{name => transaction_id, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
-     #{name => prepare_vc, fnum => 2, rnum => 3,
-       type => bytes, occurrence => optional, opts => []},
-     #{name => prepares, fnum => 3, rnum => 4,
+     #{name => prepares, fnum => 2, rnum => 3,
        type => {msg, 'PrepareNode.PrepareSingle'},
        occurrence => repeated, opts => []}];
 find_msg_def('Vote') ->
@@ -3605,12 +3609,9 @@ find_msg_def('Vote') ->
 	    #{name => seq_number, fnum => 3, rnum => 3,
 	      type => uint64, occurrence => optional, opts => []}]}];
 find_msg_def('VoteBatch') ->
-    [#{name => payload, rnum => 2,
-       fields =>
-	   [#{name => abort, fnum => 1, rnum => 2, type => uint32,
-	      occurrence => optional, opts => []},
-	    #{name => vote_vc, fnum => 2, rnum => 2, type => bytes,
-	      occurrence => optional, opts => []}]}];
+    [#{name => votes, fnum => 1, rnum => 2,
+       type => {msg, 'Vote'}, occurrence => repeated,
+       opts => []}];
 find_msg_def('Decide.DecideAbort') -> [];
 find_msg_def('Decide.DecideCommit') ->
     [#{name => commit_vc, fnum => 1, rnum => 2,

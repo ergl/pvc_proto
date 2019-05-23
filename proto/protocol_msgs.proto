@@ -66,15 +66,12 @@ message PrepareNode {
     message PrepareSingle {
         bytes partition = 1;
         bytes writeset = 2;
+        uint64 version = 3;
     }
 
-    // Don't repeated transaction id, redundant
+    // Don't repeat transaction id, redundant
     bytes transaction_id = 1;
-    // Entire VCdep, server will get the appropriate
-    // versions for the partitions
-    bytes prepare_vc = 2;
-    // Actual prepare payload
-    repeated PrepareSingle prepares = 3;
+    repeated PrepareSingle prepares = 2;
 }
 
 // Votes casted by partitions during the prepare phase
@@ -90,12 +87,7 @@ message Vote {
 
 // Vote msg aggregation by all the partitions of a node
 message VoteBatch {
-    oneof payload {
-        uint32 abort = 1;
-        // Vote VC with the sequence numbers filled out
-        // by the server
-        bytes vote_vc = 2;
-    }
+    repeated Vote votes = 1;
 }
 
 //  Decide phase
