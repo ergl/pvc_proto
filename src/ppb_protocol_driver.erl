@@ -9,7 +9,7 @@
 -export([connect/0,
          read_request/4,
          prepare/4,
-         prepare_node/3,
+         prepare_node/2,
          decide_abort/2,
          decide_commit/3]).
 
@@ -42,13 +42,13 @@ prepare(Partition, TxId, WriteSet, Version) ->
                                    partition_version => Version}, 'Prepare'),
     encode_raw_bits('Prepare', Msg).
 
--spec prepare_node(term(), term(), [{term(), term()}, ...]) -> msg().
-prepare_node(TxId, PrepareVC, Prepares) ->
+-spec prepare_node(term(), [{term(), term(), term()}, ...]) -> msg().
+prepare_node(TxId, Prepares) ->
     PrepareMaps = [#{partition => term_to_binary(Partition),
-                     writeset => term_to_binary(WS)} || {Partition, WS} <- Prepares],
+                     writeset => term_to_binary(WS),
+                     version => Version} || {Partition, WS, Version} <- Prepares],
 
     Msg = ?proto_msgs:encode_msg(#{transaction_id => term_to_binary(TxId),
-                                   prepare_vc => term_to_binary(PrepareVC),
                                    prepares => PrepareMaps}, 'PrepareNode'),
 
     encode_raw_bits('PrepareNode', Msg).
@@ -90,16 +90,14 @@ decode_from_client('Prepare', Msg) ->
 
 decode_from_client('PrepareNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'PrepareNode'),
-    maps:map(fun(Key, Value) ->
-        case Key of
-            prepares ->
-                [begin
-                    maps:map(fun(_, V) -> binary_to_term(V) end, M)
-                 end || M <- Value];
-            _->
-                binary_to_term(Value)
-        end
-    end, Map);
+
+    DecodeInner = fun(version, V) -> V;
+                     (_Key, V) -> binary_to_term(V) end,
+
+    DecodeOuter = fun(prepares, V) -> [maps:map(DecodeInner, M) || M <- V];
+                     (_Key, V) -> binary_to_term(V) end,
+
+    maps:map(DecodeOuter, Map);
 
 decode_from_client('Decide', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'Decide'),
