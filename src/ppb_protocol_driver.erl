@@ -135,9 +135,15 @@ to_client_enc('Prepare', {error, From, Reason}) ->
 
 to_client_enc('Prepare', {ok, From, SeqNumber}) ->
     encode_pb_msg('Vote', #{partition => term_to_binary(From),
-                            payload => {seq_number, SeqNumber}}).
+                            payload => {seq_number, SeqNumber}});
 
-%% TODO(borja): Implement to_client_enc for 'PrepareNode'
+to_client_enc('PrepareNode', Results) ->
+    encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]}).
+
+encode_prepare({error, From, Reason}) ->
+    #{partition => term_to_binary(From), payload => {abort, common:encode_error(Reason)}};
+encode_prepare({ok, From, SeqNumber}) ->
+    #{partition => term_to_binary(From), payload => {seq_number, SeqNumber}}.
 
 %% @doc Generic client side decode
 from_server_dec(Bin) ->
@@ -164,9 +170,17 @@ decode_from_server('Vote', BinMsg) ->
             {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
         {seq_number, Num} ->
             {ok, binary_to_term(PartitionBytes), Num}
-    end.
+    end;
 
-%% TODO(borja): Implement decode_from_server for 'VoteBatch'
+decode_from_server('VoteBatch', BinMsg) ->
+    #{votes := BinVotes} = ?proto_msgs:decode_msg(BinMsg, 'VoteBatch'),
+    [case Resp of
+              {abort, Code} ->
+                  {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
+              {seq_number, Num} ->
+                  {ok, binary_to_term(PartitionBytes), Num}
+    end || #{partition := PartitionBytes, payload := Resp} <- BinVotes].
+
 
 %%====================================================================
 %% Internal functions
