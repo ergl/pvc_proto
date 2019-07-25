@@ -9,6 +9,7 @@
 -export([connect/0,
          read_request/4,
          prepare/4,
+         prepare_node/2,
          decide_abort/2,
          decide_commit/3]).
 
@@ -40,6 +41,17 @@ prepare(Partition, TxId, WriteSet, Version) ->
                                    writeset => term_to_binary(WriteSet),
                                    partition_version => Version}, 'Prepare'),
     encode_raw_bits('Prepare', Msg).
+
+-spec prepare_node(term(), [{term(), term(), term()}, ...]) -> msg().
+prepare_node(TxId, Prepares) ->
+    PrepareMaps = [#{partition => term_to_binary(Partition),
+                     writeset => term_to_binary(WS),
+                     version => Version} || {Partition, WS, Version} <- Prepares],
+
+    Msg = ?proto_msgs:encode_msg(#{transaction_id => term_to_binary(TxId),
+                                   prepares => PrepareMaps}, 'PrepareNode'),
+
+    encode_raw_bits('PrepareNode', Msg).
 
 -spec decide_abort(term(), term()) -> msg().
 decide_abort(Partition, TxId) ->
@@ -75,6 +87,17 @@ decode_from_client('Prepare', Msg) ->
         (partition_version, V) -> V;
         (_, Value) -> binary_to_term(Value)
     end, Map);
+
+decode_from_client('PrepareNode', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'PrepareNode'),
+
+    DecodeInner = fun(version, V) -> V;
+                     (_Key, V) -> binary_to_term(V) end,
+
+    DecodeOuter = fun(prepares, V) -> [maps:map(DecodeInner, M) || M <- V];
+                     (_Key, V) -> binary_to_term(V) end,
+
+    maps:map(DecodeOuter, Map);
 
 decode_from_client('Decide', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'Decide'),
@@ -112,7 +135,15 @@ to_client_enc('Prepare', {error, From, Reason}) ->
 
 to_client_enc('Prepare', {ok, From, SeqNumber}) ->
     encode_pb_msg('Vote', #{partition => term_to_binary(From),
-                            payload => {seq_number, SeqNumber}}).
+                            payload => {seq_number, SeqNumber}});
+
+to_client_enc('PrepareNode', Results) ->
+    encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]}).
+
+encode_prepare({error, From, Reason}) ->
+    #{partition => term_to_binary(From), payload => {abort, common:encode_error(Reason)}};
+encode_prepare({ok, From, SeqNumber}) ->
+    #{partition => term_to_binary(From), payload => {seq_number, SeqNumber}}.
 
 %% @doc Generic client side decode
 from_server_dec(Bin) ->
@@ -139,7 +170,17 @@ decode_from_server('Vote', BinMsg) ->
             {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
         {seq_number, Num} ->
             {ok, binary_to_term(PartitionBytes), Num}
-    end.
+    end;
+
+decode_from_server('VoteBatch', BinMsg) ->
+    #{votes := BinVotes} = ?proto_msgs:decode_msg(BinMsg, 'VoteBatch'),
+    [case Resp of
+              {abort, Code} ->
+                  {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
+              {seq_number, Num} ->
+                  {ok, binary_to_term(PartitionBytes), Num}
+    end || #{partition := PartitionBytes, payload := Resp} <- BinVotes].
+
 
 %%====================================================================
 %% Internal functions
@@ -172,7 +213,9 @@ encode_msg_type('ReadRequest') -> 3;
 encode_msg_type('ReadReturn') -> 4;
 encode_msg_type('Prepare') -> 5;
 encode_msg_type('Vote') -> 6;
-encode_msg_type('Decide') -> 7.
+encode_msg_type('PrepareNode') -> 7;
+encode_msg_type('VoteBatch') -> 8;
+encode_msg_type('Decide') -> 9.
 
 
 %% @doc Get original message type
@@ -183,4 +226,6 @@ decode_type_num(3) -> 'ReadRequest';
 decode_type_num(4) -> 'ReadReturn';
 decode_type_num(5) -> 'Prepare';
 decode_type_num(6) -> 'Vote';
-decode_type_num(7) -> 'Decide'.
+decode_type_num(7) -> 'PrepareNode';
+decode_type_num(8) -> 'VoteBatch';
+decode_type_num(9) -> 'Decide'.
