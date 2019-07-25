@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+// Complex types are encoded as Erlang terms,
+// using term_to_binary/binary_to_term
+// If using these definitions from some other
+// language, we should change most of the "bytes"
+// fields.
+
+// TODO: Add connection/partition info
+
+// Emtpy message for requesting a connection
+// A connection requested to only one node in the cluster
+message ConnectRequest {}
+
+message ConnectResponse {
+    uint32 num_partitions = 1;
+    // Ring structure is sent using raw erlang encoding
+    bytes ring_payload = 2;
+}
+
+// Request a read for the given key
+// Key must be "owned" by the given partition
+//
+// All fields are byte-serialized erlang terms
+message ReadRequest {
+    // Partition number is too long for PB
+    // (128 bit number)
+    bytes partition = 1;
+    bytes key = 2;
+    bytes vc_aggr = 3;
+    bytes has_read = 4;
+}
+
+// Read Request response, might be an abort
+// or a payload containing the value of
+// the key, its version time, and the maximum
+// VC calculated for the owner partition
+message ReadReturn {
+    message ReadPayload {
+        bytes value = 1;
+        bytes version_vc = 2;
+        bytes max_vc = 3;
+    }
+
+    oneof resp {
+        // Encoded error number
+        uint32 abort = 1;
+        ReadPayload payload = 2;
+    }
+}
+
+// Prepare phase of the 2pc protocol
+message Prepare {
+    bytes partition = 1;
+    // id of entry in commit queue
+    bytes transaction_id = 2;
+    // used for write-write conflict check
+    bytes writeset = 3;
+    // VCdep[partition]
+    // used for stale check
+    uint64 partition_version = 4;
+}
+
+// Votes casted by partitions during the prepare phase
+message Vote {
+    bytes partition = 1;
+    oneof payload {
+        // Encoded error number
+        uint32 abort = 2;
+        // Partition proposed sequence number
+        uint64 seq_number = 3;
+    }
+}
+
+//  Decide phase
+message Decide {
+    message DecideAbort {}
+    message DecideCommit {
+        bytes commit_vc = 1;
+    }
+
+    bytes partition = 1;
+    bytes transaction_id = 2;
+    oneof payload {
+        DecideAbort abort = 3;
+        DecideCommit commit = 4;
+    }
+}
