@@ -49,18 +49,6 @@ message ReadReturn {
     }
 }
 
-// Prepare phase of the 2pc protocol
-message Prepare {
-    bytes partition = 1;
-    // id of entry in commit queue
-    bytes transaction_id = 2;
-    // used for write-write conflict check
-    bytes writeset = 3;
-    // VCdep[partition]
-    // used for stale check
-    uint64 partition_version = 4;
-}
-
 // Aggregation of prepare messages
 message PrepareNode {
     message PrepareSingle {
@@ -74,20 +62,19 @@ message PrepareNode {
     repeated PrepareSingle prepares = 2;
 }
 
-// Votes casted by partitions during the prepare phase
-message Vote {
-    bytes partition = 1;
-    oneof payload {
-        // Encoded error number
-        uint32 abort = 2;
-        // Partition proposed sequence number
-        uint64 seq_number = 3;
-    }
-}
-
 // Vote msg aggregation by all the partitions of a node
 message VoteBatch {
-    repeated Vote votes = 1;
+    message VoteSingle {
+        bytes partition = 1;
+        oneof payload {
+            // Encoded error number
+            uint32 abort = 2;
+            // Partition proposed sequence number
+            uint64 seq_number = 3;
+        }
+    }
+
+    repeated VoteSingle votes = 1;
 }
 
 //  Decide phase

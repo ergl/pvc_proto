@@ -8,7 +8,6 @@
 %% Client-side API
 -export([connect/0,
          read_request/4,
-         prepare/4,
          prepare_node/2,
          decide_abort/2,
          decide_commit/3]).
@@ -33,14 +32,6 @@ read_request(Partition, Key, VCaggr, HasRead) ->
                                    vc_aggr => term_to_binary(VCaggr),
                                    has_read => term_to_binary(HasRead)}, 'ReadRequest'),
     encode_raw_bits('ReadRequest', Msg).
-
--spec prepare(term(), term(), term(), non_neg_integer()) -> msg().
-prepare(Partition, TxId, WriteSet, Version) ->
-    Msg = ?proto_msgs:encode_msg(#{partition => term_to_binary(Partition),
-                                   transaction_id => term_to_binary(TxId),
-                                   writeset => term_to_binary(WriteSet),
-                                   partition_version => Version}, 'Prepare'),
-    encode_raw_bits('Prepare', Msg).
 
 -spec prepare_node(term(), [{term(), term(), term()}, ...]) -> msg().
 prepare_node(TxId, Prepares) ->
@@ -80,13 +71,6 @@ from_client_dec(Bin) ->
 decode_from_client('ReadRequest', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'ReadRequest'),
     maps:map(fun(_, Value) -> binary_to_term(Value) end, Map);
-
-decode_from_client('Prepare', Msg) ->
-    Map = ?proto_msgs:decode_msg(Msg, 'Prepare'),
-    maps:map(fun
-        (partition_version, V) -> V;
-        (_, Value) -> binary_to_term(Value)
-    end, Map);
 
 decode_from_client('PrepareNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'PrepareNode'),
@@ -129,19 +113,12 @@ to_client_enc('ReadRequest', {ok, Value, VCdep, MaxVC}) ->
 to_client_enc('ReadRequest', {error, Reason}) ->
     encode_pb_msg('ReadReturn', #{resp => {abort, common:encode_error(Reason)}});
 
-to_client_enc('Prepare', {error, From, Reason}) ->
-    encode_pb_msg('Vote', #{partition => term_to_binary(From),
-                            payload => {abort, common:encode_error(Reason)}});
-
-to_client_enc('Prepare', {ok, From, SeqNumber}) ->
-    encode_pb_msg('Vote', #{partition => term_to_binary(From),
-                            payload => {seq_number, SeqNumber}});
-
 to_client_enc('PrepareNode', Results) ->
     encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]}).
 
 encode_prepare({error, From, Reason}) ->
     #{partition => term_to_binary(From), payload => {abort, common:encode_error(Reason)}};
+
 encode_prepare({ok, From, SeqNumber}) ->
     #{partition => term_to_binary(From), payload => {seq_number, SeqNumber}}.
 
@@ -161,15 +138,6 @@ decode_from_server('ReadReturn', BinMsg) ->
             {error, common:decode_error(Code)};
         {payload, #{value := V, version_vc := VC, max_vc := MaxVC}} ->
             {ok, binary_to_term(V), binary_to_term(VC), binary_to_term(MaxVC)}
-    end;
-
-decode_from_server('Vote', BinMsg) ->
-    #{partition := PartitionBytes, payload := Resp} = ?proto_msgs:decode_msg(BinMsg, 'Vote'),
-    case Resp of
-        {abort, Code} ->
-            {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
-        {seq_number, Num} ->
-            {ok, binary_to_term(PartitionBytes), Num}
     end;
 
 decode_from_server('VoteBatch', BinMsg) ->
@@ -211,11 +179,9 @@ encode_msg_type('ConnectRequest') -> 1;
 encode_msg_type('ConnectResponse') -> 2;
 encode_msg_type('ReadRequest') -> 3;
 encode_msg_type('ReadReturn') -> 4;
-encode_msg_type('Prepare') -> 5;
-encode_msg_type('Vote') -> 6;
-encode_msg_type('PrepareNode') -> 7;
-encode_msg_type('VoteBatch') -> 8;
-encode_msg_type('Decide') -> 9.
+encode_msg_type('PrepareNode') -> 5;
+encode_msg_type('VoteBatch') -> 6;
+encode_msg_type('Decide') -> 7.
 
 
 %% @doc Get original message type
@@ -224,8 +190,6 @@ decode_type_num(1) -> 'ConnectRequest';
 decode_type_num(2) -> 'ConnectResponse';
 decode_type_num(3) -> 'ReadRequest';
 decode_type_num(4) -> 'ReadReturn';
-decode_type_num(5) -> 'Prepare';
-decode_type_num(6) -> 'Vote';
-decode_type_num(7) -> 'PrepareNode';
-decode_type_num(8) -> 'VoteBatch';
-decode_type_num(9) -> 'Decide'.
+decode_type_num(5) -> 'PrepareNode';
+decode_type_num(6) -> 'VoteBatch';
+decode_type_num(7) -> 'Decide'.
