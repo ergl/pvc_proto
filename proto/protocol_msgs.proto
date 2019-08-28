@@ -59,7 +59,8 @@ message PrepareNode {
 
     // Don't repeat transaction id, redundant
     bytes transaction_id = 1;
-    repeated PrepareSingle prepares = 2;
+    uint32 protocol = 2;
+    repeated PrepareSingle prepares = 3;
 }
 
 // Vote msg aggregation by all the partitions of a node

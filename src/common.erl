@@ -7,7 +7,9 @@
 -export([encode_success/1,
          decode_success/1,
          encode_error/1,
-         decode_error/1]).
+         decode_error/1,
+         encode_protocol/1,
+         decode_protocol/1]).
 
 -spec encode_driver_module(atom()) -> non_neg_integer().
 encode_driver_module(ppb_rubis_driver) -> 1;
@@ -55,3 +57,14 @@ decode_error(4) -> timeout;
 decode_error(5) -> pvc_conflict;
 decode_error(6) -> pvc_stale_vc;
 decode_error(7) -> pvc_bad_vc.
+
+%% Client coordinator protocol version
+-spec encode_protocol(atom()) -> non_neg_integer().
+encode_protocol(psi) -> 1;
+encode_protocol(ser) -> 2;
+encode_protocol(_) -> 0.
+
+-spec decode_protocol(non_neg_integer()) -> atom().
+decode_protocol(0) -> unknown;
+decode_protocol(1) -> psi;
+decode_protocol(2) -> ser.

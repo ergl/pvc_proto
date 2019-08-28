@@ -8,7 +8,7 @@
 %% Client-side API
 -export([connect/0,
          read_request/4,
-         prepare_node/2,
+         prepare_node/3,
          decide_abort/2,
          decide_commit/3]).
 
@@ -33,13 +33,14 @@ read_request(Partition, Key, VCaggr, HasRead) ->
                                    has_read => term_to_binary(HasRead)}, 'ReadRequest'),
     encode_raw_bits('ReadRequest', Msg).
 
--spec prepare_node(term(), [{term(), term(), term()}, ...]) -> msg().
-prepare_node(TxId, Prepares) ->
+-spec prepare_node(term(), term(), [{term(), term(), term()}, ...]) -> msg().
+prepare_node(TxId, Protocol, Prepares) ->
     PrepareMaps = [#{partition => term_to_binary(Partition),
                      writeset => term_to_binary(WS),
                      version => Version} || {Partition, WS, Version} <- Prepares],
 
     Msg = ?proto_msgs:encode_msg(#{transaction_id => term_to_binary(TxId),
+                                   protocol => common:encode_protocol(Protocol),
                                    prepares => PrepareMaps}, 'PrepareNode'),
 
     encode_raw_bits('PrepareNode', Msg).
@@ -79,6 +80,7 @@ decode_from_client('PrepareNode', Msg) ->
                      (_Key, V) -> binary_to_term(V) end,
 
     DecodeOuter = fun(prepares, V) -> [maps:map(DecodeInner, M) || M <- V];
+                     (protocol, V) -> common:decode_protocol(V);
                      (_Key, V) -> binary_to_term(V) end,
 
     maps:map(DecodeOuter, Map);

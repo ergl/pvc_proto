@@ -62,7 +62,8 @@
 
 -type 'PrepareNode'() ::
       #{transaction_id          => iodata(),        % = 1
-        prepares                => ['PrepareNode.PrepareSingle'()] % = 2
+        protocol                => non_neg_integer(), % = 2, 32 bits
+        prepares                => ['PrepareNode.PrepareSingle'()] % = 3
        }.
 
 -type 'VoteBatch.VoteSingle'() ::
@@ -332,14 +333,24 @@ e_msg_PrepareNode(#{} = M, Bin, TrUserData) ->
 	       end;
 	   _ -> Bin
 	 end,
+    B2 = case M of
+	   #{protocol := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 if TrF2 =:= 0 -> B1;
+		    true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+		 end
+	       end;
+	   _ -> B1
+	 end,
     case M of
-      #{prepares := F2} ->
-	  TrF2 = id(F2, TrUserData),
-	  if TrF2 == [] -> B1;
+      #{prepares := F3} ->
+	  TrF3 = id(F3, TrUserData),
+	  if TrF3 == [] -> B2;
 	     true ->
-		 e_field_PrepareNode_prepares(TrF2, B1, TrUserData)
+		 e_field_PrepareNode_prepares(TrF3, B2, TrUserData)
 	  end;
-      _ -> B1
+      _ -> B2
     end.
 
 'e_msg_VoteBatch.VoteSingle'(Msg, TrUserData) ->
@@ -469,7 +480,7 @@ e_mfield_PrepareNode_prepares(Msg, Bin, TrUserData) ->
 
 e_field_PrepareNode_prepares([Elem | Rest], Bin,
 			     TrUserData) ->
-    Bin2 = <<Bin/binary, 18>>,
+    Bin2 = <<Bin/binary, 26>>,
     Bin3 = e_mfield_PrepareNode_prepares(id(Elem,
 					    TrUserData),
 					 Bin2, TrUserData),
@@ -1570,91 +1581,113 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 
 d_msg_PrepareNode(Bin, TrUserData) ->
     dfp_read_field_def_PrepareNode(Bin, 0, 0,
-				   id(<<>>, TrUserData), id([], TrUserData),
-				   TrUserData).
+				   id(<<>>, TrUserData), id(0, TrUserData),
+				   id([], TrUserData), TrUserData).
 
 dfp_read_field_def_PrepareNode(<<10, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, TrUserData) ->
+			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
     d_field_PrepareNode_transaction_id(Rest, Z1, Z2, F@_1,
-				       F@_2, TrUserData);
-dfp_read_field_def_PrepareNode(<<18, Rest/binary>>, Z1,
-			       Z2, F@_1, F@_2, TrUserData) ->
+				       F@_2, F@_3, TrUserData);
+dfp_read_field_def_PrepareNode(<<16, Rest/binary>>, Z1,
+			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    d_field_PrepareNode_protocol(Rest, Z1, Z2, F@_1, F@_2,
+				 F@_3, TrUserData);
+dfp_read_field_def_PrepareNode(<<26, Rest/binary>>, Z1,
+			       Z2, F@_1, F@_2, F@_3, TrUserData) ->
     d_field_PrepareNode_prepares(Rest, Z1, Z2, F@_1, F@_2,
-				 TrUserData);
-dfp_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, R1,
-			       TrUserData) ->
-    S1 = #{transaction_id => F@_1},
+				 F@_3, TrUserData);
+dfp_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, F@_2,
+			       R1, TrUserData) ->
+    S1 = #{transaction_id => F@_1, protocol => F@_2},
     if R1 == '$undef' -> S1;
        true -> S1#{prepares => lists_reverse(R1, TrUserData)}
     end;
 dfp_read_field_def_PrepareNode(Other, Z1, Z2, F@_1,
-			       F@_2, TrUserData) ->
+			       F@_2, F@_3, TrUserData) ->
     dg_read_field_def_PrepareNode(Other, Z1, Z2, F@_1, F@_2,
-				  TrUserData).
+				  F@_3, TrUserData).
 
 dg_read_field_def_PrepareNode(<<1:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, TrUserData)
+			      N, Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 32 - 7 ->
     dg_read_field_def_PrepareNode(Rest, N + 7,
-				  X bsl N + Acc, F@_1, F@_2, TrUserData);
+				  X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
 dg_read_field_def_PrepareNode(<<0:1, X:7, Rest/binary>>,
-			      N, Acc, F@_1, F@_2, TrUserData) ->
+			      N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
       10 ->
 	  d_field_PrepareNode_transaction_id(Rest, 0, 0, F@_1,
-					     F@_2, TrUserData);
-      18 ->
+					     F@_2, F@_3, TrUserData);
+      16 ->
+	  d_field_PrepareNode_protocol(Rest, 0, 0, F@_1, F@_2,
+				       F@_3, TrUserData);
+      26 ->
 	  d_field_PrepareNode_prepares(Rest, 0, 0, F@_1, F@_2,
-				       TrUserData);
+				       F@_3, TrUserData);
       _ ->
 	  case Key band 7 of
 	    0 ->
-		skip_varint_PrepareNode(Rest, 0, 0, F@_1, F@_2,
+		skip_varint_PrepareNode(Rest, 0, 0, F@_1, F@_2, F@_3,
 					TrUserData);
 	    1 ->
-		skip_64_PrepareNode(Rest, 0, 0, F@_1, F@_2, TrUserData);
+		skip_64_PrepareNode(Rest, 0, 0, F@_1, F@_2, F@_3,
+				    TrUserData);
 	    2 ->
 		skip_length_delimited_PrepareNode(Rest, 0, 0, F@_1,
-						  F@_2, TrUserData);
+						  F@_2, F@_3, TrUserData);
 	    3 ->
 		skip_group_PrepareNode(Rest, Key bsr 3, 0, F@_1, F@_2,
-				       TrUserData);
+				       F@_3, TrUserData);
 	    5 ->
-		skip_32_PrepareNode(Rest, 0, 0, F@_1, F@_2, TrUserData)
+		skip_32_PrepareNode(Rest, 0, 0, F@_1, F@_2, F@_3,
+				    TrUserData)
 	  end
     end;
-dg_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, R1,
-			      TrUserData) ->
-    S1 = #{transaction_id => F@_1},
+dg_read_field_def_PrepareNode(<<>>, 0, 0, F@_1, F@_2,
+			      R1, TrUserData) ->
+    S1 = #{transaction_id => F@_1, protocol => F@_2},
     if R1 == '$undef' -> S1;
        true -> S1#{prepares => lists_reverse(R1, TrUserData)}
     end.
 
 d_field_PrepareNode_transaction_id(<<1:1, X:7,
 				     Rest/binary>>,
-				   N, Acc, F@_1, F@_2, TrUserData)
+				   N, Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     d_field_PrepareNode_transaction_id(Rest, N + 7,
-				       X bsl N + Acc, F@_1, F@_2, TrUserData);
+				       X bsl N + Acc, F@_1, F@_2, F@_3,
+				       TrUserData);
 d_field_PrepareNode_transaction_id(<<0:1, X:7,
 				     Rest/binary>>,
-				   N, Acc, _, F@_2, TrUserData) ->
+				   N, Acc, _, F@_2, F@_3, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
 			   {id(binary:copy(Bytes), TrUserData), Rest2}
 			 end,
     dfp_read_field_def_PrepareNode(RestF, 0, 0, NewFValue,
-				   F@_2, TrUserData).
+				   F@_2, F@_3, TrUserData).
+
+d_field_PrepareNode_protocol(<<1:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
+    when N < 57 ->
+    d_field_PrepareNode_protocol(Rest, N + 7, X bsl N + Acc,
+				 F@_1, F@_2, F@_3, TrUserData);
+d_field_PrepareNode_protocol(<<0:1, X:7, Rest/binary>>,
+			     N, Acc, F@_1, _, F@_3, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+			  Rest},
+    dfp_read_field_def_PrepareNode(RestF, 0, 0, F@_1,
+				   NewFValue, F@_3, TrUserData).
 
 d_field_PrepareNode_prepares(<<1:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, F@_2, TrUserData)
+			     N, Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     d_field_PrepareNode_prepares(Rest, N + 7, X bsl N + Acc,
-				 F@_1, F@_2, TrUserData);
+				 F@_1, F@_2, F@_3, TrUserData);
 d_field_PrepareNode_prepares(<<0:1, X:7, Rest/binary>>,
-			     N, Acc, F@_1, Prev, TrUserData) ->
+			     N, Acc, F@_1, F@_2, Prev, TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bs:Len/binary, Rest2/binary>> = Rest,
@@ -1663,48 +1696,49 @@ d_field_PrepareNode_prepares(<<0:1, X:7, Rest/binary>>,
 			       TrUserData),
 			    Rest2}
 			 end,
-    dfp_read_field_def_PrepareNode(RestF, 0, 0, F@_1,
+    dfp_read_field_def_PrepareNode(RestF, 0, 0, F@_1, F@_2,
 				   cons(NewFValue, Prev, TrUserData),
 				   TrUserData).
 
 skip_varint_PrepareNode(<<1:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, TrUserData) ->
-    skip_varint_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
+			Z2, F@_1, F@_2, F@_3, TrUserData) ->
+    skip_varint_PrepareNode(Rest, Z1, Z2, F@_1, F@_2, F@_3,
 			    TrUserData);
 skip_varint_PrepareNode(<<0:1, _:7, Rest/binary>>, Z1,
-			Z2, F@_1, F@_2, TrUserData) ->
+			Z2, F@_1, F@_2, F@_3, TrUserData) ->
     dfp_read_field_def_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
-				   TrUserData).
+				   F@_3, TrUserData).
 
 skip_length_delimited_PrepareNode(<<1:1, X:7,
 				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, TrUserData)
+				  N, Acc, F@_1, F@_2, F@_3, TrUserData)
     when N < 57 ->
     skip_length_delimited_PrepareNode(Rest, N + 7,
-				      X bsl N + Acc, F@_1, F@_2, TrUserData);
+				      X bsl N + Acc, F@_1, F@_2, F@_3,
+				      TrUserData);
 skip_length_delimited_PrepareNode(<<0:1, X:7,
 				    Rest/binary>>,
-				  N, Acc, F@_1, F@_2, TrUserData) ->
+				  N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
     dfp_read_field_def_PrepareNode(Rest2, 0, 0, F@_1, F@_2,
-				   TrUserData).
+				   F@_3, TrUserData).
 
-skip_group_PrepareNode(Bin, FNum, Z2, F@_1, F@_2,
+skip_group_PrepareNode(Bin, FNum, Z2, F@_1, F@_2, F@_3,
 		       TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
     dfp_read_field_def_PrepareNode(Rest, 0, Z2, F@_1, F@_2,
-				   TrUserData).
+				   F@_3, TrUserData).
 
 skip_32_PrepareNode(<<_:32, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, TrUserData) ->
+		    F@_2, F@_3, TrUserData) ->
     dfp_read_field_def_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
-				   TrUserData).
+				   F@_3, TrUserData).
 
 skip_64_PrepareNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
-		    F@_2, TrUserData) ->
+		    F@_2, F@_3, TrUserData) ->
     dfp_read_field_def_PrepareNode(Rest, Z1, Z2, F@_1, F@_2,
-				   TrUserData).
+				   F@_3, TrUserData).
 
 'd_msg_VoteBatch.VoteSingle'(Bin, TrUserData) ->
     'dfp_read_field_def_VoteBatch.VoteSingle'(Bin, 0, 0,
@@ -2592,16 +2626,23 @@ merge_msg_PrepareNode(PMsg, NMsg, TrUserData) ->
 	       S1#{transaction_id => PFtransaction_id};
 	   _ -> S1
 	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{protocol := NFprotocol}} ->
+	       S2#{protocol => NFprotocol};
+	   {#{protocol := PFprotocol}, _} ->
+	       S2#{protocol => PFprotocol};
+	   _ -> S2
+	 end,
     case {PMsg, NMsg} of
       {#{prepares := PFprepares},
        #{prepares := NFprepares}} ->
-	  S2#{prepares =>
+	  S3#{prepares =>
 		  'erlang_++'(PFprepares, NFprepares, TrUserData)};
       {_, #{prepares := NFprepares}} ->
-	  S2#{prepares => NFprepares};
+	  S3#{prepares => NFprepares};
       {#{prepares := PFprepares}, _} ->
-	  S2#{prepares => PFprepares};
-      {_, _} -> S2
+	  S3#{prepares => PFprepares};
+      {_, _} -> S3
     end.
 
 -compile({nowarn_unused_function,'merge_msg_VoteBatch.VoteSingle'/3}).
@@ -2918,21 +2959,27 @@ v_msg_PrepareNode(#{} = M, Path, TrUserData) ->
       _ -> ok
     end,
     case M of
-      #{prepares := F2} ->
-	  if is_list(F2) ->
+      #{protocol := F2} ->
+	  v_type_uint32(F2, [protocol | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{prepares := F3} ->
+	  if is_list(F3) ->
 		 _ = ['v_msg_PrepareNode.PrepareSingle'(Elem,
 							[prepares | Path],
 							TrUserData)
-		      || Elem <- F2],
+		      || Elem <- F3],
 		 ok;
 	     true ->
 		 mk_type_error({invalid_list_of,
 				{msg, 'PrepareNode.PrepareSingle'}},
-			       F2, [prepares | Path])
+			       F3, [prepares | Path])
 	  end;
       _ -> ok
     end,
     lists:foreach(fun (transaction_id) -> ok;
+		      (protocol) -> ok;
 		      (prepares) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -3210,7 +3257,9 @@ get_msg_defs() ->
      {{msg, 'PrepareNode'},
       [#{name => transaction_id, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
-       #{name => prepares, fnum => 2, rnum => 3,
+       #{name => protocol, fnum => 2, rnum => 3,
+	 type => uint32, occurrence => optional, opts => []},
+       #{name => prepares, fnum => 3, rnum => 4,
 	 type => {msg, 'PrepareNode.PrepareSingle'},
 	 occurrence => repeated, opts => []}]},
      {{msg, 'VoteBatch.VoteSingle'},
@@ -3319,7 +3368,9 @@ find_msg_def('PrepareNode.PrepareSingle') ->
 find_msg_def('PrepareNode') ->
     [#{name => transaction_id, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
-     #{name => prepares, fnum => 2, rnum => 3,
+     #{name => protocol, fnum => 2, rnum => 3,
+       type => uint32, occurrence => optional, opts => []},
+     #{name => prepares, fnum => 3, rnum => 4,
        type => {msg, 'PrepareNode.PrepareSingle'},
        occurrence => repeated, opts => []}];
 find_msg_def('VoteBatch.VoteSingle') ->
