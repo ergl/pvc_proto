@@ -56,7 +56,7 @@
 
 -type 'PrepareNode.PrepareSingle'() ::
       #{partition               => iodata(),        % = 1
-        writeset                => iodata(),        % = 2
+        keydata                 => iodata(),        % = 2
         version                 => non_neg_integer() % = 3, 32 bits
        }.
 
@@ -296,7 +296,7 @@ e_msg_ReadReturn(#{} = M, Bin, TrUserData) ->
 	   _ -> Bin
 	 end,
     B2 = case M of
-	   #{writeset := F2} ->
+	   #{keydata := F2} ->
 	       begin
 		 TrF2 = id(F2, TrUserData),
 		 case iolist_size(TrF2) of
@@ -1394,9 +1394,9 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 						 Rest/binary>>,
 					       Z1, Z2, F@_1, F@_2, F@_3,
 					       TrUserData) ->
-    'd_field_PrepareNode.PrepareSingle_writeset'(Rest, Z1,
-						 Z2, F@_1, F@_2, F@_3,
-						 TrUserData);
+    'd_field_PrepareNode.PrepareSingle_keydata'(Rest, Z1,
+						Z2, F@_1, F@_2, F@_3,
+						TrUserData);
 'dfp_read_field_def_PrepareNode.PrepareSingle'(<<24,
 						 Rest/binary>>,
 					       Z1, Z2, F@_1, F@_2, F@_3,
@@ -1406,7 +1406,7 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 						TrUserData);
 'dfp_read_field_def_PrepareNode.PrepareSingle'(<<>>, 0,
 					       0, F@_1, F@_2, F@_3, _) ->
-    #{partition => F@_1, writeset => F@_2, version => F@_3};
+    #{partition => F@_1, keydata => F@_2, version => F@_3};
 'dfp_read_field_def_PrepareNode.PrepareSingle'(Other,
 					       Z1, Z2, F@_1, F@_2, F@_3,
 					       TrUserData) ->
@@ -1433,9 +1433,9 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 							0, F@_1, F@_2, F@_3,
 							TrUserData);
       18 ->
-	  'd_field_PrepareNode.PrepareSingle_writeset'(Rest, 0, 0,
-						       F@_1, F@_2, F@_3,
-						       TrUserData);
+	  'd_field_PrepareNode.PrepareSingle_keydata'(Rest, 0, 0,
+						      F@_1, F@_2, F@_3,
+						      TrUserData);
       24 ->
 	  'd_field_PrepareNode.PrepareSingle_version'(Rest, 0, 0,
 						      F@_1, F@_2, F@_3,
@@ -1465,7 +1465,7 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
     end;
 'dg_read_field_def_PrepareNode.PrepareSingle'(<<>>, 0,
 					      0, F@_1, F@_2, F@_3, _) ->
-    #{partition => F@_1, writeset => F@_2, version => F@_3}.
+    #{partition => F@_1, keydata => F@_2, version => F@_3}.
 
 'd_field_PrepareNode.PrepareSingle_partition'(<<1:1,
 						X:7, Rest/binary>>,
@@ -1488,18 +1488,18 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 						   0, NewFValue, F@_2, F@_3,
 						   TrUserData).
 
-'d_field_PrepareNode.PrepareSingle_writeset'(<<1:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, F@_2, F@_3,
-					     TrUserData)
+'d_field_PrepareNode.PrepareSingle_keydata'(<<1:1, X:7,
+					      Rest/binary>>,
+					    N, Acc, F@_1, F@_2, F@_3,
+					    TrUserData)
     when N < 57 ->
-    'd_field_PrepareNode.PrepareSingle_writeset'(Rest,
-						 N + 7, X bsl N + Acc, F@_1,
-						 F@_2, F@_3, TrUserData);
-'d_field_PrepareNode.PrepareSingle_writeset'(<<0:1, X:7,
-					       Rest/binary>>,
-					     N, Acc, F@_1, _, F@_3,
-					     TrUserData) ->
+    'd_field_PrepareNode.PrepareSingle_keydata'(Rest, N + 7,
+						X bsl N + Acc, F@_1, F@_2, F@_3,
+						TrUserData);
+'d_field_PrepareNode.PrepareSingle_keydata'(<<0:1, X:7,
+					      Rest/binary>>,
+					    N, Acc, F@_1, _, F@_3,
+					    TrUserData) ->
     {NewFValue, RestF} = begin
 			   Len = X bsl N + Acc,
 			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
@@ -2602,10 +2602,10 @@ merge_msg_ReadReturn(PMsg, NMsg, TrUserData) ->
 	   _ -> S1
 	 end,
     S3 = case {PMsg, NMsg} of
-	   {_, #{writeset := NFwriteset}} ->
-	       S2#{writeset => NFwriteset};
-	   {#{writeset := PFwriteset}, _} ->
-	       S2#{writeset => PFwriteset};
+	   {_, #{keydata := NFkeydata}} ->
+	       S2#{keydata => NFkeydata};
+	   {#{keydata := PFkeydata}, _} ->
+	       S2#{keydata => PFkeydata};
 	   _ -> S2
 	 end,
     case {PMsg, NMsg} of
@@ -2922,8 +2922,8 @@ v_msg_ReadReturn(X, Path, _TrUserData) ->
       _ -> ok
     end,
     case M of
-      #{writeset := F2} ->
-	  v_type_bytes(F2, [writeset | Path], TrUserData);
+      #{keydata := F2} ->
+	  v_type_bytes(F2, [keydata | Path], TrUserData);
       _ -> ok
     end,
     case M of
@@ -2932,7 +2932,7 @@ v_msg_ReadReturn(X, Path, _TrUserData) ->
       _ -> ok
     end,
     lists:foreach(fun (partition) -> ok;
-		      (writeset) -> ok;
+		      (keydata) -> ok;
 		      (version) -> ok;
 		      (OtherKey) ->
 			  mk_type_error({extraneous_key, OtherKey}, M, Path)
@@ -3250,7 +3250,7 @@ get_msg_defs() ->
      {{msg, 'PrepareNode.PrepareSingle'},
       [#{name => partition, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
-       #{name => writeset, fnum => 2, rnum => 3, type => bytes,
+       #{name => keydata, fnum => 2, rnum => 3, type => bytes,
 	 occurrence => optional, opts => []},
        #{name => version, fnum => 3, rnum => 4, type => uint64,
 	 occurrence => optional, opts => []}]},
@@ -3361,7 +3361,7 @@ find_msg_def('ReadReturn') ->
 find_msg_def('PrepareNode.PrepareSingle') ->
     [#{name => partition, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},
-     #{name => writeset, fnum => 2, rnum => 3, type => bytes,
+     #{name => keydata, fnum => 2, rnum => 3, type => bytes,
        occurrence => optional, opts => []},
      #{name => version, fnum => 3, rnum => 4, type => uint64,
        occurrence => optional, opts => []}];

@@ -36,8 +36,8 @@ read_request(Partition, Key, VCaggr, HasRead) ->
 -spec prepare_node(term(), term(), [{term(), term(), term()}, ...]) -> msg().
 prepare_node(TxId, Protocol, Prepares) ->
     PrepareMaps = [#{partition => term_to_binary(Partition),
-                     writeset => term_to_binary(WS),
-                     version => Version} || {Partition, WS, Version} <- Prepares],
+                     keydata => term_to_binary(KeyData),
+                     version => Version} || {Partition, KeyData, Version} <- Prepares],
 
     Msg = ?proto_msgs:encode_msg(#{transaction_id => term_to_binary(TxId),
                                    protocol => common:encode_protocol(Protocol),

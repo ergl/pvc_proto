@@ -53,7 +53,7 @@ message ReadReturn {
 message PrepareNode {
     message PrepareSingle {
         bytes partition = 1;
-        bytes writeset = 2;
+        bytes keydata = 2;
         uint64 version = 3;
     }
 
