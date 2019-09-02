@@ -87,9 +87,8 @@ message Decide {
 
     bytes partition = 1;
     bytes transaction_id = 2;
-    uint32 protocol = 3;
     oneof payload {
-        DecideAbort abort = 4;
-        DecideCommit commit = 5;
+        DecideAbort abort = 3;
+        DecideCommit commit = 4;
     }
 }

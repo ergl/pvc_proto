@@ -9,8 +9,8 @@
 -export([connect/0,
          read_request/4,
          prepare_node/3,
-         decide_abort/3,
-         decide_commit/4]).
+         decide_abort/2,
+         decide_commit/3]).
 
 -define(proto_msgs, protocol_msgs).
 -type msg() :: binary().
@@ -45,19 +45,17 @@ prepare_node(TxId, Protocol, Prepares) ->
 
     encode_raw_bits('PrepareNode', Msg).
 
--spec decide_abort(term(), term(), term()) -> msg().
-decide_abort(Partition, TxId, Protocol) ->
+-spec decide_abort(term(), term()) -> msg().
+decide_abort(Partition, TxId) ->
     Msg = ?proto_msgs:encode_msg(#{partition => term_to_binary(Partition),
                                    transaction_id => term_to_binary(TxId),
-                                   protocol => common:encode_protocol(Protocol),
                                    payload => {abort, #{}}}, 'Decide'),
     encode_raw_bits('Decide', Msg).
 
--spec decide_commit(term(), term(), term(), term()) -> msg().
-decide_commit(Partition, TxId, Protocol, VC) ->
+-spec decide_commit(term(), term(), term()) -> msg().
+decide_commit(Partition, TxId, VC) ->
     Msg = ?proto_msgs:encode_msg(#{partition => term_to_binary(Partition),
                                    transaction_id => term_to_binary(TxId),
-                                   protocol => common:encode_protocol(Protocol),
                                    payload => {commit, #{commit_vc => term_to_binary(VC)}}}, 'Decide'),
     encode_raw_bits('Decide', Msg).
 
@@ -92,7 +90,6 @@ decode_from_client('Decide', Msg) ->
     maps:map(fun
         (payload, {abort, _}) -> abort;
         (payload, {commit, #{commit_vc := Bytes}}) -> {ok, binary_to_term(Bytes)};
-        (protocol, V) -> common:decode_protocol(V);
         (_, Value) -> binary_to_term(Value)
     end, Map);
 
