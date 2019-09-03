@@ -41,10 +41,13 @@ encode_error(non_unique_username) -> 3;
 %% Misc errors
 %% TODO(borja): Can remove?
 encode_error(timeout) -> 4;
+
 %% Protocol errors
+%% Prepare Errors
 encode_error(pvc_conflict) -> 5;
-encode_error(pvc_stale_vc) -> 6;
-encode_error(pvc_bad_vc) -> 7;
+encode_error(pvc_stale_tx) -> 6;
+%% Read Errors
+encode_error(maxvc_bad_vc) -> 7;
 encode_error(_Other) -> 0.
 
 %% @doc Get original error types
@@ -55,8 +58,8 @@ decode_error(2) -> wrong_password;
 decode_error(3) -> non_unique_username;
 decode_error(4) -> timeout;
 decode_error(5) -> pvc_conflict;
-decode_error(6) -> pvc_stale_vc;
-decode_error(7) -> pvc_bad_vc.
+decode_error(6) -> pvc_stale_tx;
+decode_error(7) -> maxvc_bad_vc.
 
 %% Client coordinator protocol version
 -spec encode_protocol(atom()) -> non_neg_integer().
