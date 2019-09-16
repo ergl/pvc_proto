@@ -145,10 +145,10 @@ decode_from_server('ReadReturn', BinMsg) ->
 decode_from_server('VoteBatch', BinMsg) ->
     #{votes := BinVotes} = ?proto_msgs:decode_msg(BinMsg, 'VoteBatch'),
     [case Resp of
-              {abort, Code} ->
-                  {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
-              {seq_number, Num} ->
-                  {ok, binary_to_term(PartitionBytes), Num}
+        {abort, Code} ->
+            {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
+        {seq_number, Num} ->
+            {ok, binary_to_term(PartitionBytes), Num}
     end || #{partition := PartitionBytes, payload := Resp} <- BinVotes].
 
 
