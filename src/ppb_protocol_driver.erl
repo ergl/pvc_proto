@@ -9,8 +9,8 @@
 -export([connect/0,
          read_request/4,
          prepare_node/3,
-         decide_abort/2,
-         decide_commit/3]).
+         decide_node_abort/2,
+         decide_node_commit/3]).
 
 -define(proto_msgs, protocol_msgs).
 -type msg() :: binary().
@@ -45,19 +45,20 @@ prepare_node(TxId, Protocol, Prepares) ->
 
     encode_raw_bits('PrepareNode', Msg).
 
--spec decide_abort(term(), term()) -> msg().
-decide_abort(Partition, TxId) ->
-    Msg = ?proto_msgs:encode_msg(#{partition => term_to_binary(Partition),
-                                   transaction_id => term_to_binary(TxId),
-                                   payload => {abort, #{}}}, 'Decide'),
-    encode_raw_bits('Decide', Msg).
+-spec decide_node_abort([term(), ...], term()) -> msg().
+decide_node_abort(Partitions, TxId) ->
+    PBinary = [term_to_binary(P) || P <- Partitions],
+    Msg = ?proto_msgs:encode_msg(#{partitions => PBinary,
+                                   transaction_id => term_to_binary(TxId)}, 'DecideNode'),
+    encode_raw_bits('DecideNode', Msg).
 
--spec decide_commit(term(), term(), term()) -> msg().
-decide_commit(Partition, TxId, VC) ->
-    Msg = ?proto_msgs:encode_msg(#{partition => term_to_binary(Partition),
+-spec decide_node_commit([term(), ...], term(), term()) -> msg().
+decide_node_commit(Partitions, TxId, VC) ->
+    PBinary = [term_to_binary(P) || P <- Partitions],
+    Msg = ?proto_msgs:encode_msg(#{partitions => PBinary,
                                    transaction_id => term_to_binary(TxId),
-                                   payload => {commit, #{commit_vc => term_to_binary(VC)}}}, 'Decide'),
-    encode_raw_bits('Decide', Msg).
+                                   maybe_payload => {commit_vc, term_to_binary(VC)}}, 'DecideNode'),
+    encode_raw_bits('DecideNode', Msg).
 
 
 %% @doc Generic client-side decoding
@@ -85,11 +86,11 @@ decode_from_client('PrepareNode', Msg) ->
 
     maps:map(DecodeOuter, Map);
 
-decode_from_client('Decide', Msg) ->
-    Map = ?proto_msgs:decode_msg(Msg, 'Decide'),
+decode_from_client('DecideNode', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'DecideNode'),
     maps:map(fun
-        (payload, {abort, _}) -> abort;
-        (payload, {commit, #{commit_vc := Bytes}}) -> {ok, binary_to_term(Bytes)};
+        (partitions, Ps) -> lists:map(fun erlang:binary_to_term/1, Ps);
+        (maybe_payload, {commit_vc, Bytes}) -> {ok, binary_to_term(Bytes)};
         (_, Value) -> binary_to_term(Value)
     end, Map);
 
@@ -183,7 +184,7 @@ encode_msg_type('ReadRequest') -> 3;
 encode_msg_type('ReadReturn') -> 4;
 encode_msg_type('PrepareNode') -> 5;
 encode_msg_type('VoteBatch') -> 6;
-encode_msg_type('Decide') -> 7.
+encode_msg_type('DecideNode') -> 7.
 
 
 %% @doc Get original message type
@@ -194,4 +195,4 @@ decode_type_num(3) -> 'ReadRequest';
 decode_type_num(4) -> 'ReadReturn';
 decode_type_num(5) -> 'PrepareNode';
 decode_type_num(6) -> 'VoteBatch';
-decode_type_num(7) -> 'Decide'.
+decode_type_num(7) -> 'DecideNode'.

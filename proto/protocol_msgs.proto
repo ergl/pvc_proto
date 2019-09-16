@@ -78,17 +78,13 @@ message VoteBatch {
     repeated VoteSingle votes = 1;
 }
 
-//  Decide phase
-message Decide {
-    message DecideAbort {}
-    message DecideCommit {
-        bytes commit_vc = 1;
-    }
-
-    bytes partition = 1;
-    bytes transaction_id = 2;
-    oneof payload {
-        DecideAbort abort = 3;
-        DecideCommit commit = 4;
+// Aggregation of decide messages
+message DecideNode {
+    // Don't repeat transaction id or commit vc
+    // the commit VC is always the same for all partitions
+    bytes transaction_id = 1;
+    repeated bytes partitions = 2;
+    oneof maybe_payload {
+        bytes commit_vc = 3;
     }
 }
