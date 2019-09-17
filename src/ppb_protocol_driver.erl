@@ -117,10 +117,7 @@ to_client_enc('ReadRequest', {error, Reason}) ->
     encode_pb_msg('ReadReturn', #{resp => {abort, common:encode_error(Reason)}});
 
 to_client_enc('PrepareNode', Results) ->
-    encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]});
-
-to_client_enc('DecideNode', _) ->
-    encode_pb_msg('DecideAck', #{}).
+    encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]}).
 
 encode_prepare({error, From, Reason}) ->
     #{partition => term_to_binary(From), payload => {abort, common:encode_error(Reason)}};
@@ -153,10 +150,8 @@ decode_from_server('VoteBatch', BinMsg) ->
             {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
         {seq_number, Num} ->
             {ok, binary_to_term(PartitionBytes), Num}
-    end || #{partition := PartitionBytes, payload := Resp} <- BinVotes];
+    end || #{partition := PartitionBytes, payload := Resp} <- BinVotes].
 
-decode_from_server('DecideAck', _) ->
-    ok.
 
 %%====================================================================
 %% Internal functions
@@ -189,8 +184,7 @@ encode_msg_type('ReadRequest') -> 3;
 encode_msg_type('ReadReturn') -> 4;
 encode_msg_type('PrepareNode') -> 5;
 encode_msg_type('VoteBatch') -> 6;
-encode_msg_type('DecideNode') -> 7;
-encode_msg_type('DecideAck') -> 8.
+encode_msg_type('DecideNode') -> 7.
 
 
 %% @doc Get original message type
@@ -201,5 +195,4 @@ decode_type_num(3) -> 'ReadRequest';
 decode_type_num(4) -> 'ReadReturn';
 decode_type_num(5) -> 'PrepareNode';
 decode_type_num(6) -> 'VoteBatch';
-decode_type_num(7) -> 'DecideNode';
-decode_type_num(8) -> 'DecideAck'.
+decode_type_num(7) -> 'DecideNode'.

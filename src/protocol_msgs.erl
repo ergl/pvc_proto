@@ -81,17 +81,13 @@
         maybe_payload           => {commit_vc, iodata()} % oneof
        }.
 
--type 'DecideAck'() ::
-      #{
-       }.
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'ReadRequest'/0, 'ReadReturn.ReadPayload'/0, 'ReadReturn'/0, 'PrepareNode.PrepareSingle'/0, 'PrepareNode'/0, 'VoteBatch.VoteSingle'/0, 'VoteBatch'/0, 'DecideNode'/0]).
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'ReadRequest'/0, 'ReadReturn.ReadPayload'/0, 'ReadReturn'/0, 'PrepareNode.PrepareSingle'/0, 'PrepareNode'/0, 'VoteBatch.VoteSingle'/0, 'VoteBatch'/0, 'DecideNode'/0, 'DecideAck'/0]).
-
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'() | 'DecideAck'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'() | 'DecideAck'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -121,9 +117,7 @@ encode_msg(Msg, MsgName, Opts) ->
       'VoteBatch' ->
 	  e_msg_VoteBatch(id(Msg, TrUserData), TrUserData);
       'DecideNode' ->
-	  e_msg_DecideNode(id(Msg, TrUserData), TrUserData);
-      'DecideAck' ->
-	  e_msg_DecideAck(id(Msg, TrUserData), TrUserData)
+	  e_msg_DecideNode(id(Msg, TrUserData), TrUserData)
     end.
 
 
@@ -430,8 +424,6 @@ e_msg_DecideNode(#{} = M, Bin, TrUserData) ->
       _ -> B2
     end.
 
-e_msg_DecideAck(_Msg, _TrUserData) -> <<>>.
-
 e_mfield_ReadReturn_payload(Msg, Bin, TrUserData) ->
     SubBin = 'e_msg_ReadReturn.ReadPayload'(Msg, <<>>,
 					    TrUserData),
@@ -624,9 +616,7 @@ decode_msg_2_doit('VoteBatch.VoteSingle', Bin,
 decode_msg_2_doit('VoteBatch', Bin, TrUserData) ->
     id(d_msg_VoteBatch(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('DecideNode', Bin, TrUserData) ->
-    id(d_msg_DecideNode(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('DecideAck', Bin, TrUserData) ->
-    id(d_msg_DecideAck(Bin, TrUserData), TrUserData).
+    id(d_msg_DecideNode(Bin, TrUserData), TrUserData).
 
 
 
@@ -2143,65 +2133,6 @@ skip_64_DecideNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
     dfp_read_field_def_DecideNode(Rest, Z1, Z2, F@_1, F@_2,
 				  F@_3, TrUserData).
 
-d_msg_DecideAck(Bin, TrUserData) ->
-    dfp_read_field_def_DecideAck(Bin, 0, 0, TrUserData).
-
-dfp_read_field_def_DecideAck(<<>>, 0, 0, _) -> #{};
-dfp_read_field_def_DecideAck(Other, Z1, Z2,
-			     TrUserData) ->
-    dg_read_field_def_DecideAck(Other, Z1, Z2, TrUserData).
-
-dg_read_field_def_DecideAck(<<1:1, X:7, Rest/binary>>,
-			    N, Acc, TrUserData)
-    when N < 32 - 7 ->
-    dg_read_field_def_DecideAck(Rest, N + 7, X bsl N + Acc,
-				TrUserData);
-dg_read_field_def_DecideAck(<<0:1, X:7, Rest/binary>>,
-			    N, Acc, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key band 7 of
-      0 -> skip_varint_DecideAck(Rest, 0, 0, TrUserData);
-      1 -> skip_64_DecideAck(Rest, 0, 0, TrUserData);
-      2 ->
-	  skip_length_delimited_DecideAck(Rest, 0, 0, TrUserData);
-      3 ->
-	  skip_group_DecideAck(Rest, Key bsr 3, 0, TrUserData);
-      5 -> skip_32_DecideAck(Rest, 0, 0, TrUserData)
-    end;
-dg_read_field_def_DecideAck(<<>>, 0, 0, _) -> #{}.
-
-skip_varint_DecideAck(<<1:1, _:7, Rest/binary>>, Z1, Z2,
-		      TrUserData) ->
-    skip_varint_DecideAck(Rest, Z1, Z2, TrUserData);
-skip_varint_DecideAck(<<0:1, _:7, Rest/binary>>, Z1, Z2,
-		      TrUserData) ->
-    dfp_read_field_def_DecideAck(Rest, Z1, Z2, TrUserData).
-
-skip_length_delimited_DecideAck(<<1:1, X:7,
-				  Rest/binary>>,
-				N, Acc, TrUserData)
-    when N < 57 ->
-    skip_length_delimited_DecideAck(Rest, N + 7,
-				    X bsl N + Acc, TrUserData);
-skip_length_delimited_DecideAck(<<0:1, X:7,
-				  Rest/binary>>,
-				N, Acc, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_DecideAck(Rest2, 0, 0, TrUserData).
-
-skip_group_DecideAck(Bin, FNum, Z2, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_DecideAck(Rest, 0, Z2, TrUserData).
-
-skip_32_DecideAck(<<_:32, Rest/binary>>, Z1, Z2,
-		  TrUserData) ->
-    dfp_read_field_def_DecideAck(Rest, Z1, Z2, TrUserData).
-
-skip_64_DecideAck(<<_:64, Rest/binary>>, Z1, Z2,
-		  TrUserData) ->
-    dfp_read_field_def_DecideAck(Rest, Z1, Z2, TrUserData).
-
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
     <<Group:NumBytes/binary, _:EndTagLen/binary, Rest/binary>> = Bin,
@@ -2287,9 +2218,7 @@ merge_msgs(Prev, New, MsgName, Opts) ->
       'VoteBatch' ->
 	  merge_msg_VoteBatch(Prev, New, TrUserData);
       'DecideNode' ->
-	  merge_msg_DecideNode(Prev, New, TrUserData);
-      'DecideAck' ->
-	  merge_msg_DecideAck(Prev, New, TrUserData)
+	  merge_msg_DecideNode(Prev, New, TrUserData)
     end.
 
 -compile({nowarn_unused_function,merge_msg_ConnectRequest/3}).
@@ -2492,9 +2421,6 @@ merge_msg_DecideNode(PMsg, NMsg, TrUserData) ->
       _ -> S3
     end.
 
--compile({nowarn_unused_function,merge_msg_DecideAck/3}).
-merge_msg_DecideAck(_Prev, New, _TrUserData) -> New.
-
 
 verify_msg(Msg, MsgName) when is_atom(MsgName) ->
     verify_msg(Msg, MsgName, []).
@@ -2525,8 +2451,6 @@ verify_msg(Msg, MsgName, Opts) ->
 	  v_msg_VoteBatch(Msg, [MsgName], TrUserData);
       'DecideNode' ->
 	  v_msg_DecideNode(Msg, [MsgName], TrUserData);
-      'DecideAck' ->
-	  v_msg_DecideAck(Msg, [MsgName], TrUserData);
       _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
 
@@ -2870,21 +2794,6 @@ v_msg_DecideNode(M, Path, _TrUserData) when is_map(M) ->
 v_msg_DecideNode(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'DecideNode'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_DecideAck/3}).
--dialyzer({nowarn_function,v_msg_DecideAck/3}).
-v_msg_DecideAck(#{} = M, Path, _) ->
-    lists:foreach(fun (OtherKey) ->
-			  mk_type_error({extraneous_key, OtherKey}, M, Path)
-		  end,
-		  maps:keys(M)),
-    ok;
-v_msg_DecideAck(M, Path, _TrUserData) when is_map(M) ->
-    mk_type_error({missing_fields, [] -- maps:keys(M),
-		   'DecideAck'},
-		  M, Path);
-v_msg_DecideAck(X, Path, _TrUserData) ->
-    mk_type_error({expected_msg, 'DecideAck'}, X, Path).
-
 -compile({nowarn_unused_function,v_type_uint32/3}).
 -dialyzer({nowarn_function,v_type_uint32/3}).
 v_type_uint32(N, _Path, _TrUserData)
@@ -3029,16 +2938,14 @@ get_msg_defs() ->
        #{name => maybe_payload, rnum => 4,
 	 fields =>
 	     [#{name => commit_vc, fnum => 3, rnum => 4,
-		type => bytes, occurrence => optional, opts => []}]}]},
-     {{msg, 'DecideAck'}, []}].
+		type => bytes, occurrence => optional, opts => []}]}]}].
 
 
 get_msg_names() ->
     ['ConnectRequest', 'ConnectResponse', 'ReadRequest',
      'ReadReturn.ReadPayload', 'ReadReturn',
      'PrepareNode.PrepareSingle', 'PrepareNode',
-     'VoteBatch.VoteSingle', 'VoteBatch', 'DecideNode',
-     'DecideAck'].
+     'VoteBatch.VoteSingle', 'VoteBatch', 'DecideNode'].
 
 
 get_group_names() -> [].
@@ -3048,8 +2955,7 @@ get_msg_or_group_names() ->
     ['ConnectRequest', 'ConnectResponse', 'ReadRequest',
      'ReadReturn.ReadPayload', 'ReadReturn',
      'PrepareNode.PrepareSingle', 'PrepareNode',
-     'VoteBatch.VoteSingle', 'VoteBatch', 'DecideNode',
-     'DecideAck'].
+     'VoteBatch.VoteSingle', 'VoteBatch', 'DecideNode'].
 
 
 get_enum_names() -> [].
@@ -3134,7 +3040,6 @@ find_msg_def('DecideNode') ->
        fields =>
 	   [#{name => commit_vc, fnum => 3, rnum => 4,
 	      type => bytes, occurrence => optional, opts => []}]}];
-find_msg_def('DecideAck') -> [];
 find_msg_def(_) -> error.
 
 
