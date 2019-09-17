@@ -88,3 +88,5 @@ message DecideNode {
         bytes commit_vc = 3;
     }
 }
+
+message DecideAck {}
