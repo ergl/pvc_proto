@@ -7,6 +7,7 @@
 
 %% Client-side API
 -export([connect/0,
+         read_rc/2,
          read_request/4,
          prepare_node/3,
          decide_node_abort/2,
@@ -24,6 +25,11 @@
 connect() ->
     Msg = ?proto_msgs:encode_msg(#{}, 'ConnectRequest'),
     encode_raw_bits('ConnectRequest', Msg).
+
+-spec read_rc(term(), term()) -> msg().
+read_rc(Partition, Key) ->
+    Msg = ?proto_msgs:encode_msg(#{partition => term_to_binary(Partition), key => term_to_binary(Key)}, 'RCReadRequest'),
+    encode_raw_bits('RCReadRequest', Msg).
 
 -spec read_request(term(), term(), term(), term()) -> msg().
 read_request(Partition, Key, VCaggr, HasRead) ->
@@ -70,6 +76,10 @@ from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, decode_from_client(Type, BinMsg)}.
 
+decode_from_client('RCReadRequest', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'RCReadRequest'),
+    maps:map(fun(_, Value) -> binary_to_term(Value) end, Map);
+
 decode_from_client('ReadRequest', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'ReadRequest'),
     maps:map(fun(_, Value) -> binary_to_term(Value) end, Map);
@@ -107,6 +117,9 @@ to_client_enc('ConnectRequest', {ok, {NumPartitions, Ring}}) ->
     encode_pb_msg('ConnectResponse',
                   #{num_partitions => NumPartitions, ring_payload => term_to_binary(Ring)});
 
+to_client_enc('RCReadRequest', Value) ->
+    encode_pb_msg('RCReadReturn', #{value => term_to_binary(Value)});
+
 to_client_enc('ReadRequest', {ok, Value, VCdep, MaxVC}) ->
     encode_pb_msg('ReadReturn',
                   #{resp => {payload, #{value => term_to_binary(Value),
@@ -133,6 +146,10 @@ from_server_dec(Bin) ->
 decode_from_server('ConnectResponse', BinMsg) ->
     #{num_partitions := N, ring_payload := Bytes} = ?proto_msgs:decode_msg(BinMsg, 'ConnectResponse'),
     {ok, N, binary_to_term(Bytes)};
+
+decode_from_server('RCReadReturn', BinMsg) ->
+    #{value := BinVal} = ?proto_msgs:decode_msg(BinMsg, 'RCReadReturn'),
+    {ok, binary_to_term(BinVal)};
 
 decode_from_server('ReadReturn', BinMsg) ->
     Resp = maps:get(resp, ?proto_msgs:decode_msg(BinMsg, 'ReadReturn')),
@@ -184,7 +201,9 @@ encode_msg_type('ReadRequest') -> 3;
 encode_msg_type('ReadReturn') -> 4;
 encode_msg_type('PrepareNode') -> 5;
 encode_msg_type('VoteBatch') -> 6;
-encode_msg_type('DecideNode') -> 7.
+encode_msg_type('DecideNode') -> 7;
+encode_msg_type('RCReadRequest') -> 8;
+encode_msg_type('RCReadReturn') -> 9.
 
 
 %% @doc Get original message type
@@ -195,4 +214,6 @@ decode_type_num(3) -> 'ReadRequest';
 decode_type_num(4) -> 'ReadReturn';
 decode_type_num(5) -> 'PrepareNode';
 decode_type_num(6) -> 'VoteBatch';
-decode_type_num(7) -> 'DecideNode'.
+decode_type_num(7) -> 'DecideNode';
+decode_type_num(8) -> 'RCReadRequest';
+decode_type_num(9) -> 'RCReadReturn'.

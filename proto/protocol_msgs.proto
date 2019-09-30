@@ -49,6 +49,17 @@ message ReadReturn {
     }
 }
 
+// Read Request for Read Committed
+message RCReadRequest {
+    bytes partition = 1;
+    bytes key = 2;
+}
+
+// Read Committed Response
+message RCReadReturn {
+    bytes value = 1;
+}
+
 // Aggregation of prepare messages
 message PrepareNode {
     message PrepareSingle {
