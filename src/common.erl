@@ -65,9 +65,11 @@ decode_error(7) -> maxvc_bad_vc.
 -spec encode_protocol(atom()) -> non_neg_integer().
 encode_protocol(psi) -> 1;
 encode_protocol(ser) -> 2;
+encode_protocol(rc) -> 3;
 encode_protocol(_) -> 0.
 
 -spec decode_protocol(non_neg_integer()) -> atom().
 decode_protocol(0) -> unknown;
 decode_protocol(1) -> psi;
-decode_protocol(2) -> ser.
+decode_protocol(2) -> ser;
+decode_protocol(3) -> rc.
