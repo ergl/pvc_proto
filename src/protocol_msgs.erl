@@ -54,6 +54,18 @@
       #{resp                    => {abort, non_neg_integer()} | {payload, 'ReadReturn.ReadPayload'()} % oneof
        }.
 
+-type 'ReadReturnTrace.Payload'() ::
+      #{value                   => iodata(),        % = 1
+        version_vc              => iodata()         % = 2
+       }.
+
+-type 'ReadReturnTrace'() ::
+      #{status                  => {abort, non_neg_integer()} | {payload, 'ReadReturnTrace.Payload'()}, % oneof
+        max_vc                  => iodata(),        % = 3
+        fixed_log               => iodata(),        % = 4
+        fixed_queue             => iodata()         % = 5
+       }.
+
 -type 'RCReadRequest'() ::
       #{partition               => iodata(),        % = 1
         key                     => iodata()         % = 2
@@ -90,13 +102,13 @@
         maybe_payload           => {commit_vc, iodata()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'ReadRequest'/0, 'ReadReturn.ReadPayload'/0, 'ReadReturn'/0, 'RCReadRequest'/0, 'RCReadReturn'/0, 'PrepareNode.PrepareSingle'/0, 'PrepareNode'/0, 'VoteBatch.VoteSingle'/0, 'VoteBatch'/0, 'DecideNode'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'ReadRequest'/0, 'ReadReturn.ReadPayload'/0, 'ReadReturn'/0, 'ReadReturnTrace.Payload'/0, 'ReadReturnTrace'/0, 'RCReadRequest'/0, 'RCReadReturn'/0, 'PrepareNode.PrepareSingle'/0, 'PrepareNode'/0, 'VoteBatch.VoteSingle'/0, 'VoteBatch'/0, 'DecideNode'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'RCReadRequest'() | 'RCReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'ReadReturnTrace.Payload'() | 'ReadReturnTrace'() | 'RCReadRequest'() | 'RCReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) ->
     encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'RCReadRequest'() | 'RCReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'ReadRequest'() | 'ReadReturn.ReadPayload'() | 'ReadReturn'() | 'ReadReturnTrace.Payload'() | 'ReadReturnTrace'() | 'RCReadRequest'() | 'RCReadReturn'() | 'PrepareNode.PrepareSingle'() | 'PrepareNode'() | 'VoteBatch.VoteSingle'() | 'VoteBatch'() | 'DecideNode'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
       true -> verify_msg(Msg, MsgName, Opts);
@@ -115,6 +127,11 @@ encode_msg(Msg, MsgName, Opts) ->
 					 TrUserData);
       'ReadReturn' ->
 	  e_msg_ReadReturn(id(Msg, TrUserData), TrUserData);
+      'ReadReturnTrace.Payload' ->
+	  'e_msg_ReadReturnTrace.Payload'(id(Msg, TrUserData),
+					  TrUserData);
+      'ReadReturnTrace' ->
+	  e_msg_ReadReturnTrace(id(Msg, TrUserData), TrUserData);
       'RCReadRequest' ->
 	  e_msg_RCReadRequest(id(Msg, TrUserData), TrUserData);
       'RCReadReturn' ->
@@ -274,6 +291,92 @@ e_msg_ReadReturn(#{} = M, Bin, TrUserData) ->
 		end
 	  end;
       _ -> Bin
+    end.
+
+'e_msg_ReadReturnTrace.Payload'(Msg, TrUserData) ->
+    'e_msg_ReadReturnTrace.Payload'(Msg, <<>>, TrUserData).
+
+
+'e_msg_ReadReturnTrace.Payload'(#{} = M, Bin,
+				TrUserData) ->
+    B1 = case M of
+	   #{value := F1} ->
+	       begin
+		 TrF1 = id(F1, TrUserData),
+		 case iolist_size(TrF1) of
+		   0 -> Bin;
+		   _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+		 end
+	       end;
+	   _ -> Bin
+	 end,
+    case M of
+      #{version_vc := F2} ->
+	  begin
+	    TrF2 = id(F2, TrUserData),
+	    case iolist_size(TrF2) of
+	      0 -> B1;
+	      _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+	    end
+	  end;
+      _ -> B1
+    end.
+
+e_msg_ReadReturnTrace(Msg, TrUserData) ->
+    e_msg_ReadReturnTrace(Msg, <<>>, TrUserData).
+
+
+e_msg_ReadReturnTrace(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+	   #{status := F1} ->
+	       case id(F1, TrUserData) of
+		 {abort, TF1} ->
+		     begin
+		       TrTF1 = id(TF1, TrUserData),
+		       e_varint(TrTF1, <<Bin/binary, 8>>, TrUserData)
+		     end;
+		 {payload, TF1} ->
+		     begin
+		       TrTF1 = id(TF1, TrUserData),
+		       e_mfield_ReadReturnTrace_payload(TrTF1,
+							<<Bin/binary, 18>>,
+							TrUserData)
+		     end
+	       end;
+	   _ -> Bin
+	 end,
+    B2 = case M of
+	   #{max_vc := F2} ->
+	       begin
+		 TrF2 = id(F2, TrUserData),
+		 case iolist_size(TrF2) of
+		   0 -> B1;
+		   _ -> e_type_bytes(TrF2, <<B1/binary, 26>>, TrUserData)
+		 end
+	       end;
+	   _ -> B1
+	 end,
+    B3 = case M of
+	   #{fixed_log := F3} ->
+	       begin
+		 TrF3 = id(F3, TrUserData),
+		 case iolist_size(TrF3) of
+		   0 -> B2;
+		   _ -> e_type_bytes(TrF3, <<B2/binary, 34>>, TrUserData)
+		 end
+	       end;
+	   _ -> B2
+	 end,
+    case M of
+      #{fixed_queue := F4} ->
+	  begin
+	    TrF4 = id(F4, TrUserData),
+	    case iolist_size(TrF4) of
+	      0 -> B3;
+	      _ -> e_type_bytes(TrF4, <<B3/binary, 42>>, TrUserData)
+	    end
+	  end;
+      _ -> B3
     end.
 
 e_msg_RCReadRequest(Msg, TrUserData) ->
@@ -488,6 +591,13 @@ e_mfield_ReadReturn_payload(Msg, Bin, TrUserData) ->
     Bin2 = e_varint(byte_size(SubBin), Bin),
     <<Bin2/binary, SubBin/binary>>.
 
+e_mfield_ReadReturnTrace_payload(Msg, Bin,
+				 TrUserData) ->
+    SubBin = 'e_msg_ReadReturnTrace.Payload'(Msg, <<>>,
+					     TrUserData),
+    Bin2 = e_varint(byte_size(SubBin), Bin),
+    <<Bin2/binary, SubBin/binary>>.
+
 e_mfield_PrepareNode_prepares(Msg, Bin, TrUserData) ->
     SubBin = 'e_msg_PrepareNode.PrepareSingle'(Msg, <<>>,
 					       TrUserData),
@@ -661,6 +771,12 @@ decode_msg_2_doit('ReadReturn.ReadPayload', Bin,
        TrUserData);
 decode_msg_2_doit('ReadReturn', Bin, TrUserData) ->
     id(d_msg_ReadReturn(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('ReadReturnTrace.Payload', Bin,
+		  TrUserData) ->
+    id('d_msg_ReadReturnTrace.Payload'(Bin, TrUserData),
+       TrUserData);
+decode_msg_2_doit('ReadReturnTrace', Bin, TrUserData) ->
+    id(d_msg_ReadReturnTrace(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('RCReadRequest', Bin, TrUserData) ->
     id(d_msg_RCReadRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('RCReadReturn', Bin, TrUserData) ->
@@ -1387,6 +1503,396 @@ skip_64_ReadReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1,
 		   TrUserData) ->
     dfp_read_field_def_ReadReturn(Rest, Z1, Z2, F@_1,
 				  TrUserData).
+
+'d_msg_ReadReturnTrace.Payload'(Bin, TrUserData) ->
+    'dfp_read_field_def_ReadReturnTrace.Payload'(Bin, 0, 0,
+						 id(<<>>, TrUserData),
+						 id(<<>>, TrUserData),
+						 TrUserData).
+
+'dfp_read_field_def_ReadReturnTrace.Payload'(<<10,
+					       Rest/binary>>,
+					     Z1, Z2, F@_1, F@_2, TrUserData) ->
+    'd_field_ReadReturnTrace.Payload_value'(Rest, Z1, Z2,
+					    F@_1, F@_2, TrUserData);
+'dfp_read_field_def_ReadReturnTrace.Payload'(<<18,
+					       Rest/binary>>,
+					     Z1, Z2, F@_1, F@_2, TrUserData) ->
+    'd_field_ReadReturnTrace.Payload_version_vc'(Rest, Z1,
+						 Z2, F@_1, F@_2, TrUserData);
+'dfp_read_field_def_ReadReturnTrace.Payload'(<<>>, 0, 0,
+					     F@_1, F@_2, _) ->
+    #{value => F@_1, version_vc => F@_2};
+'dfp_read_field_def_ReadReturnTrace.Payload'(Other, Z1,
+					     Z2, F@_1, F@_2, TrUserData) ->
+    'dg_read_field_def_ReadReturnTrace.Payload'(Other, Z1,
+						Z2, F@_1, F@_2, TrUserData).
+
+'dg_read_field_def_ReadReturnTrace.Payload'(<<1:1, X:7,
+					      Rest/binary>>,
+					    N, Acc, F@_1, F@_2, TrUserData)
+    when N < 32 - 7 ->
+    'dg_read_field_def_ReadReturnTrace.Payload'(Rest, N + 7,
+						X bsl N + Acc, F@_1, F@_2,
+						TrUserData);
+'dg_read_field_def_ReadReturnTrace.Payload'(<<0:1, X:7,
+					      Rest/binary>>,
+					    N, Acc, F@_1, F@_2, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      10 ->
+	  'd_field_ReadReturnTrace.Payload_value'(Rest, 0, 0,
+						  F@_1, F@_2, TrUserData);
+      18 ->
+	  'd_field_ReadReturnTrace.Payload_version_vc'(Rest, 0, 0,
+						       F@_1, F@_2, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		'skip_varint_ReadReturnTrace.Payload'(Rest, 0, 0, F@_1,
+						      F@_2, TrUserData);
+	    1 ->
+		'skip_64_ReadReturnTrace.Payload'(Rest, 0, 0, F@_1,
+						  F@_2, TrUserData);
+	    2 ->
+		'skip_length_delimited_ReadReturnTrace.Payload'(Rest, 0,
+								0, F@_1, F@_2,
+								TrUserData);
+	    3 ->
+		'skip_group_ReadReturnTrace.Payload'(Rest, Key bsr 3, 0,
+						     F@_1, F@_2, TrUserData);
+	    5 ->
+		'skip_32_ReadReturnTrace.Payload'(Rest, 0, 0, F@_1,
+						  F@_2, TrUserData)
+	  end
+    end;
+'dg_read_field_def_ReadReturnTrace.Payload'(<<>>, 0, 0,
+					    F@_1, F@_2, _) ->
+    #{value => F@_1, version_vc => F@_2}.
+
+'d_field_ReadReturnTrace.Payload_value'(<<1:1, X:7,
+					  Rest/binary>>,
+					N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    'd_field_ReadReturnTrace.Payload_value'(Rest, N + 7,
+					    X bsl N + Acc, F@_1, F@_2,
+					    TrUserData);
+'d_field_ReadReturnTrace.Payload_value'(<<0:1, X:7,
+					  Rest/binary>>,
+					N, Acc, _, F@_2, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    'dfp_read_field_def_ReadReturnTrace.Payload'(RestF, 0,
+						 0, NewFValue, F@_2,
+						 TrUserData).
+
+'d_field_ReadReturnTrace.Payload_version_vc'(<<1:1, X:7,
+					       Rest/binary>>,
+					     N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    'd_field_ReadReturnTrace.Payload_version_vc'(Rest,
+						 N + 7, X bsl N + Acc, F@_1,
+						 F@_2, TrUserData);
+'d_field_ReadReturnTrace.Payload_version_vc'(<<0:1, X:7,
+					       Rest/binary>>,
+					     N, Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    'dfp_read_field_def_ReadReturnTrace.Payload'(RestF, 0,
+						 0, F@_1, NewFValue,
+						 TrUserData).
+
+'skip_varint_ReadReturnTrace.Payload'(<<1:1, _:7,
+					Rest/binary>>,
+				      Z1, Z2, F@_1, F@_2, TrUserData) ->
+    'skip_varint_ReadReturnTrace.Payload'(Rest, Z1, Z2,
+					  F@_1, F@_2, TrUserData);
+'skip_varint_ReadReturnTrace.Payload'(<<0:1, _:7,
+					Rest/binary>>,
+				      Z1, Z2, F@_1, F@_2, TrUserData) ->
+    'dfp_read_field_def_ReadReturnTrace.Payload'(Rest, Z1,
+						 Z2, F@_1, F@_2, TrUserData).
+
+'skip_length_delimited_ReadReturnTrace.Payload'(<<1:1,
+						  X:7, Rest/binary>>,
+						N, Acc, F@_1, F@_2, TrUserData)
+    when N < 57 ->
+    'skip_length_delimited_ReadReturnTrace.Payload'(Rest,
+						    N + 7, X bsl N + Acc, F@_1,
+						    F@_2, TrUserData);
+'skip_length_delimited_ReadReturnTrace.Payload'(<<0:1,
+						  X:7, Rest/binary>>,
+						N, Acc, F@_1, F@_2,
+						TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    'dfp_read_field_def_ReadReturnTrace.Payload'(Rest2, 0,
+						 0, F@_1, F@_2, TrUserData).
+
+'skip_group_ReadReturnTrace.Payload'(Bin, FNum, Z2,
+				     F@_1, F@_2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    'dfp_read_field_def_ReadReturnTrace.Payload'(Rest, 0,
+						 Z2, F@_1, F@_2, TrUserData).
+
+'skip_32_ReadReturnTrace.Payload'(<<_:32, Rest/binary>>,
+				  Z1, Z2, F@_1, F@_2, TrUserData) ->
+    'dfp_read_field_def_ReadReturnTrace.Payload'(Rest, Z1,
+						 Z2, F@_1, F@_2, TrUserData).
+
+'skip_64_ReadReturnTrace.Payload'(<<_:64, Rest/binary>>,
+				  Z1, Z2, F@_1, F@_2, TrUserData) ->
+    'dfp_read_field_def_ReadReturnTrace.Payload'(Rest, Z1,
+						 Z2, F@_1, F@_2, TrUserData).
+
+d_msg_ReadReturnTrace(Bin, TrUserData) ->
+    dfp_read_field_def_ReadReturnTrace(Bin, 0, 0,
+				       id('$undef', TrUserData),
+				       id(<<>>, TrUserData),
+				       id(<<>>, TrUserData),
+				       id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_ReadReturnTrace(<<8, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+				   TrUserData) ->
+    d_field_ReadReturnTrace_abort(Rest, Z1, Z2, F@_1, F@_2,
+				  F@_3, F@_4, TrUserData);
+dfp_read_field_def_ReadReturnTrace(<<18, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+				   TrUserData) ->
+    d_field_ReadReturnTrace_payload(Rest, Z1, Z2, F@_1,
+				    F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ReadReturnTrace(<<26, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+				   TrUserData) ->
+    d_field_ReadReturnTrace_max_vc(Rest, Z1, Z2, F@_1, F@_2,
+				   F@_3, F@_4, TrUserData);
+dfp_read_field_def_ReadReturnTrace(<<34, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+				   TrUserData) ->
+    d_field_ReadReturnTrace_fixed_log(Rest, Z1, Z2, F@_1,
+				      F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ReadReturnTrace(<<42, Rest/binary>>,
+				   Z1, Z2, F@_1, F@_2, F@_3, F@_4,
+				   TrUserData) ->
+    d_field_ReadReturnTrace_fixed_queue(Rest, Z1, Z2, F@_1,
+					F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_ReadReturnTrace(<<>>, 0, 0, F@_1,
+				   F@_2, F@_3, F@_4, _) ->
+    S1 = #{max_vc => F@_2, fixed_log => F@_3,
+	   fixed_queue => F@_4},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{status => F@_1}
+    end;
+dfp_read_field_def_ReadReturnTrace(Other, Z1, Z2, F@_1,
+				   F@_2, F@_3, F@_4, TrUserData) ->
+    dg_read_field_def_ReadReturnTrace(Other, Z1, Z2, F@_1,
+				      F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_ReadReturnTrace(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 32 - 7 ->
+    dg_read_field_def_ReadReturnTrace(Rest, N + 7,
+				      X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+				      TrUserData);
+dg_read_field_def_ReadReturnTrace(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+      8 ->
+	  d_field_ReadReturnTrace_abort(Rest, 0, 0, F@_1, F@_2,
+					F@_3, F@_4, TrUserData);
+      18 ->
+	  d_field_ReadReturnTrace_payload(Rest, 0, 0, F@_1, F@_2,
+					  F@_3, F@_4, TrUserData);
+      26 ->
+	  d_field_ReadReturnTrace_max_vc(Rest, 0, 0, F@_1, F@_2,
+					 F@_3, F@_4, TrUserData);
+      34 ->
+	  d_field_ReadReturnTrace_fixed_log(Rest, 0, 0, F@_1,
+					    F@_2, F@_3, F@_4, TrUserData);
+      42 ->
+	  d_field_ReadReturnTrace_fixed_queue(Rest, 0, 0, F@_1,
+					      F@_2, F@_3, F@_4, TrUserData);
+      _ ->
+	  case Key band 7 of
+	    0 ->
+		skip_varint_ReadReturnTrace(Rest, 0, 0, F@_1, F@_2,
+					    F@_3, F@_4, TrUserData);
+	    1 ->
+		skip_64_ReadReturnTrace(Rest, 0, 0, F@_1, F@_2, F@_3,
+					F@_4, TrUserData);
+	    2 ->
+		skip_length_delimited_ReadReturnTrace(Rest, 0, 0, F@_1,
+						      F@_2, F@_3, F@_4,
+						      TrUserData);
+	    3 ->
+		skip_group_ReadReturnTrace(Rest, Key bsr 3, 0, F@_1,
+					   F@_2, F@_3, F@_4, TrUserData);
+	    5 ->
+		skip_32_ReadReturnTrace(Rest, 0, 0, F@_1, F@_2, F@_3,
+					F@_4, TrUserData)
+	  end
+    end;
+dg_read_field_def_ReadReturnTrace(<<>>, 0, 0, F@_1,
+				  F@_2, F@_3, F@_4, _) ->
+    S1 = #{max_vc => F@_2, fixed_log => F@_3,
+	   fixed_queue => F@_4},
+    if F@_1 == '$undef' -> S1;
+       true -> S1#{status => F@_1}
+    end.
+
+d_field_ReadReturnTrace_abort(<<1:1, X:7, Rest/binary>>,
+			      N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 57 ->
+    d_field_ReadReturnTrace_abort(Rest, N + 7,
+				  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+				  TrUserData);
+d_field_ReadReturnTrace_abort(<<0:1, X:7, Rest/binary>>,
+			      N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData),
+			  Rest},
+    dfp_read_field_def_ReadReturnTrace(RestF, 0, 0,
+				       id({abort, NewFValue}, TrUserData), F@_2,
+				       F@_3, F@_4, TrUserData).
+
+d_field_ReadReturnTrace_payload(<<1:1, X:7,
+				  Rest/binary>>,
+				N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 57 ->
+    d_field_ReadReturnTrace_payload(Rest, N + 7,
+				    X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+				    TrUserData);
+d_field_ReadReturnTrace_payload(<<0:1, X:7,
+				  Rest/binary>>,
+				N, Acc, Prev, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bs:Len/binary, Rest2/binary>> = Rest,
+			   {id('d_msg_ReadReturnTrace.Payload'(Bs, TrUserData),
+			       TrUserData),
+			    Rest2}
+			 end,
+    dfp_read_field_def_ReadReturnTrace(RestF, 0, 0,
+				       case Prev of
+					 '$undef' ->
+					     id({payload, NewFValue},
+						TrUserData);
+					 {payload, MVPrev} ->
+					     id({payload,
+						 'merge_msg_ReadReturnTrace.Payload'(MVPrev,
+										     NewFValue,
+										     TrUserData)},
+						TrUserData);
+					 _ ->
+					     id({payload, NewFValue},
+						TrUserData)
+				       end,
+				       F@_2, F@_3, F@_4, TrUserData).
+
+d_field_ReadReturnTrace_max_vc(<<1:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 57 ->
+    d_field_ReadReturnTrace_max_vc(Rest, N + 7,
+				   X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+				   TrUserData);
+d_field_ReadReturnTrace_max_vc(<<0:1, X:7,
+				 Rest/binary>>,
+			       N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_ReadReturnTrace(RestF, 0, 0, F@_1,
+				       NewFValue, F@_3, F@_4, TrUserData).
+
+d_field_ReadReturnTrace_fixed_log(<<1:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 57 ->
+    d_field_ReadReturnTrace_fixed_log(Rest, N + 7,
+				      X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+				      TrUserData);
+d_field_ReadReturnTrace_fixed_log(<<0:1, X:7,
+				    Rest/binary>>,
+				  N, Acc, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_ReadReturnTrace(RestF, 0, 0, F@_1,
+				       F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_ReadReturnTrace_fixed_queue(<<1:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData)
+    when N < 57 ->
+    d_field_ReadReturnTrace_fixed_queue(Rest, N + 7,
+					X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+					TrUserData);
+d_field_ReadReturnTrace_fixed_queue(<<0:1, X:7,
+				      Rest/binary>>,
+				    N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin
+			   Len = X bsl N + Acc,
+			   <<Bytes:Len/binary, Rest2/binary>> = Rest,
+			   {id(binary:copy(Bytes), TrUserData), Rest2}
+			 end,
+    dfp_read_field_def_ReadReturnTrace(RestF, 0, 0, F@_1,
+				       F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_ReadReturnTrace(<<1:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    skip_varint_ReadReturnTrace(Rest, Z1, Z2, F@_1, F@_2,
+				F@_3, F@_4, TrUserData);
+skip_varint_ReadReturnTrace(<<0:1, _:7, Rest/binary>>,
+			    Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    dfp_read_field_def_ReadReturnTrace(Rest, Z1, Z2, F@_1,
+				       F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_ReadReturnTrace(<<1:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, F@_2, F@_3, F@_4,
+				      TrUserData)
+    when N < 57 ->
+    skip_length_delimited_ReadReturnTrace(Rest, N + 7,
+					  X bsl N + Acc, F@_1, F@_2, F@_3, F@_4,
+					  TrUserData);
+skip_length_delimited_ReadReturnTrace(<<0:1, X:7,
+					Rest/binary>>,
+				      N, Acc, F@_1, F@_2, F@_3, F@_4,
+				      TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_ReadReturnTrace(Rest2, 0, 0, F@_1,
+				       F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_ReadReturnTrace(Bin, FNum, Z2, F@_1, F@_2,
+			   F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_ReadReturnTrace(Rest, 0, Z2, F@_1,
+				       F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_ReadReturnTrace(<<_:32, Rest/binary>>, Z1, Z2,
+			F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    dfp_read_field_def_ReadReturnTrace(Rest, Z1, Z2, F@_1,
+				       F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_ReadReturnTrace(<<_:64, Rest/binary>>, Z1, Z2,
+			F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    dfp_read_field_def_ReadReturnTrace(Rest, Z1, Z2, F@_1,
+				       F@_2, F@_3, F@_4, TrUserData).
 
 d_msg_RCReadRequest(Bin, TrUserData) ->
     dfp_read_field_def_RCReadRequest(Bin, 0, 0,
@@ -2502,6 +3008,11 @@ merge_msgs(Prev, New, MsgName, Opts) ->
 					     TrUserData);
       'ReadReturn' ->
 	  merge_msg_ReadReturn(Prev, New, TrUserData);
+      'ReadReturnTrace.Payload' ->
+	  'merge_msg_ReadReturnTrace.Payload'(Prev, New,
+					      TrUserData);
+      'ReadReturnTrace' ->
+	  merge_msg_ReadReturnTrace(Prev, New, TrUserData);
       'RCReadRequest' ->
 	  merge_msg_RCReadRequest(Prev, New, TrUserData);
       'RCReadReturn' ->
@@ -2605,6 +3116,57 @@ merge_msg_ReadReturn(PMsg, NMsg, TrUserData) ->
       {_, #{resp := NFresp}} -> S1#{resp => NFresp};
       {#{resp := PFresp}, _} -> S1#{resp => PFresp};
       {_, _} -> S1
+    end.
+
+-compile({nowarn_unused_function,'merge_msg_ReadReturnTrace.Payload'/3}).
+'merge_msg_ReadReturnTrace.Payload'(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {_, #{value := NFvalue}} -> S1#{value => NFvalue};
+	   {#{value := PFvalue}, _} -> S1#{value => PFvalue};
+	   _ -> S1
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{version_vc := NFversion_vc}} ->
+	  S2#{version_vc => NFversion_vc};
+      {#{version_vc := PFversion_vc}, _} ->
+	  S2#{version_vc => PFversion_vc};
+      _ -> S2
+    end.
+
+-compile({nowarn_unused_function,merge_msg_ReadReturnTrace/3}).
+merge_msg_ReadReturnTrace(PMsg, NMsg, TrUserData) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+	   {#{status := {payload, OPFstatus}},
+	    #{status := {payload, ONFstatus}}} ->
+	       S1#{status =>
+		       {payload,
+			'merge_msg_ReadReturnTrace.Payload'(OPFstatus,
+							    ONFstatus,
+							    TrUserData)}};
+	   {_, #{status := NFstatus}} -> S1#{status => NFstatus};
+	   {#{status := PFstatus}, _} -> S1#{status => PFstatus};
+	   {_, _} -> S1
+	 end,
+    S3 = case {PMsg, NMsg} of
+	   {_, #{max_vc := NFmax_vc}} -> S2#{max_vc => NFmax_vc};
+	   {#{max_vc := PFmax_vc}, _} -> S2#{max_vc => PFmax_vc};
+	   _ -> S2
+	 end,
+    S4 = case {PMsg, NMsg} of
+	   {_, #{fixed_log := NFfixed_log}} ->
+	       S3#{fixed_log => NFfixed_log};
+	   {#{fixed_log := PFfixed_log}, _} ->
+	       S3#{fixed_log => PFfixed_log};
+	   _ -> S3
+	 end,
+    case {PMsg, NMsg} of
+      {_, #{fixed_queue := NFfixed_queue}} ->
+	  S4#{fixed_queue => NFfixed_queue};
+      {#{fixed_queue := PFfixed_queue}, _} ->
+	  S4#{fixed_queue => PFfixed_queue};
+      _ -> S4
     end.
 
 -compile({nowarn_unused_function,merge_msg_RCReadRequest/3}).
@@ -2762,6 +3324,11 @@ verify_msg(Msg, MsgName, Opts) ->
 					 TrUserData);
       'ReadReturn' ->
 	  v_msg_ReadReturn(Msg, [MsgName], TrUserData);
+      'ReadReturnTrace.Payload' ->
+	  'v_msg_ReadReturnTrace.Payload'(Msg, [MsgName],
+					  TrUserData);
+      'ReadReturnTrace' ->
+	  v_msg_ReadReturnTrace(Msg, [MsgName], TrUserData);
       'RCReadRequest' ->
 	  v_msg_RCReadRequest(Msg, [MsgName], TrUserData);
       'RCReadReturn' ->
@@ -2929,6 +3496,82 @@ v_msg_ReadReturn(M, Path, _TrUserData) when is_map(M) ->
 		  M, Path);
 v_msg_ReadReturn(X, Path, _TrUserData) ->
     mk_type_error({expected_msg, 'ReadReturn'}, X, Path).
+
+-compile({nowarn_unused_function,'v_msg_ReadReturnTrace.Payload'/3}).
+-dialyzer({nowarn_function,'v_msg_ReadReturnTrace.Payload'/3}).
+'v_msg_ReadReturnTrace.Payload'(#{} = M, Path,
+				TrUserData) ->
+    case M of
+      #{value := F1} ->
+	  v_type_bytes(F1, [value | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{version_vc := F2} ->
+	  v_type_bytes(F2, [version_vc | Path], TrUserData);
+      _ -> ok
+    end,
+    lists:foreach(fun (value) -> ok;
+		      (version_vc) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+'v_msg_ReadReturnTrace.Payload'(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ReadReturnTrace.Payload'},
+		  M, Path);
+'v_msg_ReadReturnTrace.Payload'(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ReadReturnTrace.Payload'},
+		  X, Path).
+
+-compile({nowarn_unused_function,v_msg_ReadReturnTrace/3}).
+-dialyzer({nowarn_function,v_msg_ReadReturnTrace/3}).
+v_msg_ReadReturnTrace(#{} = M, Path, TrUserData) ->
+    case M of
+      #{status := {abort, OF1}} ->
+	  v_type_uint32(OF1, [abort, status | Path], TrUserData);
+      #{status := {payload, OF1}} ->
+	  'v_msg_ReadReturnTrace.Payload'(OF1,
+					  [payload, status | Path], TrUserData);
+      #{status := F1} ->
+	  mk_type_error(invalid_oneof, F1, [status | Path]);
+      _ -> ok
+    end,
+    case M of
+      #{max_vc := F2} ->
+	  v_type_bytes(F2, [max_vc | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{fixed_log := F3} ->
+	  v_type_bytes(F3, [fixed_log | Path], TrUserData);
+      _ -> ok
+    end,
+    case M of
+      #{fixed_queue := F4} ->
+	  v_type_bytes(F4, [fixed_queue | Path], TrUserData);
+      _ -> ok
+    end,
+    lists:foreach(fun (status) -> ok;
+		      (max_vc) -> ok;
+		      (fixed_log) -> ok;
+		      (fixed_queue) -> ok;
+		      (OtherKey) ->
+			  mk_type_error({extraneous_key, OtherKey}, M, Path)
+		  end,
+		  maps:keys(M)),
+    ok;
+v_msg_ReadReturnTrace(M, Path, _TrUserData)
+    when is_map(M) ->
+    mk_type_error({missing_fields, [] -- maps:keys(M),
+		   'ReadReturnTrace'},
+		  M, Path);
+v_msg_ReadReturnTrace(X, Path, _TrUserData) ->
+    mk_type_error({expected_msg, 'ReadReturnTrace'}, X,
+		  Path).
 
 -compile({nowarn_unused_function,v_msg_RCReadRequest/3}).
 -dialyzer({nowarn_function,v_msg_RCReadRequest/3}).
@@ -3279,6 +3922,25 @@ get_msg_defs() ->
 	      #{name => payload, fnum => 2, rnum => 2,
 		type => {msg, 'ReadReturn.ReadPayload'},
 		occurrence => optional, opts => []}]}]},
+     {{msg, 'ReadReturnTrace.Payload'},
+      [#{name => value, fnum => 1, rnum => 2, type => bytes,
+	 occurrence => optional, opts => []},
+       #{name => version_vc, fnum => 2, rnum => 3,
+	 type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'ReadReturnTrace'},
+      [#{name => status, rnum => 2,
+	 fields =>
+	     [#{name => abort, fnum => 1, rnum => 2, type => uint32,
+		occurrence => optional, opts => []},
+	      #{name => payload, fnum => 2, rnum => 2,
+		type => {msg, 'ReadReturnTrace.Payload'},
+		occurrence => optional, opts => []}]},
+       #{name => max_vc, fnum => 3, rnum => 3, type => bytes,
+	 occurrence => optional, opts => []},
+       #{name => fixed_log, fnum => 4, rnum => 4,
+	 type => bytes, occurrence => optional, opts => []},
+       #{name => fixed_queue, fnum => 5, rnum => 5,
+	 type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'RCReadRequest'},
       [#{name => partition, fnum => 1, rnum => 2,
 	 type => bytes, occurrence => optional, opts => []},
@@ -3328,10 +3990,11 @@ get_msg_defs() ->
 
 get_msg_names() ->
     ['ConnectRequest', 'ConnectResponse', 'ReadRequest',
-     'ReadReturn.ReadPayload', 'ReadReturn', 'RCReadRequest',
-     'RCReadReturn', 'PrepareNode.PrepareSingle',
-     'PrepareNode', 'VoteBatch.VoteSingle', 'VoteBatch',
-     'DecideNode'].
+     'ReadReturn.ReadPayload', 'ReadReturn',
+     'ReadReturnTrace.Payload', 'ReadReturnTrace',
+     'RCReadRequest', 'RCReadReturn',
+     'PrepareNode.PrepareSingle', 'PrepareNode',
+     'VoteBatch.VoteSingle', 'VoteBatch', 'DecideNode'].
 
 
 get_group_names() -> [].
@@ -3339,10 +4002,11 @@ get_group_names() -> [].
 
 get_msg_or_group_names() ->
     ['ConnectRequest', 'ConnectResponse', 'ReadRequest',
-     'ReadReturn.ReadPayload', 'ReadReturn', 'RCReadRequest',
-     'RCReadReturn', 'PrepareNode.PrepareSingle',
-     'PrepareNode', 'VoteBatch.VoteSingle', 'VoteBatch',
-     'DecideNode'].
+     'ReadReturn.ReadPayload', 'ReadReturn',
+     'ReadReturnTrace.Payload', 'ReadReturnTrace',
+     'RCReadRequest', 'RCReadReturn',
+     'PrepareNode.PrepareSingle', 'PrepareNode',
+     'VoteBatch.VoteSingle', 'VoteBatch', 'DecideNode'].
 
 
 get_enum_names() -> [].
@@ -3390,6 +4054,25 @@ find_msg_def('ReadReturn') ->
 	    #{name => payload, fnum => 2, rnum => 2,
 	      type => {msg, 'ReadReturn.ReadPayload'},
 	      occurrence => optional, opts => []}]}];
+find_msg_def('ReadReturnTrace.Payload') ->
+    [#{name => value, fnum => 1, rnum => 2, type => bytes,
+       occurrence => optional, opts => []},
+     #{name => version_vc, fnum => 2, rnum => 3,
+       type => bytes, occurrence => optional, opts => []}];
+find_msg_def('ReadReturnTrace') ->
+    [#{name => status, rnum => 2,
+       fields =>
+	   [#{name => abort, fnum => 1, rnum => 2, type => uint32,
+	      occurrence => optional, opts => []},
+	    #{name => payload, fnum => 2, rnum => 2,
+	      type => {msg, 'ReadReturnTrace.Payload'},
+	      occurrence => optional, opts => []}]},
+     #{name => max_vc, fnum => 3, rnum => 3, type => bytes,
+       occurrence => optional, opts => []},
+     #{name => fixed_log, fnum => 4, rnum => 4,
+       type => bytes, occurrence => optional, opts => []},
+     #{name => fixed_queue, fnum => 5, rnum => 5,
+       type => bytes, occurrence => optional, opts => []}];
 find_msg_def('RCReadRequest') ->
     [#{name => partition, fnum => 1, rnum => 2,
        type => bytes, occurrence => optional, opts => []},

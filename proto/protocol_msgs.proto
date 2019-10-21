@@ -49,6 +49,23 @@ message ReadReturn {
     }
 }
 
+message ReadReturnTrace {
+    message Payload {
+        bytes value = 1;
+        bytes version_vc = 2;
+    }
+
+
+    oneof status {
+        uint32 abort = 1;
+        Payload payload = 2;
+    }
+
+    bytes max_vc = 3;
+    bytes fixed_log = 4;
+    bytes fixed_queue = 5;
+}
+
 // Read Request for Read Committed
 message RCReadRequest {
     bytes partition = 1;

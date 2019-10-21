@@ -129,6 +129,19 @@ to_client_enc('ReadRequest', {ok, Value, VCdep, MaxVC}) ->
 to_client_enc('ReadRequest', {error, Reason}) ->
     encode_pb_msg('ReadReturn', #{resp => {abort, common:encode_error(Reason)}});
 
+to_client_enc('ReadRequest', {error, MaxVC, FixedLog, FixedQueue}) ->
+    encode_pb_msg('ReadReturnTrace', #{status => {abort, common:encode_error(maxvc_bad_vc)},
+                                       max_vc => term_to_binary(MaxVC),
+                                       fixed_log => term_to_binary(FixedLog),
+                                       fixed_queue => term_to_binary(FixedQueue)});
+
+to_client_enc('ReadRequest', {ok, Value, VersionVC, MaxVC, FixedLog, FixedQueue}) ->
+    encode_pb_msg('ReadReturnTrace', #{status => {payload, #{value => term_to_binary(Value),
+                                                             version_vc => term_to_binary(VersionVC)}},
+                                       max_vc => term_to_binary(MaxVC),
+                                       fixed_log => term_to_binary(FixedLog),
+                                       fixed_queue => term_to_binary(FixedQueue)});
+
 to_client_enc('PrepareNode', Results) ->
     encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]}).
 
@@ -158,6 +171,18 @@ decode_from_server('ReadReturn', BinMsg) ->
             {error, common:decode_error(Code)};
         {payload, #{value := V, version_vc := VC, max_vc := MaxVC}} ->
             {ok, binary_to_term(V), binary_to_term(VC), binary_to_term(MaxVC)}
+    end;
+
+decode_from_server('ReadReturnTrace', BinMsg) ->
+    #{status := Status, max_vc := BinVC, fixed_log := BinLog, fixed_queue := BinQueue} = ?proto_msgs:decode_msg(BinMsg, 'ReadReturnTrace'),
+    Log = binary_to_term(BinLog),
+    Queue = binary_to_term(BinQueue),
+    MaxVC = binary_to_term(BinVC),
+    case Status of
+        {abort, Code} ->
+            {error, common:decode_error(Code), MaxVC, Log, Queue};
+        {payload, #{value := V, version_vc := VC}} ->
+            {ok, binary_to_term(V), binary_to_term(VC), MaxVC, Log, Queue}
     end;
 
 decode_from_server('VoteBatch', BinMsg) ->
@@ -203,7 +228,8 @@ encode_msg_type('PrepareNode') -> 5;
 encode_msg_type('VoteBatch') -> 6;
 encode_msg_type('DecideNode') -> 7;
 encode_msg_type('RCReadRequest') -> 8;
-encode_msg_type('RCReadReturn') -> 9.
+encode_msg_type('RCReadReturn') -> 9;
+encode_msg_type('ReadReturnTrace') -> 10.
 
 
 %% @doc Get original message type
@@ -216,4 +242,5 @@ decode_type_num(5) -> 'PrepareNode';
 decode_type_num(6) -> 'VoteBatch';
 decode_type_num(7) -> 'DecideNode';
 decode_type_num(8) -> 'RCReadRequest';
-decode_type_num(9) -> 'RCReadReturn'.
+decode_type_num(9) -> 'RCReadReturn';
+decode_type_num(10) -> 'ReadReturnTrace'.
