@@ -14,7 +14,8 @@
 -spec encode_driver_module(atom()) -> non_neg_integer().
 encode_driver_module(ppb_rubis_driver) -> 1;
 encode_driver_module(ppb_simple_driver) -> 2;
-encode_driver_module(ppb_protocol_driver) -> 3.
+encode_driver_module(ppb_protocol_driver) -> 3;
+encode_driver_module(ppb_grb_driver) -> 4.
 
 -spec decode_driver_module(binary()) -> atom().
 decode_driver_module(Bin) ->
@@ -24,7 +25,8 @@ decode_driver_module(Bin) ->
 -spec decode_driver_module_int(non_neg_integer()) -> atom().
 decode_driver_module_int(1) -> ppb_rubis_driver;
 decode_driver_module_int(2) -> ppb_simple_driver;
-decode_driver_module_int(3) -> ppb_protocol_driver.
+decode_driver_module_int(3) -> ppb_protocol_driver;
+decode_driver_module_int(4) -> ppb_grb_driver.
 
 -spec encode_success(atom()) -> non_neg_integer().
 encode_success(_) -> 1.
