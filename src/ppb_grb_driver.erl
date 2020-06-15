@@ -101,6 +101,9 @@ to_client_enc('ConnectRequest', {ok, ReplicaID, NumPartitions, Ring}) ->
                   ring_payload => term_to_binary(Ring),
                   replica_id => term_to_binary(ReplicaID)});
 
+to_client_enc('StartReq', SVC) ->
+    ?encode_msg('StartReturn', #{snapshot_vc => term_to_binary(SVC)});
+
 to_client_enc('UniformBarrier', ok) ->
     ?encode_msg('UniformResp', #{});
 
