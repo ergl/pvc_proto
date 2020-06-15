@@ -122,7 +122,7 @@ decode_from_server('ConnectResponse', BinMsg) ->
     #{num_partitions := N,
       ring_payload := Bytes,
       replica_id := BinId} = ?proto_msgs:decode_msg(BinMsg, 'ConnectResponse'),
-    {ok, BinId, N, binary_to_term(Bytes)};
+    {ok, binary_to_term(BinId), N, binary_to_term(Bytes)};
 
 decode_from_server('UniformResp', _) ->
     ok;
