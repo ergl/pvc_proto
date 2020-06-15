@@ -1,6 +1,16 @@
 syntax = "proto3";
 
-import "proto/protocol_msgs.proto";
+// Emtpy message for requesting a connection
+// A connection requested to only one node in the cluster
+message ConnectRequest {}
+
+message ConnectResponse {
+    uint32 num_partitions = 1;
+    // Ring structure is sent using raw erlang encoding
+    bytes ring_payload = 2;
+    // The replica identifier of this cluster
+    bytes replica_id = 3;
+}
 
 message UniformBarrier {
     bytes client_vc = 1;

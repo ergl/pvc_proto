@@ -95,9 +95,11 @@ decode_from_client(Type, BinMsg) ->
 %%      the reply.
 %%
 
-to_client_enc('ConnectRequest', {ok, {NumPartitions, Ring}}) ->
+to_client_enc('ConnectRequest', {ok, ReplicaID, NumPartitions, Ring}) ->
     ?encode_msg('ConnectResponse',
-                #{num_partitions => NumPartitions, ring_payload => term_to_binary(Ring)});
+                #{num_partitions => NumPartitions,
+                  ring_payload => term_to_binary(Ring),
+                  replica_id => term_to_binary(ReplicaID)});
 
 to_client_enc('UniformBarrier', ok) ->
     ?encode_msg('UniformResp', #{});
@@ -117,8 +119,10 @@ from_server_dec(Bin) ->
     decode_from_server(Type, Msg).
 
 decode_from_server('ConnectResponse', BinMsg) ->
-    #{num_partitions := N, ring_payload := Bytes} = ?proto_msgs:decode_msg(BinMsg, 'ConnectResponse'),
-    {ok, N, binary_to_term(Bytes)};
+    #{num_partitions := N,
+      ring_payload := Bytes,
+      replica_id := BinId} = ?proto_msgs:decode_msg(BinMsg, 'ConnectResponse'),
+    {ok, BinId, N, binary_to_term(Bytes)};
 
 decode_from_server('UniformResp', _) ->
     ok;
