@@ -33,24 +33,24 @@ start_tx(Partition, CVC) ->
     ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC),
                               partition => binary:encode_unsigned(Partition)}).
 
--spec op_request(term(), term(), binary(), binary()) -> msg().
+-spec op_request(non_neg_integer(), term(), binary(), binary()) -> msg().
 op_request(Partition, SVC, Key, Val) ->
-   ?encode_msg('OpRequest', #{partition => term_to_binary(Partition),
+   ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
                               snapshot_vc => term_to_binary(SVC),
                               key => Key,
                               value => Val}).
 
--spec prepare_blue_node(term(), term(), [{term(), term()}]) -> msg().
+-spec prepare_blue_node(term(), term(), [{non_neg_integer(), term()}]) -> msg().
 prepare_blue_node(TxId, SVC, Prepares) ->
-    BinPrepares = [#{partition => term_to_binary(P), writeset => term_to_binary(WS)}
+    BinPrepares = [#{partition => binary:encode_unsigned(P), writeset => term_to_binary(WS)}
                    || {P, WS} <- Prepares],
     ?encode_msg('PrepareBlueNode', #{transaction_id => term_to_binary(TxId),
                                      snapshot_vc => term_to_binary(SVC),
                                      prepares => BinPrepares}).
 
--spec decide_blue_node(term(), [term()], term()) -> msg().
+-spec decide_blue_node(term(), [non_neg_integer()], term()) -> msg().
 decide_blue_node(TxId, Partitions, CommitVC) ->
-    PBinary = [term_to_binary(P) || P <- Partitions],
+    PBinary = [binary:encode_unsigned(P) || P <- Partitions],
     ?encode_msg('DecideBlueNode', #{transaction_id => term_to_binary(TxId),
                                     partitions => PBinary,
                                     commit_vc => term_to_binary(CommitVC)}).
@@ -72,17 +72,19 @@ decode_from_client('OpRequest', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'OpRequest'),
     maps:map(fun(key, V) -> V;
                 (value, V) -> V;
-                (_, V) -> binary_to_term(V) end, Map);
+                (partition, V) -> binary:decode_unsigned(V);
+                (snapshot_vc, V) -> binary_to_term(V) end, Map);
 
 decode_from_client('PrepareBlueNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'PrepareBlueNode'),
-    DecodeInner = fun(_, V) -> binary_to_term(V) end,
+    DecodeInner = fun(partition, V) -> binary:decode_unsigned(V);
+                     (writeset, V) -> binary_to_term(V) end,
     maps:map(fun(prepares, V) -> [maps:map(DecodeInner, M) || M <- V];
                  (_, V) -> binary_to_term(V) end, Map);
 
 decode_from_client('DecideBlueNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'DecideBlueNode'),
-    maps:map(fun(partitions, V) -> [binary_to_term(P) || P <- V];
+    maps:map(fun(partitions, V) -> [binary:decode_unsigned(P) || P <- V];
                  (_, V) -> binary_to_term(V) end, Map);
 
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->
@@ -119,7 +121,7 @@ to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]}).
 
 encode_blue_prepare({ok, From, SeqNumber}) ->
-    #{partition => term_to_binary(From), prepare_time => SeqNumber}.
+    #{partition => binary:encode_unsigned(From), prepare_time => SeqNumber}.
 
 %% @doc Generic client side decode
 from_server_dec(Bin) ->
@@ -145,7 +147,7 @@ decode_from_server('OpReturn', BinMsg) ->
 
 decode_from_server('BlueVoteBatch', BinMsg) ->
     #{votes := Votes} = ?proto_msgs:decode_msg(BinMsg, 'BlueVoteBatch'),
-    [ {ok, binary_to_term(P), PT} || #{partition := P, prepare_time := PT} <- Votes].
+    [ {ok, binary:decode_unsigned(P), PT} || #{partition := P, prepare_time := PT} <- Votes].
 
 %%====================================================================
 %% Internal functions
