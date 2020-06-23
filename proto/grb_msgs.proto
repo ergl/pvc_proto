@@ -14,12 +14,14 @@ message ConnectResponse {
 
 message UniformBarrier {
     bytes client_vc = 1;
+    bytes partition = 2;
 }
 
 message UniformResp {}
 
 message StartReq {
     bytes client_vc = 1;
+    bytes partition = 2;
 }
 
 message StartReturn {

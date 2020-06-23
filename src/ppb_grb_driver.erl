@@ -5,8 +5,8 @@
          from_server_dec/1]).
 
 -export([connect/0,
-         uniform_barrier/1,
-         start_tx/1,
+         uniform_barrier/2,
+         start_tx/2,
          op_request/4,
          prepare_blue_node/3,
          decide_blue_node/3]).
@@ -23,11 +23,15 @@
 -spec connect() -> msg().
 connect() -> ?encode_msg('ConnectRequest', #{}).
 
--spec uniform_barrier(term()) -> msg().
-uniform_barrier(CVC) -> ?encode_msg('UniformBarrier', #{client_vc => term_to_binary(CVC)}).
+-spec uniform_barrier(non_neg_integer(), term()) -> msg().
+uniform_barrier(Partition, CVC) ->
+    ?encode_msg('UniformBarrier', #{client_vc => term_to_binary(CVC),
+                                    partition => binary:encode_unsigned(Partition)}).
 
--spec start_tx(term()) -> msg().
-start_tx(CVC) -> ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC)}).
+-spec start_tx(non_neg_integer(), term()) -> msg().
+start_tx(Partition, CVC) ->
+    ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC),
+                              partition => binary:encode_unsigned(Partition)}).
 
 -spec op_request(term(), term(), binary(), binary()) -> msg().
 op_request(Partition, SVC, Key, Val) ->
@@ -83,7 +87,8 @@ decode_from_client('DecideBlueNode', Msg) ->
 
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->
     Map = ?proto_msgs:decode_msg(Msg, Type),
-    maps:map(fun(_, Value) -> binary_to_term(Value) end, Map);
+    maps:map(fun(client_vc, V) -> binary_to_term(V);
+                (partition, P) -> binary:decode_unsigned(P) end, Map);
 
 decode_from_client(Type, BinMsg) ->
     ?proto_msgs:decode_msg(BinMsg, Type).

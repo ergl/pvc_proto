@@ -61,7 +61,8 @@
        }.
 
 -type 'UniformBarrier'() ::
-      #{client_vc               => iodata()         % = 1
+      #{client_vc               => iodata(),        % = 1
+        partition               => iodata()         % = 2
        }.
 
 -type 'UniformResp'() ::
@@ -69,7 +70,8 @@
        }.
 
 -type 'StartReq'() ::
-      #{client_vc               => iodata()         % = 1
+      #{client_vc               => iodata(),        % = 1
+        partition               => iodata()         % = 2
        }.
 
 -type 'StartReturn'() ::
@@ -186,16 +188,27 @@ encode_msg_UniformBarrier(Msg, TrUserData) -> encode_msg_UniformBarrier(Msg, <<>
 
 
 encode_msg_UniformBarrier(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{client_vc := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case iolist_size(TrF1) of
+                         0 -> Bin;
+                         _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
     case M of
-        #{client_vc := F1} ->
+        #{partition := F2} ->
             begin
-                TrF1 = id(F1, TrUserData),
-                case iolist_size(TrF1) of
-                    0 -> Bin;
-                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                TrF2 = id(F2, TrUserData),
+                case iolist_size(TrF2) of
+                    0 -> B1;
+                    _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
                 end
             end;
-        _ -> Bin
+        _ -> B1
     end.
 
 encode_msg_UniformResp(_Msg, _TrUserData) -> <<>>.
@@ -204,16 +217,27 @@ encode_msg_StartReq(Msg, TrUserData) -> encode_msg_StartReq(Msg, <<>>, TrUserDat
 
 
 encode_msg_StartReq(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{client_vc := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case iolist_size(TrF1) of
+                         0 -> Bin;
+                         _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
     case M of
-        #{client_vc := F1} ->
+        #{partition := F2} ->
             begin
-                TrF1 = id(F1, TrUserData),
-                case iolist_size(TrF1) of
-                    0 -> Bin;
-                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                TrF2 = id(F2, TrUserData),
+                case iolist_size(TrF2) of
+                    0 -> B1;
+                    _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
                 end
             end;
-        _ -> Bin
+        _ -> B1
     end.
 
 encode_msg_StartReturn(Msg, TrUserData) -> encode_msg_StartReturn(Msg, <<>>, TrUserData).
@@ -670,49 +694,56 @@ skip_32_ConnectResponse(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserD
 
 skip_64_ConnectResponse(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
-decode_msg_UniformBarrier(Bin, TrUserData) -> dfp_read_field_def_UniformBarrier(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+decode_msg_UniformBarrier(Bin, TrUserData) -> dfp_read_field_def_UniformBarrier(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_UniformBarrier(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_UniformBarrier_client_vc(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_UniformBarrier(<<>>, 0, 0, F@_1, _) -> #{client_vc => F@_1};
-dfp_read_field_def_UniformBarrier(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_UniformBarrier(Other, Z1, Z2, F@_1, TrUserData).
+dfp_read_field_def_UniformBarrier(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_UniformBarrier_client_vc(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+dfp_read_field_def_UniformBarrier(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_UniformBarrier_partition(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+dfp_read_field_def_UniformBarrier(<<>>, 0, 0, F@_1, F@_2, _) -> #{client_vc => F@_1, partition => F@_2};
+dfp_read_field_def_UniformBarrier(Other, Z1, Z2, F@_1, F@_2, TrUserData) -> dg_read_field_def_UniformBarrier(Other, Z1, Z2, F@_1, F@_2, TrUserData).
 
-dg_read_field_def_UniformBarrier(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_UniformBarrier(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_UniformBarrier(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+dg_read_field_def_UniformBarrier(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_UniformBarrier(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+dg_read_field_def_UniformBarrier(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_UniformBarrier_client_vc(Rest, 0, 0, F@_1, TrUserData);
+        10 -> d_field_UniformBarrier_client_vc(Rest, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_UniformBarrier_partition(Rest, 0, 0, F@_1, F@_2, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_UniformBarrier(Rest, 0, 0, F@_1, TrUserData);
-                1 -> skip_64_UniformBarrier(Rest, 0, 0, F@_1, TrUserData);
-                2 -> skip_length_delimited_UniformBarrier(Rest, 0, 0, F@_1, TrUserData);
-                3 -> skip_group_UniformBarrier(Rest, Key bsr 3, 0, F@_1, TrUserData);
-                5 -> skip_32_UniformBarrier(Rest, 0, 0, F@_1, TrUserData)
+                0 -> skip_varint_UniformBarrier(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                1 -> skip_64_UniformBarrier(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_UniformBarrier(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                3 -> skip_group_UniformBarrier(Rest, Key bsr 3, 0, F@_1, F@_2, TrUserData);
+                5 -> skip_32_UniformBarrier(Rest, 0, 0, F@_1, F@_2, TrUserData)
             end
     end;
-dg_read_field_def_UniformBarrier(<<>>, 0, 0, F@_1, _) -> #{client_vc => F@_1}.
+dg_read_field_def_UniformBarrier(<<>>, 0, 0, F@_1, F@_2, _) -> #{client_vc => F@_1, partition => F@_2}.
 
-d_field_UniformBarrier_client_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_UniformBarrier_client_vc(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-d_field_UniformBarrier_client_vc(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+d_field_UniformBarrier_client_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_UniformBarrier_client_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_UniformBarrier_client_vc(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_UniformBarrier(RestF, 0, 0, NewFValue, TrUserData).
+    dfp_read_field_def_UniformBarrier(RestF, 0, 0, NewFValue, F@_2, TrUserData).
 
-skip_varint_UniformBarrier(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_UniformBarrier(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_UniformBarrier(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_UniformBarrier(Rest, Z1, Z2, F@_1, TrUserData).
+d_field_UniformBarrier_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_UniformBarrier_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_UniformBarrier_partition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_UniformBarrier(RestF, 0, 0, F@_1, NewFValue, TrUserData).
 
-skip_length_delimited_UniformBarrier(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_UniformBarrier(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_UniformBarrier(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+skip_varint_UniformBarrier(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> skip_varint_UniformBarrier(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+skip_varint_UniformBarrier(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_UniformBarrier(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_UniformBarrier(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_UniformBarrier(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+skip_length_delimited_UniformBarrier(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_UniformBarrier(Rest2, 0, 0, F@_1, TrUserData).
+    dfp_read_field_def_UniformBarrier(Rest2, 0, 0, F@_1, F@_2, TrUserData).
 
-skip_group_UniformBarrier(Bin, FNum, Z2, F@_1, TrUserData) ->
+skip_group_UniformBarrier(Bin, FNum, Z2, F@_1, F@_2, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_UniformBarrier(Rest, 0, Z2, F@_1, TrUserData).
+    dfp_read_field_def_UniformBarrier(Rest, 0, Z2, F@_1, F@_2, TrUserData).
 
-skip_32_UniformBarrier(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_UniformBarrier(Rest, Z1, Z2, F@_1, TrUserData).
+skip_32_UniformBarrier(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_UniformBarrier(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
-skip_64_UniformBarrier(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_UniformBarrier(Rest, Z1, Z2, F@_1, TrUserData).
+skip_64_UniformBarrier(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_UniformBarrier(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
 decode_msg_UniformResp(Bin, TrUserData) -> dfp_read_field_def_UniformResp(Bin, 0, 0, TrUserData).
 
@@ -748,49 +779,56 @@ skip_32_UniformResp(<<_:32, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field
 
 skip_64_UniformResp(<<_:64, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_UniformResp(Rest, Z1, Z2, TrUserData).
 
-decode_msg_StartReq(Bin, TrUserData) -> dfp_read_field_def_StartReq(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+decode_msg_StartReq(Bin, TrUserData) -> dfp_read_field_def_StartReq(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_StartReq(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_StartReq_client_vc(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_StartReq(<<>>, 0, 0, F@_1, _) -> #{client_vc => F@_1};
-dfp_read_field_def_StartReq(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_StartReq(Other, Z1, Z2, F@_1, TrUserData).
+dfp_read_field_def_StartReq(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_StartReq_client_vc(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+dfp_read_field_def_StartReq(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_StartReq_partition(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+dfp_read_field_def_StartReq(<<>>, 0, 0, F@_1, F@_2, _) -> #{client_vc => F@_1, partition => F@_2};
+dfp_read_field_def_StartReq(Other, Z1, Z2, F@_1, F@_2, TrUserData) -> dg_read_field_def_StartReq(Other, Z1, Z2, F@_1, F@_2, TrUserData).
 
-dg_read_field_def_StartReq(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_StartReq(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_StartReq(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+dg_read_field_def_StartReq(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_StartReq(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+dg_read_field_def_StartReq(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_StartReq_client_vc(Rest, 0, 0, F@_1, TrUserData);
+        10 -> d_field_StartReq_client_vc(Rest, 0, 0, F@_1, F@_2, TrUserData);
+        18 -> d_field_StartReq_partition(Rest, 0, 0, F@_1, F@_2, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_StartReq(Rest, 0, 0, F@_1, TrUserData);
-                1 -> skip_64_StartReq(Rest, 0, 0, F@_1, TrUserData);
-                2 -> skip_length_delimited_StartReq(Rest, 0, 0, F@_1, TrUserData);
-                3 -> skip_group_StartReq(Rest, Key bsr 3, 0, F@_1, TrUserData);
-                5 -> skip_32_StartReq(Rest, 0, 0, F@_1, TrUserData)
+                0 -> skip_varint_StartReq(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                1 -> skip_64_StartReq(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_StartReq(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                3 -> skip_group_StartReq(Rest, Key bsr 3, 0, F@_1, F@_2, TrUserData);
+                5 -> skip_32_StartReq(Rest, 0, 0, F@_1, F@_2, TrUserData)
             end
     end;
-dg_read_field_def_StartReq(<<>>, 0, 0, F@_1, _) -> #{client_vc => F@_1}.
+dg_read_field_def_StartReq(<<>>, 0, 0, F@_1, F@_2, _) -> #{client_vc => F@_1, partition => F@_2}.
 
-d_field_StartReq_client_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_StartReq_client_vc(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-d_field_StartReq_client_vc(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+d_field_StartReq_client_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_StartReq_client_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_StartReq_client_vc(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_StartReq(RestF, 0, 0, NewFValue, TrUserData).
+    dfp_read_field_def_StartReq(RestF, 0, 0, NewFValue, F@_2, TrUserData).
 
-skip_varint_StartReq(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_StartReq(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_StartReq(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_StartReq(Rest, Z1, Z2, F@_1, TrUserData).
+d_field_StartReq_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_StartReq_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_StartReq_partition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_StartReq(RestF, 0, 0, F@_1, NewFValue, TrUserData).
 
-skip_length_delimited_StartReq(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_StartReq(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_StartReq(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+skip_varint_StartReq(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> skip_varint_StartReq(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+skip_varint_StartReq(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_StartReq(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_StartReq(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_StartReq(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+skip_length_delimited_StartReq(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_StartReq(Rest2, 0, 0, F@_1, TrUserData).
+    dfp_read_field_def_StartReq(Rest2, 0, 0, F@_1, F@_2, TrUserData).
 
-skip_group_StartReq(Bin, FNum, Z2, F@_1, TrUserData) ->
+skip_group_StartReq(Bin, FNum, Z2, F@_1, F@_2, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_StartReq(Rest, 0, Z2, F@_1, TrUserData).
+    dfp_read_field_def_StartReq(Rest, 0, Z2, F@_1, F@_2, TrUserData).
 
-skip_32_StartReq(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_StartReq(Rest, Z1, Z2, F@_1, TrUserData).
+skip_32_StartReq(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_StartReq(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
-skip_64_StartReq(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_StartReq(Rest, Z1, Z2, F@_1, TrUserData).
+skip_64_StartReq(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_StartReq(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
 decode_msg_StartReturn(Bin, TrUserData) -> dfp_read_field_def_StartReturn(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
@@ -1333,10 +1371,15 @@ merge_msg_ConnectResponse(PMsg, NMsg, _) ->
 -compile({nowarn_unused_function,merge_msg_UniformBarrier/3}).
 merge_msg_UniformBarrier(PMsg, NMsg, _) ->
     S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{client_vc := NFclient_vc}} -> S1#{client_vc => NFclient_vc};
+             {#{client_vc := PFclient_vc}, _} -> S1#{client_vc => PFclient_vc};
+             _ -> S1
+         end,
     case {PMsg, NMsg} of
-        {_, #{client_vc := NFclient_vc}} -> S1#{client_vc => NFclient_vc};
-        {#{client_vc := PFclient_vc}, _} -> S1#{client_vc => PFclient_vc};
-        _ -> S1
+        {_, #{partition := NFpartition}} -> S2#{partition => NFpartition};
+        {#{partition := PFpartition}, _} -> S2#{partition => PFpartition};
+        _ -> S2
     end.
 
 -compile({nowarn_unused_function,merge_msg_UniformResp/3}).
@@ -1345,10 +1388,15 @@ merge_msg_UniformResp(_Prev, New, _TrUserData) -> New.
 -compile({nowarn_unused_function,merge_msg_StartReq/3}).
 merge_msg_StartReq(PMsg, NMsg, _) ->
     S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{client_vc := NFclient_vc}} -> S1#{client_vc => NFclient_vc};
+             {#{client_vc := PFclient_vc}, _} -> S1#{client_vc => PFclient_vc};
+             _ -> S1
+         end,
     case {PMsg, NMsg} of
-        {_, #{client_vc := NFclient_vc}} -> S1#{client_vc => NFclient_vc};
-        {#{client_vc := PFclient_vc}, _} -> S1#{client_vc => PFclient_vc};
-        _ -> S1
+        {_, #{partition := NFpartition}} -> S2#{partition => NFpartition};
+        {#{partition := PFpartition}, _} -> S2#{partition => PFpartition};
+        _ -> S2
     end.
 
 -compile({nowarn_unused_function,merge_msg_StartReturn/3}).
@@ -1539,7 +1587,12 @@ v_msg_UniformBarrier(#{} = M, Path, TrUserData) ->
         #{client_vc := F1} -> v_type_bytes(F1, [client_vc | Path], TrUserData);
         _ -> ok
     end,
+    case M of
+        #{partition := F2} -> v_type_bytes(F2, [partition | Path], TrUserData);
+        _ -> ok
+    end,
     lists:foreach(fun (client_vc) -> ok;
+                      (partition) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -1562,7 +1615,12 @@ v_msg_StartReq(#{} = M, Path, TrUserData) ->
         #{client_vc := F1} -> v_type_bytes(F1, [client_vc | Path], TrUserData);
         _ -> ok
     end,
+    case M of
+        #{partition := F2} -> v_type_bytes(F2, [partition | Path], TrUserData);
+        _ -> ok
+    end,
     lists:foreach(fun (client_vc) -> ok;
+                      (partition) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -1816,9 +1874,9 @@ get_msg_defs() ->
       [#{name => num_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
        #{name => ring_payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => replica_id, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'UniformBarrier'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'UniformBarrier'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'UniformResp'}, []},
-     {{msg, 'StartReq'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'StartReq'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'StartReturn'}, [#{name => snapshot_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'OpRequest'},
       [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
@@ -1869,9 +1927,9 @@ find_msg_def('ConnectResponse') ->
     [#{name => num_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
      #{name => ring_payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => replica_id, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('UniformBarrier') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('UniformBarrier') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('UniformResp') -> [];
-find_msg_def('StartReq') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('StartReq') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('StartReturn') -> [#{name => snapshot_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('OpRequest') ->
     [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
