@@ -45,7 +45,14 @@ encode_error({fastpsi, pvc_conflict}) -> 1;
 %% Conflict on commited
 encode_error({fastpsi, pvc_stale_tx}) -> 2;
 %% fastPSI: read error
-encode_error({fastpsi, maxvc_bad_vc}) -> 3.
+encode_error({fastpsi, maxvc_bad_vc}) -> 3;
+
+%% Conflict on preparedRed
+encode_error({grb, conflict}) -> 1;
+%% Conflict on decidedRed
+encode_error({grb, stale_decided}) -> 2;
+%% Conflict on opLog
+encode_error({grb, stale_committed}) -> 3;
 
 encode_error(_Other) -> 0.
 
@@ -59,7 +66,11 @@ decode_error({rubis, 3}) -> non_unique_username;
 
 decode_error({fastpsi, 1}) -> pvc_conflict;
 decode_error({fastpsi, 2}) -> pvc_stale_tx;
-decode_error({fastpsi, 3}) -> maxvc_bad_vc.
+decode_error({fastpsi, 3}) -> maxvc_bad_vc;
+
+decode_error({grb, 1}) -> conflict;
+decode_error({grb, 2}) -> stale_decided;
+decode_error({grb, 3}) -> stale_committed.
 
 %% Client coordinator protocol version
 -spec encode_protocol(atom()) -> non_neg_integer().
