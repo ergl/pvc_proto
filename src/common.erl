@@ -35,33 +35,31 @@ encode_success(_) -> 1.
 decode_success(_) -> ok.
 
 %% @doc Encode server errors as ints
--spec encode_error(atom()) -> non_neg_integer().
-%% Rubis errors
-encode_error(user_not_found) -> 1;
-encode_error(wrong_password) -> 2;
-encode_error(non_unique_username) -> 3;
-%% Misc errors
-%% TODO(borja): Can remove?
-encode_error(timeout) -> 4;
+-spec encode_error({atom(), atom()} | atom()) -> non_neg_integer().
+encode_error({rubis, user_not_found}) -> 1;
+encode_error({rubis, wrong_password}) -> 2;
+encode_error({rubis, non_unique_username}) -> 3;
 
-%% Protocol errors
-%% Prepare Errors
-encode_error(pvc_conflict) -> 5;
-encode_error(pvc_stale_tx) -> 6;
-%% Read Errors
-encode_error(maxvc_bad_vc) -> 7;
+%% Conflict on prepared
+encode_error({fastpsi, pvc_conflict}) -> 1;
+%% Conflict on commited
+encode_error({fastpsi, pvc_stale_tx}) -> 2;
+%% fastPSI: read error
+encode_error({fastpsi, maxvc_bad_vc}) -> 3.
+
 encode_error(_Other) -> 0.
 
 %% @doc Get original error types
--spec decode_error(non_neg_integer()) -> atom().
+-spec decode_error({atom(), non_neg_integer()} | non_neg_integer()) -> atom().
 decode_error(0) -> unknown;
-decode_error(1) -> user_not_found;
-decode_error(2) -> wrong_password;
-decode_error(3) -> non_unique_username;
-decode_error(4) -> timeout;
-decode_error(5) -> pvc_conflict;
-decode_error(6) -> pvc_stale_tx;
-decode_error(7) -> maxvc_bad_vc.
+
+decode_error({rubis, 1}) -> user_not_found;
+decode_error({rubis, 2}) -> wrong_password;
+decode_error({rubis, 3}) -> non_unique_username;
+
+decode_error({fastpsi, 1}) -> pvc_conflict;
+decode_error({fastpsi, 2}) -> pvc_stale_tx;
+decode_error({fastpsi, 3}) -> maxvc_bad_vc.
 
 %% Client coordinator protocol version
 -spec encode_protocol(atom()) -> non_neg_integer().

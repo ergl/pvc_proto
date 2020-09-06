@@ -127,13 +127,13 @@ to_client_enc('ReadRequest', {ok, Value, VCdep, MaxVC}) ->
                                         max_vc => term_to_binary(MaxVC)}}});
 
 to_client_enc('ReadRequest', {error, Reason}) ->
-    encode_pb_msg('ReadReturn', #{resp => {abort, common:encode_error(Reason)}});
+    encode_pb_msg('ReadReturn', #{resp => {abort, common:encode_error({fastpsi, Reason})}});
 
 to_client_enc('PrepareNode', Results) ->
     encode_pb_msg('VoteBatch', #{votes => [encode_prepare(R) || R <- Results]}).
 
 encode_prepare({error, From, Reason}) ->
-    #{partition => term_to_binary(From), payload => {abort, common:encode_error(Reason)}};
+    #{partition => term_to_binary(From), payload => {abort, common:encode_error({fastpsi, Reason})}};
 
 encode_prepare({ok, From, SeqNumber}) ->
     #{partition => term_to_binary(From), payload => {seq_number, SeqNumber}}.
@@ -155,7 +155,7 @@ decode_from_server('ReadReturn', BinMsg) ->
     Resp = maps:get(resp, ?proto_msgs:decode_msg(BinMsg, 'ReadReturn')),
     case Resp of
         {abort, Code} ->
-            {error, common:decode_error(Code)};
+            {error, common:decode_error({fastpsi, Code})};
         {payload, #{value := V, version_vc := VC, max_vc := MaxVC}} ->
             {ok, binary_to_term(V), binary_to_term(VC), binary_to_term(MaxVC)}
     end;
@@ -164,7 +164,7 @@ decode_from_server('VoteBatch', BinMsg) ->
     #{votes := BinVotes} = ?proto_msgs:decode_msg(BinMsg, 'VoteBatch'),
     [case Resp of
         {abort, Code} ->
-            {error, binary_to_term(PartitionBytes), common:decode_error(Code)};
+            {error, binary_to_term(PartitionBytes), common:decode_error({fastpsi, Code})};
         {seq_number, Num} ->
             {ok, binary_to_term(PartitionBytes), Num}
     end || #{partition := PartitionBytes, payload := Resp} <- BinVotes].

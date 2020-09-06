@@ -197,7 +197,7 @@ enc_resp(MsgType, _, {error, Reason}) ->
     enc_resp_int(
         MsgType,
         rubis_msgs:encode_msg(
-            #{resp => {error_reason, common:encode_error(Reason)}},
+            #{resp => {error_reason, common:encode_error({rubis, Reason})}},
             MsgType
         )
     ).
@@ -214,7 +214,7 @@ dec_resp(MsgType, InnerName, Msg) ->
             common:decode_success(Code);
 
         {error_reason, Code} ->
-            {error, common:decode_error(Code)};
+            {error, common:decode_error({rubis, Code})};
 
         {InnerName, Content} ->
             {ok, Content}
