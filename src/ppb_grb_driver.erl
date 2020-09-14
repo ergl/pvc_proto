@@ -140,8 +140,8 @@ to_client_enc('PrepareBlueNode', Votes) ->
 to_client_enc('CommitRed', {ok, CommitVC}) ->
     ?encode_msg('CommitRedReturn', #{resp => {commit_vc, term_to_binary(CommitVC)}});
 
-to_client_enc('CommitRed', {error, Reason}) ->
-    ?encode_msg('CommitRedReturn', #{resp => {error_reason, common:encode_error({grb, Reason})}}).
+to_client_enc('CommitRed', {abort, Reason}) ->
+    ?encode_msg('CommitRedReturn', #{resp => {abort_reason, common:encode_error({grb, Reason})}}).
 
 encode_blue_prepare({ok, From, SeqNumber}) ->
     #{partition => binary:encode_unsigned(From), prepare_time => SeqNumber}.
@@ -175,8 +175,8 @@ decode_from_server('BlueVoteBatch', BinMsg) ->
 decode_from_server('CommitRedReturn', BinMsg) ->
     Resp = maps:get(resp, ?proto_msgs:decode_msg(BinMsg, 'CommitRedReturn')),
     case Resp of
-        {error_reason, Code} ->
-            {error, common:decode_error({grb, Code})};
+        {abort_reason, Code} ->
+            {abort, common:decode_error({grb, Code})};
         {commit_vc, BinVC} ->
             {ok, binary_to_term(BinVC)}
     end.

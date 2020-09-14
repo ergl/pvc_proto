@@ -129,7 +129,7 @@
        }.
 
 -type 'CommitRedReturn'() ::
-      #{resp                    => {commit_vc, iodata()} | {error_reason, non_neg_integer()} % oneof
+      #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
 -export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'PrepareBlueNode.PrepareBlueSingle'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed.RedPrepare'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
@@ -567,7 +567,7 @@ encode_msg_CommitRedReturn(#{} = M, Bin, TrUserData) ->
         #{resp := F1} ->
             case id(F1, TrUserData) of
                 {commit_vc, TF1} -> begin TrTF1 = id(TF1, TrUserData), e_type_bytes(TrTF1, <<Bin/binary, 10>>, TrUserData) end;
-                {error_reason, TF1} -> begin TrTF1 = id(TF1, TrUserData), e_varint(TrTF1, <<Bin/binary, 16>>, TrUserData) end
+                {abort_reason, TF1} -> begin TrTF1 = id(TF1, TrUserData), e_varint(TrTF1, <<Bin/binary, 16>>, TrUserData) end
             end;
         _ -> Bin
     end.
@@ -1514,7 +1514,7 @@ skip_64_CommitRed(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -
 decode_msg_CommitRedReturn(Bin, TrUserData) -> dfp_read_field_def_CommitRedReturn(Bin, 0, 0, id('$undef', TrUserData), TrUserData).
 
 dfp_read_field_def_CommitRedReturn(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_CommitRedReturn_commit_vc(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_CommitRedReturn(<<16, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_CommitRedReturn_error_reason(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_CommitRedReturn(<<16, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_CommitRedReturn_abort_reason(Rest, Z1, Z2, F@_1, TrUserData);
 dfp_read_field_def_CommitRedReturn(<<>>, 0, 0, F@_1, _) ->
     S1 = #{},
     if F@_1 == '$undef' -> S1;
@@ -1527,7 +1527,7 @@ dg_read_field_def_CommitRedReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUse
     Key = X bsl N + Acc,
     case Key of
         10 -> d_field_CommitRedReturn_commit_vc(Rest, 0, 0, F@_1, TrUserData);
-        16 -> d_field_CommitRedReturn_error_reason(Rest, 0, 0, F@_1, TrUserData);
+        16 -> d_field_CommitRedReturn_abort_reason(Rest, 0, 0, F@_1, TrUserData);
         _ ->
             case Key band 7 of
                 0 -> skip_varint_CommitRedReturn(Rest, 0, 0, F@_1, TrUserData);
@@ -1548,10 +1548,10 @@ d_field_CommitRedReturn_commit_vc(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserDa
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
     dfp_read_field_def_CommitRedReturn(RestF, 0, 0, id({commit_vc, NewFValue}, TrUserData), TrUserData).
 
-d_field_CommitRedReturn_error_reason(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_CommitRedReturn_error_reason(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-d_field_CommitRedReturn_error_reason(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+d_field_CommitRedReturn_abort_reason(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_CommitRedReturn_abort_reason(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_CommitRedReturn_abort_reason(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
-    dfp_read_field_def_CommitRedReturn(RestF, 0, 0, id({error_reason, NewFValue}, TrUserData), TrUserData).
+    dfp_read_field_def_CommitRedReturn(RestF, 0, 0, id({abort_reason, NewFValue}, TrUserData), TrUserData).
 
 skip_varint_CommitRedReturn(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_CommitRedReturn(Rest, Z1, Z2, F@_1, TrUserData);
 skip_varint_CommitRedReturn(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_CommitRedReturn(Rest, Z1, Z2, F@_1, TrUserData).
@@ -2229,7 +2229,7 @@ v_msg_CommitRed(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'CommitRed
 v_msg_CommitRedReturn(#{} = M, Path, TrUserData) ->
     case M of
         #{resp := {commit_vc, OF1}} -> v_type_bytes(OF1, [commit_vc, resp | Path], TrUserData);
-        #{resp := {error_reason, OF1}} -> v_type_uint32(OF1, [error_reason, resp | Path], TrUserData);
+        #{resp := {abort_reason, OF1}} -> v_type_uint32(OF1, [abort_reason, resp | Path], TrUserData);
         #{resp := F1} -> mk_type_error(invalid_oneof, F1, [resp | Path]);
         _ -> ok
     end,
@@ -2332,7 +2332,7 @@ get_msg_defs() ->
        #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => prepares, fnum => 3, rnum => 4, type => {msg, 'CommitRed.RedPrepare'}, occurrence => repeated, opts => []}]},
      {{msg, 'CommitRedReturn'},
-      [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => error_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}]}].
+      [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}]}].
 
 
 get_msg_names() ->
@@ -2425,7 +2425,7 @@ find_msg_def('CommitRed') ->
      #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => prepares, fnum => 3, rnum => 4, type => {msg, 'CommitRed.RedPrepare'}, occurrence => repeated, opts => []}];
 find_msg_def('CommitRedReturn') ->
-    [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => error_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}];
+    [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}];
 find_msg_def(_) -> error.
 
 

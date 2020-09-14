@@ -90,6 +90,6 @@ message CommitRed {
 message CommitRedReturn {
     oneof resp {
         bytes commit_vc = 1;
-        uint32 error_reason = 2;
+        uint32 abort_reason = 2;
     }
 }
