@@ -58,9 +58,7 @@ decide_blue_node(TxId, Partitions, CommitVC) ->
 
 -spec commit_red(term(), term(), [{non_neg_integer(), term(), term()}]) -> msg().
 commit_red(TxId, SVC, Prepares) ->
-    BinPrepares = [#{partition => binary:encode_unsigned(P),
-                     readset => term_to_binary(RS),
-                     writeset => term_to_binary(WS)} || {P, RS, WS} <- Prepares],
+    BinPrepares = lists:map(fun term_to_binary/1, Prepares),
     ?encode_msg('CommitRed', #{transaction_id => term_to_binary(TxId),
                                snapshot_vc => term_to_binary(SVC),
                                prepares => BinPrepares}).
@@ -99,9 +97,7 @@ decode_from_client('DecideBlueNode', Msg) ->
 
 decode_from_client('CommitRed', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'CommitRed'),
-    DecodeInner = fun(partition, V) -> binary:decode_unsigned(V);
-                     (_, V) -> binary_to_term(V) end,
-    maps:map(fun(prepares, V) -> [maps:map(DecodeInner, M) || M <- V];
+    maps:map(fun(prepares, V) -> lists:map(fun binary_to_term/1, V);
                  (_, V) -> binary_to_term(V) end, Map);
 
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->

@@ -76,15 +76,9 @@ message DecideBlueNode {
 }
 
 message CommitRed {
-    message RedPrepare {
-        bytes partition = 1;
-        bytes readset = 2;
-        bytes writeset = 3;
-    }
-
     bytes transaction_id = 1;
     bytes snapshot_vc = 2;
-    repeated RedPrepare prepares = 3;
+    repeated bytes prepares = 3;
 }
 
 message CommitRedReturn {
