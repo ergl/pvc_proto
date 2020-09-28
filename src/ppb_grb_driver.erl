@@ -161,8 +161,8 @@ decode_from_server('StartReturn', BinMsg) ->
     {ok, binary_to_term(BinVC)};
 
 decode_from_server('OpReturn', BinMsg) ->
-    #{value := Value, red_timestamp := RedTS} = ?proto_msgs:decode_msg(BinMsg, 'OpReturn'),
-    {ok, Value, RedTS};
+    #{value := Value} = ?proto_msgs:decode_msg(BinMsg, 'OpReturn'),
+    {ok, Value};
 
 decode_from_server('BlueVoteBatch', BinMsg) ->
     #{votes := Votes} = ?proto_msgs:decode_msg(BinMsg, 'BlueVoteBatch'),
