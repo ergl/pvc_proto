@@ -121,22 +121,16 @@
         prepares                => [iodata()]       % = 3
        }.
 
--type 'CommitRedReadonly'() ::
-      #{transaction_id          => iodata(),        % = 1
-        snapshot_vc             => iodata(),        % = 2
-        prepares                => [iodata()]       % = 3
-       }.
-
 -type 'CommitRedReturn'() ::
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'PrepareBlueNode.PrepareBlueSingle'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReadonly'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'PrepareBlueNode.PrepareBlueSingle'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReadonly'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReadonly'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -158,7 +152,6 @@ encode_msg(Msg, MsgName, Opts) ->
         'BlueVoteBatch' -> encode_msg_BlueVoteBatch(id(Msg, TrUserData), TrUserData);
         'DecideBlueNode' -> encode_msg_DecideBlueNode(id(Msg, TrUserData), TrUserData);
         'CommitRed' -> encode_msg_CommitRed(id(Msg, TrUserData), TrUserData);
-        'CommitRedReadonly' -> encode_msg_CommitRedReadonly(id(Msg, TrUserData), TrUserData);
         'CommitRedReturn' -> encode_msg_CommitRedReturn(id(Msg, TrUserData), TrUserData)
     end.
 
@@ -510,41 +503,6 @@ encode_msg_CommitRed(#{} = M, Bin, TrUserData) ->
         _ -> B2
     end.
 
-encode_msg_CommitRedReadonly(Msg, TrUserData) -> encode_msg_CommitRedReadonly(Msg, <<>>, TrUserData).
-
-
-encode_msg_CommitRedReadonly(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-             #{transaction_id := F1} ->
-                 begin
-                     TrF1 = id(F1, TrUserData),
-                     case iolist_size(TrF1) of
-                         0 -> Bin;
-                         _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
-                     end
-                 end;
-             _ -> Bin
-         end,
-    B2 = case M of
-             #{snapshot_vc := F2} ->
-                 begin
-                     TrF2 = id(F2, TrUserData),
-                     case iolist_size(TrF2) of
-                         0 -> B1;
-                         _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
-                     end
-                 end;
-             _ -> B1
-         end,
-    case M of
-        #{prepares := F3} ->
-            TrF3 = id(F3, TrUserData),
-            if TrF3 == [] -> B2;
-               true -> e_field_CommitRedReadonly_prepares(TrF3, B2, TrUserData)
-            end;
-        _ -> B2
-    end.
-
 encode_msg_CommitRedReturn(Msg, TrUserData) -> encode_msg_CommitRedReturn(Msg, <<>>, TrUserData).
 
 
@@ -591,12 +549,6 @@ e_field_CommitRed_prepares([Elem | Rest], Bin, TrUserData) ->
     Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2, TrUserData),
     e_field_CommitRed_prepares(Rest, Bin3, TrUserData);
 e_field_CommitRed_prepares([], Bin, _TrUserData) -> Bin.
-
-e_field_CommitRedReadonly_prepares([Elem | Rest], Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 26>>,
-    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2, TrUserData),
-    e_field_CommitRedReadonly_prepares(Rest, Bin3, TrUserData);
-e_field_CommitRedReadonly_prepares([], Bin, _TrUserData) -> Bin.
 
 -compile({nowarn_unused_function,e_type_sint/3}).
 e_type_sint(Value, Bin, _TrUserData) when Value >= 0 -> e_varint(Value * 2, Bin);
@@ -703,7 +655,6 @@ decode_msg_2_doit('BlueVoteBatch.BlueVote', Bin, TrUserData) -> id('decode_msg_B
 decode_msg_2_doit('BlueVoteBatch', Bin, TrUserData) -> id(decode_msg_BlueVoteBatch(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('DecideBlueNode', Bin, TrUserData) -> id(decode_msg_DecideBlueNode(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('CommitRed', Bin, TrUserData) -> id(decode_msg_CommitRed(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('CommitRedReadonly', Bin, TrUserData) -> id(decode_msg_CommitRedReadonly(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('CommitRedReturn', Bin, TrUserData) -> id(decode_msg_CommitRedReturn(Bin, TrUserData), TrUserData).
 
 
@@ -1425,64 +1376,6 @@ skip_32_CommitRed(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -
 
 skip_64_CommitRed(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
-decode_msg_CommitRedReadonly(Bin, TrUserData) -> dfp_read_field_def_CommitRedReadonly(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), TrUserData).
-
-dfp_read_field_def_CommitRedReadonly(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_CommitRedReadonly_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_CommitRedReadonly(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_CommitRedReadonly_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_CommitRedReadonly(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_CommitRedReadonly_prepares(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_CommitRedReadonly(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData)};
-dfp_read_field_def_CommitRedReadonly(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_CommitRedReadonly(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-dg_read_field_def_CommitRedReadonly(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_CommitRedReadonly(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_CommitRedReadonly(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-        10 -> d_field_CommitRedReadonly_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        18 -> d_field_CommitRedReadonly_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        26 -> d_field_CommitRedReadonly_prepares(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        _ ->
-            case Key band 7 of
-                0 -> skip_varint_CommitRedReadonly(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                1 -> skip_64_CommitRedReadonly(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                2 -> skip_length_delimited_CommitRedReadonly(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                3 -> skip_group_CommitRedReadonly(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, TrUserData);
-                5 -> skip_32_CommitRedReadonly(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
-            end
-    end;
-dg_read_field_def_CommitRedReadonly(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData)}.
-
-d_field_CommitRedReadonly_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_CommitRedReadonly_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_CommitRedReadonly_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRedReadonly(RestF, 0, 0, NewFValue, F@_2, F@_3, TrUserData).
-
-d_field_CommitRedReadonly_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_CommitRedReadonly_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_CommitRedReadonly_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRedReadonly(RestF, 0, 0, F@_1, NewFValue, F@_3, TrUserData).
-
-d_field_CommitRedReadonly_prepares(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_CommitRedReadonly_prepares(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_CommitRedReadonly_prepares(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRedReadonly(RestF, 0, 0, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), TrUserData).
-
-skip_varint_CommitRedReadonly(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_CommitRedReadonly(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-skip_varint_CommitRedReadonly(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRedReadonly(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_length_delimited_CommitRedReadonly(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_CommitRedReadonly(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_CommitRedReadonly(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_CommitRedReadonly(Rest2, 0, 0, F@_1, F@_2, F@_3, TrUserData).
-
-skip_group_CommitRedReadonly(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_CommitRedReadonly(Rest, 0, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_32_CommitRedReadonly(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRedReadonly(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_64_CommitRedReadonly(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRedReadonly(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
 decode_msg_CommitRedReturn(Bin, TrUserData) -> dfp_read_field_def_CommitRedReturn(Bin, 0, 0, id('$undef', TrUserData), TrUserData).
 
 dfp_read_field_def_CommitRedReturn(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_CommitRedReturn_commit_vc(Rest, Z1, Z2, F@_1, TrUserData);
@@ -1619,7 +1512,6 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'BlueVoteBatch' -> merge_msg_BlueVoteBatch(Prev, New, TrUserData);
         'DecideBlueNode' -> merge_msg_DecideBlueNode(Prev, New, TrUserData);
         'CommitRed' -> merge_msg_CommitRed(Prev, New, TrUserData);
-        'CommitRedReadonly' -> merge_msg_CommitRedReadonly(Prev, New, TrUserData);
         'CommitRedReturn' -> merge_msg_CommitRedReturn(Prev, New, TrUserData)
     end.
 
@@ -1816,26 +1708,6 @@ merge_msg_CommitRed(PMsg, NMsg, TrUserData) ->
         {_, _} -> S3
     end.
 
--compile({nowarn_unused_function,merge_msg_CommitRedReadonly/3}).
-merge_msg_CommitRedReadonly(PMsg, NMsg, TrUserData) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-             {_, #{transaction_id := NFtransaction_id}} -> S1#{transaction_id => NFtransaction_id};
-             {#{transaction_id := PFtransaction_id}, _} -> S1#{transaction_id => PFtransaction_id};
-             _ -> S1
-         end,
-    S3 = case {PMsg, NMsg} of
-             {_, #{snapshot_vc := NFsnapshot_vc}} -> S2#{snapshot_vc => NFsnapshot_vc};
-             {#{snapshot_vc := PFsnapshot_vc}, _} -> S2#{snapshot_vc => PFsnapshot_vc};
-             _ -> S2
-         end,
-    case {PMsg, NMsg} of
-        {#{prepares := PFprepares}, #{prepares := NFprepares}} -> S3#{prepares => 'erlang_++'(PFprepares, NFprepares, TrUserData)};
-        {_, #{prepares := NFprepares}} -> S3#{prepares => NFprepares};
-        {#{prepares := PFprepares}, _} -> S3#{prepares => PFprepares};
-        {_, _} -> S3
-    end.
-
 -compile({nowarn_unused_function,merge_msg_CommitRedReturn/3}).
 merge_msg_CommitRedReturn(PMsg, NMsg, _) ->
     S1 = #{},
@@ -1865,7 +1737,6 @@ verify_msg(Msg, MsgName, Opts) ->
         'BlueVoteBatch' -> v_msg_BlueVoteBatch(Msg, [MsgName], TrUserData);
         'DecideBlueNode' -> v_msg_DecideBlueNode(Msg, [MsgName], TrUserData);
         'CommitRed' -> v_msg_CommitRed(Msg, [MsgName], TrUserData);
-        'CommitRedReadonly' -> v_msg_CommitRedReadonly(Msg, [MsgName], TrUserData);
         'CommitRedReturn' -> v_msg_CommitRedReturn(Msg, [MsgName], TrUserData);
         _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
@@ -2162,36 +2033,6 @@ v_msg_CommitRed(#{} = M, Path, TrUserData) ->
 v_msg_CommitRed(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'CommitRed'}, M, Path);
 v_msg_CommitRed(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'CommitRed'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_CommitRedReadonly/3}).
--dialyzer({nowarn_function,v_msg_CommitRedReadonly/3}).
-v_msg_CommitRedReadonly(#{} = M, Path, TrUserData) ->
-    case M of
-        #{transaction_id := F1} -> v_type_bytes(F1, [transaction_id | Path], TrUserData);
-        _ -> ok
-    end,
-    case M of
-        #{snapshot_vc := F2} -> v_type_bytes(F2, [snapshot_vc | Path], TrUserData);
-        _ -> ok
-    end,
-    case M of
-        #{prepares := F3} ->
-            if is_list(F3) ->
-                   _ = [v_type_bytes(Elem, [prepares | Path], TrUserData) || Elem <- F3],
-                   ok;
-               true -> mk_type_error({invalid_list_of, bytes}, F3, [prepares | Path])
-            end;
-        _ -> ok
-    end,
-    lists:foreach(fun (transaction_id) -> ok;
-                      (snapshot_vc) -> ok;
-                      (prepares) -> ok;
-                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
-                  end,
-                  maps:keys(M)),
-    ok;
-v_msg_CommitRedReadonly(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'CommitRedReadonly'}, M, Path);
-v_msg_CommitRedReadonly(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'CommitRedReadonly'}, X, Path).
-
 -compile({nowarn_unused_function,v_msg_CommitRedReturn/3}).
 -dialyzer({nowarn_function,v_msg_CommitRedReturn/3}).
 v_msg_CommitRedReturn(#{} = M, Path, TrUserData) ->
@@ -2295,10 +2136,6 @@ get_msg_defs() ->
       [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}]},
-     {{msg, 'CommitRedReadonly'},
-      [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-       #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}]},
      {{msg, 'CommitRedReturn'},
       [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}]}].
 
@@ -2318,7 +2155,6 @@ get_msg_names() ->
      'BlueVoteBatch',
      'DecideBlueNode',
      'CommitRed',
-     'CommitRedReadonly',
      'CommitRedReturn'].
 
 
@@ -2340,7 +2176,6 @@ get_msg_or_group_names() ->
      'BlueVoteBatch',
      'DecideBlueNode',
      'CommitRed',
-     'CommitRedReadonly',
      'CommitRedReturn'].
 
 
@@ -2385,10 +2220,6 @@ find_msg_def('DecideBlueNode') ->
      #{name => partitions, fnum => 2, rnum => 3, type => bytes, occurrence => repeated, opts => []},
      #{name => commit_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('CommitRed') ->
-    [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-     #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}];
-find_msg_def('CommitRedReadonly') ->
     [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}];
@@ -2466,7 +2297,6 @@ fqbin_to_msg_name(<<"BlueVoteBatch.BlueVote">>) -> 'BlueVoteBatch.BlueVote';
 fqbin_to_msg_name(<<"BlueVoteBatch">>) -> 'BlueVoteBatch';
 fqbin_to_msg_name(<<"DecideBlueNode">>) -> 'DecideBlueNode';
 fqbin_to_msg_name(<<"CommitRed">>) -> 'CommitRed';
-fqbin_to_msg_name(<<"CommitRedReadonly">>) -> 'CommitRedReadonly';
 fqbin_to_msg_name(<<"CommitRedReturn">>) -> 'CommitRedReturn';
 fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
@@ -2485,7 +2315,6 @@ msg_name_to_fqbin('BlueVoteBatch.BlueVote') -> <<"BlueVoteBatch.BlueVote">>;
 msg_name_to_fqbin('BlueVoteBatch') -> <<"BlueVoteBatch">>;
 msg_name_to_fqbin('DecideBlueNode') -> <<"DecideBlueNode">>;
 msg_name_to_fqbin('CommitRed') -> <<"CommitRed">>;
-msg_name_to_fqbin('CommitRedReadonly') -> <<"CommitRedReadonly">>;
 msg_name_to_fqbin('CommitRedReturn') -> <<"CommitRedReturn">>;
 msg_name_to_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
@@ -2529,7 +2358,6 @@ get_msg_containment("grb_msgs") ->
     ['BlueVoteBatch',
      'BlueVoteBatch.BlueVote',
      'CommitRed',
-     'CommitRedReadonly',
      'CommitRedReturn',
      'ConnectRequest',
      'ConnectResponse',
@@ -2573,7 +2401,6 @@ get_proto_by_msg_name_as_fqbin(<<"DecideBlueNode">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectResponse">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch.BlueVote">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"CommitRedReadonly">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRedReturn">>) -> "grb_msgs";

@@ -80,12 +80,6 @@ message CommitRed {
     repeated bytes prepares = 3;
 }
 
-message CommitRedReadonly {
-    bytes transaction_id = 1;
-    bytes snapshot_vc = 2;
-    repeated bytes prepares = 3;
-}
-
 message CommitRedReturn {
     oneof resp {
         bytes commit_vc = 1;
