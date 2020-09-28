@@ -45,7 +45,6 @@ message OpRequest {
 // todo(borja): Add effects
 message OpReturn {
     bytes value = 1;
-    uint64 red_timestamp = 2;
 }
 
 message PrepareBlueNode {

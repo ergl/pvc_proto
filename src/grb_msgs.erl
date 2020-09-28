@@ -86,8 +86,7 @@
        }.
 
 -type 'OpReturn'() ::
-      #{value                   => iodata(),        % = 1
-        red_timestamp           => non_neg_integer() % = 2, 64 bits
+      #{value                   => iodata()         % = 1
        }.
 
 -type 'PrepareBlueNode.PrepareBlueSingle'() ::
@@ -328,26 +327,16 @@ encode_msg_OpReturn(Msg, TrUserData) -> encode_msg_OpReturn(Msg, <<>>, TrUserDat
 
 
 encode_msg_OpReturn(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-             #{value := F1} ->
-                 begin
-                     TrF1 = id(F1, TrUserData),
-                     case iolist_size(TrF1) of
-                         0 -> Bin;
-                         _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
-                     end
-                 end;
-             _ -> Bin
-         end,
     case M of
-        #{red_timestamp := F2} ->
+        #{value := F1} ->
             begin
-                TrF2 = id(F2, TrUserData),
-                if TrF2 =:= 0 -> B1;
-                   true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
+                TrF1 = id(F1, TrUserData),
+                case iolist_size(TrF1) of
+                    0 -> Bin;
+                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
                 end
             end;
-        _ -> B1
+        _ -> Bin
     end.
 
 'encode_msg_PrepareBlueNode.PrepareBlueSingle'(Msg, TrUserData) -> 'encode_msg_PrepareBlueNode.PrepareBlueSingle'(Msg, <<>>, TrUserData).
@@ -1056,56 +1045,49 @@ skip_32_OpRequest(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserD
 
 skip_64_OpRequest(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpRequest(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-decode_msg_OpReturn(Bin, TrUserData) -> dfp_read_field_def_OpReturn(Bin, 0, 0, id(<<>>, TrUserData), id(0, TrUserData), TrUserData).
+decode_msg_OpReturn(Bin, TrUserData) -> dfp_read_field_def_OpReturn(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_OpReturn(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_OpReturn_value(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
-dfp_read_field_def_OpReturn(<<16, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_OpReturn_red_timestamp(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
-dfp_read_field_def_OpReturn(<<>>, 0, 0, F@_1, F@_2, _) -> #{value => F@_1, red_timestamp => F@_2};
-dfp_read_field_def_OpReturn(Other, Z1, Z2, F@_1, F@_2, TrUserData) -> dg_read_field_def_OpReturn(Other, Z1, Z2, F@_1, F@_2, TrUserData).
+dfp_read_field_def_OpReturn(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_OpReturn_value(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_OpReturn(<<>>, 0, 0, F@_1, _) -> #{value => F@_1};
+dfp_read_field_def_OpReturn(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_OpReturn(Other, Z1, Z2, F@_1, TrUserData).
 
-dg_read_field_def_OpReturn(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpReturn(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-dg_read_field_def_OpReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
+dg_read_field_def_OpReturn(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpReturn(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_OpReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_OpReturn_value(Rest, 0, 0, F@_1, F@_2, TrUserData);
-        16 -> d_field_OpReturn_red_timestamp(Rest, 0, 0, F@_1, F@_2, TrUserData);
+        10 -> d_field_OpReturn_value(Rest, 0, 0, F@_1, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData);
-                1 -> skip_64_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData);
-                2 -> skip_length_delimited_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData);
-                3 -> skip_group_OpReturn(Rest, Key bsr 3, 0, F@_1, F@_2, TrUserData);
-                5 -> skip_32_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData)
+                0 -> skip_varint_OpReturn(Rest, 0, 0, F@_1, TrUserData);
+                1 -> skip_64_OpReturn(Rest, 0, 0, F@_1, TrUserData);
+                2 -> skip_length_delimited_OpReturn(Rest, 0, 0, F@_1, TrUserData);
+                3 -> skip_group_OpReturn(Rest, Key bsr 3, 0, F@_1, TrUserData);
+                5 -> skip_32_OpReturn(Rest, 0, 0, F@_1, TrUserData)
             end
     end;
-dg_read_field_def_OpReturn(<<>>, 0, 0, F@_1, F@_2, _) -> #{value => F@_1, red_timestamp => F@_2}.
+dg_read_field_def_OpReturn(<<>>, 0, 0, F@_1, _) -> #{value => F@_1}.
 
-d_field_OpReturn_value(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_OpReturn_value(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-d_field_OpReturn_value(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, TrUserData) ->
+d_field_OpReturn_value(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_OpReturn_value(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_OpReturn_value(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_OpReturn(RestF, 0, 0, NewFValue, F@_2, TrUserData).
+    dfp_read_field_def_OpReturn(RestF, 0, 0, NewFValue, TrUserData).
 
-d_field_OpReturn_red_timestamp(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_OpReturn_red_timestamp(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-d_field_OpReturn_red_timestamp(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, TrUserData) ->
-    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
-    dfp_read_field_def_OpReturn(RestF, 0, 0, F@_1, NewFValue, TrUserData).
+skip_varint_OpReturn(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_OpReturn(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_OpReturn(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_varint_OpReturn(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> skip_varint_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
-skip_varint_OpReturn(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
-
-skip_length_delimited_OpReturn(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_OpReturn(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-skip_length_delimited_OpReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
+skip_length_delimited_OpReturn(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_OpReturn(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_OpReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_OpReturn(Rest2, 0, 0, F@_1, F@_2, TrUserData).
+    dfp_read_field_def_OpReturn(Rest2, 0, 0, F@_1, TrUserData).
 
-skip_group_OpReturn(Bin, FNum, Z2, F@_1, F@_2, TrUserData) ->
+skip_group_OpReturn(Bin, FNum, Z2, F@_1, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_OpReturn(Rest, 0, Z2, F@_1, F@_2, TrUserData).
+    dfp_read_field_def_OpReturn(Rest, 0, Z2, F@_1, TrUserData).
 
-skip_32_OpReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
+skip_32_OpReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_64_OpReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
+skip_64_OpReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, TrUserData).
 
 'decode_msg_PrepareBlueNode.PrepareBlueSingle'(Bin, TrUserData) -> 'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -1730,15 +1712,10 @@ merge_msg_OpRequest(PMsg, NMsg, _) ->
 -compile({nowarn_unused_function,merge_msg_OpReturn/3}).
 merge_msg_OpReturn(PMsg, NMsg, _) ->
     S1 = #{},
-    S2 = case {PMsg, NMsg} of
-             {_, #{value := NFvalue}} -> S1#{value => NFvalue};
-             {#{value := PFvalue}, _} -> S1#{value => PFvalue};
-             _ -> S1
-         end,
     case {PMsg, NMsg} of
-        {_, #{red_timestamp := NFred_timestamp}} -> S2#{red_timestamp => NFred_timestamp};
-        {#{red_timestamp := PFred_timestamp}, _} -> S2#{red_timestamp => PFred_timestamp};
-        _ -> S2
+        {_, #{value := NFvalue}} -> S1#{value => NFvalue};
+        {#{value := PFvalue}, _} -> S1#{value => PFvalue};
+        _ -> S1
     end.
 
 -compile({nowarn_unused_function,'merge_msg_PrepareBlueNode.PrepareBlueSingle'/3}).
@@ -2027,12 +2004,7 @@ v_msg_OpReturn(#{} = M, Path, TrUserData) ->
         #{value := F1} -> v_type_bytes(F1, [value | Path], TrUserData);
         _ -> ok
     end,
-    case M of
-        #{red_timestamp := F2} -> v_type_uint64(F2, [red_timestamp | Path], TrUserData);
-        _ -> ok
-    end,
     lists:foreach(fun (value) -> ok;
-                      (red_timestamp) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -2307,7 +2279,7 @@ get_msg_defs() ->
        #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
        #{name => value, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'OpReturn'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => red_timestamp, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []}]},
+     {{msg, 'OpReturn'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'PrepareBlueNode.PrepareBlueSingle'}, [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => writeset, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'PrepareBlueNode'},
       [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
@@ -2400,7 +2372,7 @@ find_msg_def('OpRequest') ->
      #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
      #{name => value, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('OpReturn') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => red_timestamp, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []}];
+find_msg_def('OpReturn') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('PrepareBlueNode.PrepareBlueSingle') -> [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => writeset, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('PrepareBlueNode') ->
     [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},

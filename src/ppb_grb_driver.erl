@@ -140,8 +140,8 @@ to_client_enc('StartReq', SVC) ->
 to_client_enc('UniformBarrier', ok) ->
     ?encode_msg('UniformResp', #{});
 
-to_client_enc('OpRequest', {ok, Val, RedTs}) ->
-    ?encode_msg('OpReturn', #{value => Val, red_timestamp => RedTs});
+to_client_enc('OpRequest', {ok, Val}) ->
+    ?encode_msg('OpReturn', #{value => Val});
 
 to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]});
