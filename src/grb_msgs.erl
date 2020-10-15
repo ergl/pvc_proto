@@ -118,7 +118,8 @@
 -type 'CommitRed'() ::
       #{transaction_id          => iodata(),        % = 1
         snapshot_vc             => iodata(),        % = 2
-        prepares                => [iodata()]       % = 3
+        prepares                => [iodata()],      % = 3
+        partition               => iodata()         % = 4
        }.
 
 -type 'CommitRedReturn'() ::
@@ -494,13 +495,24 @@ encode_msg_CommitRed(#{} = M, Bin, TrUserData) ->
                  end;
              _ -> B1
          end,
+    B3 = case M of
+             #{prepares := F3} ->
+                 TrF3 = id(F3, TrUserData),
+                 if TrF3 == [] -> B2;
+                    true -> e_field_CommitRed_prepares(TrF3, B2, TrUserData)
+                 end;
+             _ -> B2
+         end,
     case M of
-        #{prepares := F3} ->
-            TrF3 = id(F3, TrUserData),
-            if TrF3 == [] -> B2;
-               true -> e_field_CommitRed_prepares(TrF3, B2, TrUserData)
+        #{partition := F4} ->
+            begin
+                TrF4 = id(F4, TrUserData),
+                case iolist_size(TrF4) of
+                    0 -> B3;
+                    _ -> e_type_bytes(TrF4, <<B3/binary, 34>>, TrUserData)
+                end
             end;
-        _ -> B2
+        _ -> B3
     end.
 
 encode_msg_CommitRedReturn(Msg, TrUserData) -> encode_msg_CommitRedReturn(Msg, <<>>, TrUserData).
@@ -1318,63 +1330,70 @@ skip_32_DecideBlueNode(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserDa
 
 skip_64_DecideBlueNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DecideBlueNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
-decode_msg_CommitRed(Bin, TrUserData) -> dfp_read_field_def_CommitRed(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), TrUserData).
+decode_msg_CommitRed(Bin, TrUserData) -> dfp_read_field_def_CommitRed(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_CommitRed(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_CommitRed_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_CommitRed(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_CommitRed_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_CommitRed(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_CommitRed_prepares(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData)};
-dfp_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+dfp_read_field_def_CommitRed(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_CommitRed(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_CommitRed(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_prepares(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_CommitRed(<<34, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, R1, F@_4, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData), partition => F@_4};
+dfp_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-dg_read_field_def_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+dg_read_field_def_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_CommitRed_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        18 -> d_field_CommitRed_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        26 -> d_field_CommitRed_prepares(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        10 -> d_field_CommitRed_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_CommitRed_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_CommitRed_prepares(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        34 -> d_field_CommitRed_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                1 -> skip_64_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                2 -> skip_length_delimited_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                3 -> skip_group_CommitRed(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, TrUserData);
-                5 -> skip_32_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
+                0 -> skip_varint_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_CommitRed(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData)
             end
     end;
-dg_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData)}.
+dg_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, R1, F@_4, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData), partition => F@_4}.
 
-d_field_CommitRed_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_CommitRed_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_CommitRed_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, TrUserData) ->
+d_field_CommitRed_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_CommitRed_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, NewFValue, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, TrUserData).
 
-d_field_CommitRed_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_CommitRed_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_CommitRed_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, TrUserData) ->
+d_field_CommitRed_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_CommitRed_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, NewFValue, F@_3, TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, TrUserData).
 
-d_field_CommitRed_prepares(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_CommitRed_prepares(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_CommitRed_prepares(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, Prev, TrUserData) ->
+d_field_CommitRed_prepares(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_prepares(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_CommitRed_prepares(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, Prev, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), F@_4, TrUserData).
 
-skip_varint_CommitRed(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-skip_varint_CommitRed(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+d_field_CommitRed_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_CommitRed_partition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, TrUserData).
 
-skip_length_delimited_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+skip_varint_CommitRed(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_CommitRed(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_CommitRed(Rest2, 0, 0, F@_1, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_CommitRed(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_group_CommitRed(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
+skip_group_CommitRed(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_CommitRed(Rest, 0, Z2, F@_1, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_CommitRed(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_32_CommitRed(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+skip_32_CommitRed(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_64_CommitRed(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+skip_64_CommitRed(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
 decode_msg_CommitRedReturn(Bin, TrUserData) -> dfp_read_field_def_CommitRedReturn(Bin, 0, 0, id('$undef', TrUserData), TrUserData).
 
@@ -1701,11 +1720,16 @@ merge_msg_CommitRed(PMsg, NMsg, TrUserData) ->
              {#{snapshot_vc := PFsnapshot_vc}, _} -> S2#{snapshot_vc => PFsnapshot_vc};
              _ -> S2
          end,
+    S4 = case {PMsg, NMsg} of
+             {#{prepares := PFprepares}, #{prepares := NFprepares}} -> S3#{prepares => 'erlang_++'(PFprepares, NFprepares, TrUserData)};
+             {_, #{prepares := NFprepares}} -> S3#{prepares => NFprepares};
+             {#{prepares := PFprepares}, _} -> S3#{prepares => PFprepares};
+             {_, _} -> S3
+         end,
     case {PMsg, NMsg} of
-        {#{prepares := PFprepares}, #{prepares := NFprepares}} -> S3#{prepares => 'erlang_++'(PFprepares, NFprepares, TrUserData)};
-        {_, #{prepares := NFprepares}} -> S3#{prepares => NFprepares};
-        {#{prepares := PFprepares}, _} -> S3#{prepares => PFprepares};
-        {_, _} -> S3
+        {_, #{partition := NFpartition}} -> S4#{partition => NFpartition};
+        {#{partition := PFpartition}, _} -> S4#{partition => PFpartition};
+        _ -> S4
     end.
 
 -compile({nowarn_unused_function,merge_msg_CommitRedReturn/3}).
@@ -2023,9 +2047,14 @@ v_msg_CommitRed(#{} = M, Path, TrUserData) ->
             end;
         _ -> ok
     end,
+    case M of
+        #{partition := F4} -> v_type_bytes(F4, [partition | Path], TrUserData);
+        _ -> ok
+    end,
     lists:foreach(fun (transaction_id) -> ok;
                       (snapshot_vc) -> ok;
                       (prepares) -> ok;
+                      (partition) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -2135,7 +2164,8 @@ get_msg_defs() ->
      {{msg, 'CommitRed'},
       [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}]},
+       #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []},
+       #{name => partition, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'CommitRedReturn'},
       [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}]}].
 
@@ -2222,7 +2252,8 @@ find_msg_def('DecideBlueNode') ->
 find_msg_def('CommitRed') ->
     [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}];
+     #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []},
+     #{name => partition, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('CommitRedReturn') ->
     [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}];
 find_msg_def(_) -> error.

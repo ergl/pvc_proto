@@ -10,7 +10,7 @@
          op_request/4,
          prepare_blue_node/3,
          decide_blue_node/3,
-         commit_red/3]).
+         commit_red/4]).
 
 -define(proto_msgs, grb_msgs).
 -define(encode_msg(Type, Body), encode_raw_bits(Type, ?proto_msgs:encode_msg(Body, Type))).
@@ -56,12 +56,13 @@ decide_blue_node(TxId, Partitions, CommitVC) ->
                                     partitions => PBinary,
                                     commit_vc => term_to_binary(CommitVC)}).
 
--spec commit_red(term(), term(), [{non_neg_integer(), term(), term()}]) -> msg().
-commit_red(TxId, SVC, Prepares) ->
+-spec commit_red(term(), term(), term(), [{non_neg_integer(), term(), term()}]) -> msg().
+commit_red(Partition, TxId, SVC, Prepares) ->
     BinPrepares = lists:map(fun term_to_binary/1, Prepares),
     ?encode_msg('CommitRed', #{transaction_id => term_to_binary(TxId),
                                snapshot_vc => term_to_binary(SVC),
-                               prepares => BinPrepares}).
+                               prepares => BinPrepares,
+                               partition => binary:encode_unsigned(Partition)}).
 
 %%====================================================================
 %% Module API functions
@@ -98,6 +99,7 @@ decode_from_client('DecideBlueNode', Msg) ->
 decode_from_client('CommitRed', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'CommitRed'),
     maps:map(fun(prepares, V) -> lists:map(fun binary_to_term/1, V);
+                 (partition, V) -> binary:decode_unsigned(V);
                  (_, V) -> binary_to_term(V) end, Map);
 
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->
