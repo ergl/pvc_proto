@@ -7,7 +7,7 @@
 -export([connect/0,
          uniform_barrier/2,
          start_tx/2,
-         op_request/4,
+         key_version/3,
          prepare_blue_node/3,
          decide_blue_node/3,
          commit_red/4]).
@@ -34,12 +34,11 @@ start_tx(Partition, CVC) ->
     ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC),
                               partition => binary:encode_unsigned(Partition)}).
 
--spec op_request(non_neg_integer(), term(), binary(), binary()) -> msg().
-op_request(Partition, SVC, Key, Val) ->
-   ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
-                              snapshot_vc => term_to_binary(SVC),
-                              key => Key,
-                              value => Val}).
+-spec key_version(non_neg_integer(), term(), binary()) -> msg().
+key_version(Partition, SVC, Key) ->
+   ?encode_msg('GetKeyVersion', #{partition => binary:encode_unsigned(Partition),
+                                  snapshot_vc => term_to_binary(SVC),
+                                  key => Key}).
 
 -spec prepare_blue_node(term(), term(), [{non_neg_integer(), term()}]) -> msg().
 prepare_blue_node(TxId, SVC, Prepares) ->
@@ -77,10 +76,9 @@ from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, decode_from_client(Type, BinMsg)}.
 
-decode_from_client('OpRequest', Msg) ->
-    Map = ?proto_msgs:decode_msg(Msg, 'OpRequest'),
+decode_from_client('GetKeyVersion', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'GetKeyVersion'),
     maps:map(fun(key, V) -> V;
-                (value, V) -> V;
                 (partition, V) -> binary:decode_unsigned(V);
                 (snapshot_vc, V) -> binary_to_term(V) end, Map);
 
@@ -129,8 +127,8 @@ to_client_enc('StartReq', SVC) ->
 to_client_enc('UniformBarrier', ok) ->
     ?encode_msg('UniformResp', #{});
 
-to_client_enc('OpRequest', {ok, Val}) ->
-    ?encode_msg('OpReturn', #{value => Val});
+to_client_enc('GetKeyVersion', {ok, Val}) ->
+    ?encode_msg('KeyVersion', #{value => Val});
 
 to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]});
@@ -162,8 +160,8 @@ decode_from_server('StartReturn', BinMsg) ->
     #{snapshot_vc := BinVC} = ?proto_msgs:decode_msg(BinMsg, 'StartReturn'),
     {ok, binary_to_term(BinVC)};
 
-decode_from_server('OpReturn', BinMsg) ->
-    #{value := Value} = ?proto_msgs:decode_msg(BinMsg, 'OpReturn'),
+decode_from_server('KeyVersion', BinMsg) ->
+    #{value := Value} = ?proto_msgs:decode_msg(BinMsg, 'KeyVersion'),
     {ok, Value};
 
 decode_from_server('BlueVoteBatch', BinMsg) ->
@@ -205,8 +203,8 @@ encode_msg_type('UniformBarrier') -> 3;
 encode_msg_type('UniformResp') -> 4;
 encode_msg_type('StartReq') -> 5;
 encode_msg_type('StartReturn') -> 6;
-encode_msg_type('OpRequest') -> 7;
-encode_msg_type('OpReturn') -> 8;
+encode_msg_type('GetKeyVersion') -> 7;
+encode_msg_type('KeyVersion') -> 8;
 encode_msg_type('PrepareBlueNode') -> 9;
 encode_msg_type('BlueVoteBatch') -> 10;
 encode_msg_type('DecideBlueNode') -> 11;
@@ -221,8 +219,8 @@ decode_type_num( 3) -> 'UniformBarrier';
 decode_type_num( 4) -> 'UniformResp';
 decode_type_num( 5) -> 'StartReq';
 decode_type_num( 6) -> 'StartReturn';
-decode_type_num( 7) -> 'OpRequest';
-decode_type_num( 8) -> 'OpReturn';
+decode_type_num( 7) -> 'GetKeyVersion';
+decode_type_num( 8) -> 'KeyVersion';
 decode_type_num( 9) -> 'PrepareBlueNode';
 decode_type_num(10) -> 'BlueVoteBatch';
 decode_type_num(11) -> 'DecideBlueNode';

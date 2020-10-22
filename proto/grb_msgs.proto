@@ -30,20 +30,19 @@ message StartReturn {
 
 // Keys are opaque byte blobs
 // The vector clock is a serialized erlang term
-// todo(borja): Add ops and effects
+// todo(borja): When adding CRDTs, do we send our effects?
 // todo(borja): Aggregate per node like prep/dec?
-message OpRequest {
+message GetKeyVersion {
     // Partition number is too long for PB
     // (128 bit number)
     bytes partition = 1;
     bytes key = 2;
     bytes snapshot_vc = 3;
-    bytes value = 4;
 }
 
 // Values are opaque byte blobs
-// todo(borja): Add effects
-message OpReturn {
+// todo(borja): Add effects?
+message KeyVersion {
     bytes value = 1;
 }
 
