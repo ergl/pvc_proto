@@ -8,6 +8,7 @@
          uniform_barrier/2,
          start_tx/2,
          key_version/3,
+         key_version_again/3,
          prepare_blue_node/3,
          decide_blue_node/3,
          commit_red/4]).
@@ -39,6 +40,12 @@ key_version(Partition, SVC, Key) ->
    ?encode_msg('GetKeyVersion', #{partition => binary:encode_unsigned(Partition),
                                   snapshot_vc => term_to_binary(SVC),
                                   key => Key}).
+
+-spec key_version_again(non_neg_integer(), term(), binary()) -> msg().
+key_version_again(Partition, SVC, Key) ->
+    ?encode_msg('GetKeyVersionAgain', #{partition => binary:encode_unsigned(Partition),
+                                        snapshot_vc => term_to_binary(SVC),
+                                        key => Key}).
 
 -spec prepare_blue_node(term(), term(), [{non_neg_integer(), term()}]) -> msg().
 prepare_blue_node(TxId, SVC, Prepares) ->
@@ -78,6 +85,12 @@ from_client_dec(Bin) ->
 
 decode_from_client('GetKeyVersion', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'GetKeyVersion'),
+    maps:map(fun(key, V) -> V;
+                (partition, V) -> binary:decode_unsigned(V);
+                (snapshot_vc, V) -> binary_to_term(V) end, Map);
+
+decode_from_client('GetKeyVersionAgain', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'GetKeyVersionAgain'),
     maps:map(fun(key, V) -> V;
                 (partition, V) -> binary:decode_unsigned(V);
                 (snapshot_vc, V) -> binary_to_term(V) end, Map);
@@ -128,6 +141,9 @@ to_client_enc('UniformBarrier', ok) ->
     ?encode_msg('UniformResp', #{});
 
 to_client_enc('GetKeyVersion', {ok, Val}) ->
+    ?encode_msg('KeyVersion', #{value => Val});
+
+to_client_enc('GetKeyVersionAgain', {ok, Val}) ->
     ?encode_msg('KeyVersion', #{value => Val});
 
 to_client_enc('PrepareBlueNode', Votes) ->
@@ -209,7 +225,8 @@ encode_msg_type('PrepareBlueNode') -> 9;
 encode_msg_type('BlueVoteBatch') -> 10;
 encode_msg_type('DecideBlueNode') -> 11;
 encode_msg_type('CommitRed') -> 12;
-encode_msg_type('CommitRedReturn') -> 13.
+encode_msg_type('CommitRedReturn') -> 13;
+encode_msg_type('GetKeyVersionAgain') -> 14.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -225,4 +242,5 @@ decode_type_num( 9) -> 'PrepareBlueNode';
 decode_type_num(10) -> 'BlueVoteBatch';
 decode_type_num(11) -> 'DecideBlueNode';
 decode_type_num(12) -> 'CommitRed';
-decode_type_num(13) -> 'CommitRedReturn'.
+decode_type_num(13) -> 'CommitRedReturn';
+decode_type_num(14) -> 'GetKeyVersionAgain'.
