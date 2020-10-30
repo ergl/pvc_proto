@@ -7,6 +7,7 @@
 -export([connect/0,
          uniform_barrier/2,
          start_tx/2,
+         start_read/3,
          key_version/3,
          key_version_again/3,
          prepare_blue_node/3,
@@ -34,6 +35,12 @@ uniform_barrier(Partition, CVC) ->
 start_tx(Partition, CVC) ->
     ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC),
                               partition => binary:encode_unsigned(Partition)}).
+
+-spec start_read(non_neg_integer(), term(), binary()) -> msg().
+start_read(Partition, CVC, Key) ->
+    ?encode_msg('StartAndRead', #{partition => binary:encode_unsigned(Partition),
+                                  key => Key,
+                                  client_vc => term_to_binary(CVC)}).
 
 -spec key_version(non_neg_integer(), term(), binary()) -> msg().
 key_version(Partition, SVC, Key) ->
@@ -82,6 +89,12 @@ commit_red(Partition, TxId, SVC, Prepares) ->
 from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, decode_from_client(Type, BinMsg)}.
+
+decode_from_client('StartAndRead', Msg) ->
+    #{partition := P,
+      client_vc := VC} = Map = ?proto_msgs:decode_msg(Msg, 'StartAndRead'),
+    Map#{partition => binary:decode_unsigned(P),
+         client_vc => binary_to_term(VC)};
 
 decode_from_client('GetKeyVersion', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'GetKeyVersion'),
@@ -137,6 +150,9 @@ to_client_enc('ConnectRequest', {ok, ReplicaID, NumPartitions, Ring}) ->
 to_client_enc('StartReq', SVC) ->
     ?encode_msg('StartReturn', #{snapshot_vc => term_to_binary(SVC)});
 
+to_client_enc('StartAndRead', {ok, Val, SVC}) ->
+    ?encode_msg('StartAndReadReturn', #{value => Val, snapshot_vc => term_to_binary(SVC)});
+
 to_client_enc('UniformBarrier', ok) ->
     ?encode_msg('UniformResp', #{});
 
@@ -175,6 +191,10 @@ decode_from_server('UniformResp', _) ->
 decode_from_server('StartReturn', BinMsg) ->
     #{snapshot_vc := BinVC} = ?proto_msgs:decode_msg(BinMsg, 'StartReturn'),
     {ok, binary_to_term(BinVC)};
+
+decode_from_server('StartAndReadReturn', BinMsg) ->
+    #{snapshot_vc := BinVC, value := Value} = ?proto_msgs:decode_msg(BinMsg, 'StartAndReadReturn'),
+    {ok, Value, binary_to_term(BinVC)};
 
 decode_from_server('KeyVersion', BinMsg) ->
     #{value := Value} = ?proto_msgs:decode_msg(BinMsg, 'KeyVersion'),
@@ -226,7 +246,9 @@ encode_msg_type('BlueVoteBatch') -> 10;
 encode_msg_type('DecideBlueNode') -> 11;
 encode_msg_type('CommitRed') -> 12;
 encode_msg_type('CommitRedReturn') -> 13;
-encode_msg_type('GetKeyVersionAgain') -> 14.
+encode_msg_type('GetKeyVersionAgain') -> 14;
+encode_msg_type('StartAndRead') -> 15;
+encode_msg_type('StartAndReadReturn') -> 16.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -243,4 +265,6 @@ decode_type_num(10) -> 'BlueVoteBatch';
 decode_type_num(11) -> 'DecideBlueNode';
 decode_type_num(12) -> 'CommitRed';
 decode_type_num(13) -> 'CommitRedReturn';
-decode_type_num(14) -> 'GetKeyVersionAgain'.
+decode_type_num(14) -> 'GetKeyVersionAgain';
+decode_type_num(15) -> 'StartAndRead';
+decode_type_num(16) -> 'StartAndReadReturn'.
