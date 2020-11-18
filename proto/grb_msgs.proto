@@ -28,21 +28,9 @@ message StartReturn {
     bytes snapshot_vc = 1;
 }
 
-message StartAndRead {
-    bytes partition = 1;
-    bytes key = 2;
-    bytes client_vc = 3;
-}
-
-message StartAndReadReturn {
-    bytes value = 1;
-    bytes snapshot_vc = 2;
-}
-
 // Keys are opaque byte blobs
 // The vector clock is a serialized erlang term
-// todo(borja): When adding CRDTs, do we send our effects?
-// todo(borja): Aggregate per node like prep/dec?
+// todo(borja): When adding CRDTs, send our effects?
 message GetKeyVersion {
     // Partition number is too long for PB
     // (128 bit number)
@@ -61,9 +49,32 @@ message GetKeyVersionAgain {
 }
 
 // Values are opaque byte blobs
-// todo(borja): Add effects?
+// todo(borja): Add effects
 message KeyVersion {
     bytes value = 1;
+}
+
+// todo(borja): Add effects
+message NodeGetKeyVersion {
+    message Inner {
+        bytes partition = 1;
+        bool read_again = 2;
+        // list of keys for this partition
+        bytes keys = 3;
+    }
+
+    bytes snapshot_vc = 1;
+    repeated Inner keys = 2;
+}
+
+// todo(borja): Add effects
+message NodeKeyVersion {
+    message Inner {
+        bytes partition = 1;
+        bytes writeset = 2;
+    }
+
+    repeated Inner result = 1;
 }
 
 message PrepareBlueNode {
