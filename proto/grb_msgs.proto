@@ -46,20 +46,6 @@ message KeyVersion {
     bytes value = 1;
 }
 
-// todo(borja): Add effects
-message PartitionGetKeyVersion {
-    bytes snapshot_vc = 1;
-    bytes partition = 2;
-    bool read_again = 3;
-    bytes keys = 4;
-}
-
-// todo(borja): Add effects
-message PartitionKeyVersion {
-    bytes partition = 1;
-    bytes writeset = 2;
-}
-
 message PrepareBlueNode {
     message PrepareBlueSingle {
         bytes partition = 1;
