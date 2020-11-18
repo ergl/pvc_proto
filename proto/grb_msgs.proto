@@ -37,15 +37,7 @@ message GetKeyVersion {
     bytes partition = 1;
     bytes key = 2;
     bytes snapshot_vc = 3;
-}
-
-// Repeat a read
-message GetKeyVersionAgain {
-    // Partition number is too long for PB
-    // (128 bit number)
-    bytes partition = 1;
-    bytes key = 2;
-    bytes snapshot_vc = 3;
+    bool read_again = 4;
 }
 
 // Values are opaque byte blobs

@@ -81,13 +81,8 @@
 -type 'GetKeyVersion'() ::
       #{partition               => iodata(),        % = 1
         key                     => iodata(),        % = 2
-        snapshot_vc             => iodata()         % = 3
-       }.
-
--type 'GetKeyVersionAgain'() ::
-      #{partition               => iodata(),        % = 1
-        key                     => iodata(),        % = 2
-        snapshot_vc             => iodata()         % = 3
+        snapshot_vc             => iodata(),        % = 3
+        read_again              => boolean() | 0 | 1 % = 4
        }.
 
 -type 'KeyVersion'() ::
@@ -143,12 +138,12 @@
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'GetKeyVersion'/0, 'GetKeyVersionAgain'/0, 'KeyVersion'/0, 'PartitionGetKeyVersion'/0, 'PartitionKeyVersion'/0, 'PrepareBlueNode.PrepareBlueSingle'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'GetKeyVersion'/0, 'KeyVersion'/0, 'PartitionGetKeyVersion'/0, 'PartitionKeyVersion'/0, 'PrepareBlueNode.PrepareBlueSingle'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'GetKeyVersion'() | 'GetKeyVersionAgain'() | 'KeyVersion'() | 'PartitionGetKeyVersion'() | 'PartitionKeyVersion'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'GetKeyVersion'() | 'KeyVersion'() | 'PartitionGetKeyVersion'() | 'PartitionKeyVersion'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'GetKeyVersion'() | 'GetKeyVersionAgain'() | 'KeyVersion'() | 'PartitionGetKeyVersion'() | 'PartitionKeyVersion'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'GetKeyVersion'() | 'KeyVersion'() | 'PartitionGetKeyVersion'() | 'PartitionKeyVersion'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -163,7 +158,6 @@ encode_msg(Msg, MsgName, Opts) ->
         'StartReq' -> encode_msg_StartReq(id(Msg, TrUserData), TrUserData);
         'StartReturn' -> encode_msg_StartReturn(id(Msg, TrUserData), TrUserData);
         'GetKeyVersion' -> encode_msg_GetKeyVersion(id(Msg, TrUserData), TrUserData);
-        'GetKeyVersionAgain' -> encode_msg_GetKeyVersionAgain(id(Msg, TrUserData), TrUserData);
         'KeyVersion' -> encode_msg_KeyVersion(id(Msg, TrUserData), TrUserData);
         'PartitionGetKeyVersion' -> encode_msg_PartitionGetKeyVersion(id(Msg, TrUserData), TrUserData);
         'PartitionKeyVersion' -> encode_msg_PartitionKeyVersion(id(Msg, TrUserData), TrUserData);
@@ -314,54 +308,26 @@ encode_msg_GetKeyVersion(#{} = M, Bin, TrUserData) ->
                  end;
              _ -> B1
          end,
-    case M of
-        #{snapshot_vc := F3} ->
-            begin
-                TrF3 = id(F3, TrUserData),
-                case iolist_size(TrF3) of
-                    0 -> B2;
-                    _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
-                end
-            end;
-        _ -> B2
-    end.
-
-encode_msg_GetKeyVersionAgain(Msg, TrUserData) -> encode_msg_GetKeyVersionAgain(Msg, <<>>, TrUserData).
-
-
-encode_msg_GetKeyVersionAgain(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-             #{partition := F1} ->
+    B3 = case M of
+             #{snapshot_vc := F3} ->
                  begin
-                     TrF1 = id(F1, TrUserData),
-                     case iolist_size(TrF1) of
-                         0 -> Bin;
-                         _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     TrF3 = id(F3, TrUserData),
+                     case iolist_size(TrF3) of
+                         0 -> B2;
+                         _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
                      end
                  end;
-             _ -> Bin
-         end,
-    B2 = case M of
-             #{key := F2} ->
-                 begin
-                     TrF2 = id(F2, TrUserData),
-                     case iolist_size(TrF2) of
-                         0 -> B1;
-                         _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
-                     end
-                 end;
-             _ -> B1
+             _ -> B2
          end,
     case M of
-        #{snapshot_vc := F3} ->
+        #{read_again := F4} ->
             begin
-                TrF3 = id(F3, TrUserData),
-                case iolist_size(TrF3) of
-                    0 -> B2;
-                    _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
+                TrF4 = id(F4, TrUserData),
+                if TrF4 =:= false -> B3;
+                   true -> e_type_bool(TrF4, <<B3/binary, 32>>, TrUserData)
                 end
             end;
-        _ -> B2
+        _ -> B3
     end.
 
 encode_msg_KeyVersion(Msg, TrUserData) -> encode_msg_KeyVersion(Msg, <<>>, TrUserData).
@@ -782,7 +748,6 @@ decode_msg_2_doit('UniformResp', Bin, TrUserData) -> id(decode_msg_UniformResp(B
 decode_msg_2_doit('StartReq', Bin, TrUserData) -> id(decode_msg_StartReq(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StartReturn', Bin, TrUserData) -> id(decode_msg_StartReturn(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('GetKeyVersion', Bin, TrUserData) -> id(decode_msg_GetKeyVersion(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('GetKeyVersionAgain', Bin, TrUserData) -> id(decode_msg_GetKeyVersionAgain(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('KeyVersion', Bin, TrUserData) -> id(decode_msg_KeyVersion(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PartitionGetKeyVersion', Bin, TrUserData) -> id(decode_msg_PartitionGetKeyVersion(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PartitionKeyVersion', Bin, TrUserData) -> id(decode_msg_PartitionKeyVersion(Bin, TrUserData), TrUserData);
@@ -1068,121 +1033,70 @@ skip_32_StartReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read
 
 skip_64_StartReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_StartReturn(Rest, Z1, Z2, F@_1, TrUserData).
 
-decode_msg_GetKeyVersion(Bin, TrUserData) -> dfp_read_field_def_GetKeyVersion(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+decode_msg_GetKeyVersion(Bin, TrUserData) -> dfp_read_field_def_GetKeyVersion(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
 
-dfp_read_field_def_GetKeyVersion(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_GetKeyVersion_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_GetKeyVersion_key(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_GetKeyVersion_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<>>, 0, 0, F@_1, F@_2, F@_3, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3};
-dfp_read_field_def_GetKeyVersion(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_GetKeyVersion(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+dfp_read_field_def_GetKeyVersion(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_GetKeyVersion(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_key(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_GetKeyVersion(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_GetKeyVersion(<<32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_read_again(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_GetKeyVersion(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3, read_again => F@_4};
+dfp_read_field_def_GetKeyVersion(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_GetKeyVersion(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-dg_read_field_def_GetKeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetKeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_GetKeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+dg_read_field_def_GetKeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetKeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_GetKeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_GetKeyVersion_partition(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        18 -> d_field_GetKeyVersion_key(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        26 -> d_field_GetKeyVersion_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        10 -> d_field_GetKeyVersion_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_GetKeyVersion_key(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_GetKeyVersion_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        32 -> d_field_GetKeyVersion_read_again(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                1 -> skip_64_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                2 -> skip_length_delimited_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                3 -> skip_group_GetKeyVersion(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, TrUserData);
-                5 -> skip_32_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
+                0 -> skip_varint_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_GetKeyVersion(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData)
             end
     end;
-dg_read_field_def_GetKeyVersion(<<>>, 0, 0, F@_1, F@_2, F@_3, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3}.
+dg_read_field_def_GetKeyVersion(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3, read_again => F@_4}.
 
-d_field_GetKeyVersion_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_GetKeyVersion_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_GetKeyVersion_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, TrUserData) ->
+d_field_GetKeyVersion_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_GetKeyVersion_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, NewFValue, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, TrUserData).
 
-d_field_GetKeyVersion_key(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_GetKeyVersion_key(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_GetKeyVersion_key(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, TrUserData) ->
+d_field_GetKeyVersion_key(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_key(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_GetKeyVersion_key(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, NewFValue, F@_3, TrUserData).
+    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, TrUserData).
 
-d_field_GetKeyVersion_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_GetKeyVersion_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_GetKeyVersion_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, TrUserData) ->
+d_field_GetKeyVersion_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_GetKeyVersion_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, F@_2, NewFValue, TrUserData).
+    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, TrUserData).
 
-skip_varint_GetKeyVersion(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-skip_varint_GetKeyVersion(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+d_field_GetKeyVersion_read_again(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_read_again(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_GetKeyVersion_read_again(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, TrUserData).
 
-skip_length_delimited_GetKeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_GetKeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_GetKeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+skip_varint_GetKeyVersion(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_GetKeyVersion(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_GetKeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_GetKeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_GetKeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_GetKeyVersion(Rest2, 0, 0, F@_1, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_GetKeyVersion(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_group_GetKeyVersion(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
+skip_group_GetKeyVersion(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_GetKeyVersion(Rest, 0, Z2, F@_1, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_GetKeyVersion(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_32_GetKeyVersion(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+skip_32_GetKeyVersion(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
-skip_64_GetKeyVersion(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-decode_msg_GetKeyVersionAgain(Bin, TrUserData) -> dfp_read_field_def_GetKeyVersionAgain(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
-
-dfp_read_field_def_GetKeyVersionAgain(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_GetKeyVersionAgain_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_GetKeyVersionAgain(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_GetKeyVersionAgain_key(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_GetKeyVersionAgain(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_GetKeyVersionAgain_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_GetKeyVersionAgain(<<>>, 0, 0, F@_1, F@_2, F@_3, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3};
-dfp_read_field_def_GetKeyVersionAgain(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_GetKeyVersionAgain(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-dg_read_field_def_GetKeyVersionAgain(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetKeyVersionAgain(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_GetKeyVersionAgain(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-        10 -> d_field_GetKeyVersionAgain_partition(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        18 -> d_field_GetKeyVersionAgain_key(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        26 -> d_field_GetKeyVersionAgain_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        _ ->
-            case Key band 7 of
-                0 -> skip_varint_GetKeyVersionAgain(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                1 -> skip_64_GetKeyVersionAgain(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                2 -> skip_length_delimited_GetKeyVersionAgain(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                3 -> skip_group_GetKeyVersionAgain(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, TrUserData);
-                5 -> skip_32_GetKeyVersionAgain(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
-            end
-    end;
-dg_read_field_def_GetKeyVersionAgain(<<>>, 0, 0, F@_1, F@_2, F@_3, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3}.
-
-d_field_GetKeyVersionAgain_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_GetKeyVersionAgain_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_GetKeyVersionAgain_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersionAgain(RestF, 0, 0, NewFValue, F@_2, F@_3, TrUserData).
-
-d_field_GetKeyVersionAgain_key(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_GetKeyVersionAgain_key(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_GetKeyVersionAgain_key(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersionAgain(RestF, 0, 0, F@_1, NewFValue, F@_3, TrUserData).
-
-d_field_GetKeyVersionAgain_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_GetKeyVersionAgain_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_GetKeyVersionAgain_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersionAgain(RestF, 0, 0, F@_1, F@_2, NewFValue, TrUserData).
-
-skip_varint_GetKeyVersionAgain(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_GetKeyVersionAgain(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-skip_varint_GetKeyVersionAgain(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_GetKeyVersionAgain(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_length_delimited_GetKeyVersionAgain(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_GetKeyVersionAgain(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_GetKeyVersionAgain(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_GetKeyVersionAgain(Rest2, 0, 0, F@_1, F@_2, F@_3, TrUserData).
-
-skip_group_GetKeyVersionAgain(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_GetKeyVersionAgain(Rest, 0, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_32_GetKeyVersionAgain(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_GetKeyVersionAgain(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_64_GetKeyVersionAgain(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_GetKeyVersionAgain(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+skip_64_GetKeyVersion(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
 
 decode_msg_KeyVersion(Bin, TrUserData) -> dfp_read_field_def_KeyVersion(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
@@ -1816,7 +1730,6 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'StartReq' -> merge_msg_StartReq(Prev, New, TrUserData);
         'StartReturn' -> merge_msg_StartReturn(Prev, New, TrUserData);
         'GetKeyVersion' -> merge_msg_GetKeyVersion(Prev, New, TrUserData);
-        'GetKeyVersionAgain' -> merge_msg_GetKeyVersionAgain(Prev, New, TrUserData);
         'KeyVersion' -> merge_msg_KeyVersion(Prev, New, TrUserData);
         'PartitionGetKeyVersion' -> merge_msg_PartitionGetKeyVersion(Prev, New, TrUserData);
         'PartitionKeyVersion' -> merge_msg_PartitionKeyVersion(Prev, New, TrUserData);
@@ -1904,29 +1817,15 @@ merge_msg_GetKeyVersion(PMsg, NMsg, _) ->
              {#{key := PFkey}, _} -> S2#{key => PFkey};
              _ -> S2
          end,
-    case {PMsg, NMsg} of
-        {_, #{snapshot_vc := NFsnapshot_vc}} -> S3#{snapshot_vc => NFsnapshot_vc};
-        {#{snapshot_vc := PFsnapshot_vc}, _} -> S3#{snapshot_vc => PFsnapshot_vc};
-        _ -> S3
-    end.
-
--compile({nowarn_unused_function,merge_msg_GetKeyVersionAgain/3}).
-merge_msg_GetKeyVersionAgain(PMsg, NMsg, _) ->
-    S1 = #{},
-    S2 = case {PMsg, NMsg} of
-             {_, #{partition := NFpartition}} -> S1#{partition => NFpartition};
-             {#{partition := PFpartition}, _} -> S1#{partition => PFpartition};
-             _ -> S1
-         end,
-    S3 = case {PMsg, NMsg} of
-             {_, #{key := NFkey}} -> S2#{key => NFkey};
-             {#{key := PFkey}, _} -> S2#{key => PFkey};
-             _ -> S2
+    S4 = case {PMsg, NMsg} of
+             {_, #{snapshot_vc := NFsnapshot_vc}} -> S3#{snapshot_vc => NFsnapshot_vc};
+             {#{snapshot_vc := PFsnapshot_vc}, _} -> S3#{snapshot_vc => PFsnapshot_vc};
+             _ -> S3
          end,
     case {PMsg, NMsg} of
-        {_, #{snapshot_vc := NFsnapshot_vc}} -> S3#{snapshot_vc => NFsnapshot_vc};
-        {#{snapshot_vc := PFsnapshot_vc}, _} -> S3#{snapshot_vc => PFsnapshot_vc};
-        _ -> S3
+        {_, #{read_again := NFread_again}} -> S4#{read_again => NFread_again};
+        {#{read_again := PFread_again}, _} -> S4#{read_again => PFread_again};
+        _ -> S4
     end.
 
 -compile({nowarn_unused_function,merge_msg_KeyVersion/3}).
@@ -2101,7 +2000,6 @@ verify_msg(Msg, MsgName, Opts) ->
         'StartReq' -> v_msg_StartReq(Msg, [MsgName], TrUserData);
         'StartReturn' -> v_msg_StartReturn(Msg, [MsgName], TrUserData);
         'GetKeyVersion' -> v_msg_GetKeyVersion(Msg, [MsgName], TrUserData);
-        'GetKeyVersionAgain' -> v_msg_GetKeyVersionAgain(Msg, [MsgName], TrUserData);
         'KeyVersion' -> v_msg_KeyVersion(Msg, [MsgName], TrUserData);
         'PartitionGetKeyVersion' -> v_msg_PartitionGetKeyVersion(Msg, [MsgName], TrUserData);
         'PartitionKeyVersion' -> v_msg_PartitionKeyVersion(Msg, [MsgName], TrUserData);
@@ -2227,40 +2125,20 @@ v_msg_GetKeyVersion(#{} = M, Path, TrUserData) ->
         #{snapshot_vc := F3} -> v_type_bytes(F3, [snapshot_vc | Path], TrUserData);
         _ -> ok
     end,
+    case M of
+        #{read_again := F4} -> v_type_bool(F4, [read_again | Path], TrUserData);
+        _ -> ok
+    end,
     lists:foreach(fun (partition) -> ok;
                       (key) -> ok;
                       (snapshot_vc) -> ok;
+                      (read_again) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
     ok;
 v_msg_GetKeyVersion(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetKeyVersion'}, M, Path);
 v_msg_GetKeyVersion(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetKeyVersion'}, X, Path).
-
--compile({nowarn_unused_function,v_msg_GetKeyVersionAgain/3}).
--dialyzer({nowarn_function,v_msg_GetKeyVersionAgain/3}).
-v_msg_GetKeyVersionAgain(#{} = M, Path, TrUserData) ->
-    case M of
-        #{partition := F1} -> v_type_bytes(F1, [partition | Path], TrUserData);
-        _ -> ok
-    end,
-    case M of
-        #{key := F2} -> v_type_bytes(F2, [key | Path], TrUserData);
-        _ -> ok
-    end,
-    case M of
-        #{snapshot_vc := F3} -> v_type_bytes(F3, [snapshot_vc | Path], TrUserData);
-        _ -> ok
-    end,
-    lists:foreach(fun (partition) -> ok;
-                      (key) -> ok;
-                      (snapshot_vc) -> ok;
-                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
-                  end,
-                  maps:keys(M)),
-    ok;
-v_msg_GetKeyVersionAgain(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetKeyVersionAgain'}, M, Path);
-v_msg_GetKeyVersionAgain(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetKeyVersionAgain'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_KeyVersion/3}).
 -dialyzer({nowarn_function,v_msg_KeyVersion/3}).
@@ -2575,11 +2453,8 @@ get_msg_defs() ->
      {{msg, 'GetKeyVersion'},
       [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'GetKeyVersionAgain'},
-      [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-       #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
+       #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+       #{name => read_again, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'KeyVersion'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'PartitionGetKeyVersion'},
       [#{name => snapshot_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
@@ -2615,7 +2490,6 @@ get_msg_names() ->
      'StartReq',
      'StartReturn',
      'GetKeyVersion',
-     'GetKeyVersionAgain',
      'KeyVersion',
      'PartitionGetKeyVersion',
      'PartitionKeyVersion',
@@ -2639,7 +2513,6 @@ get_msg_or_group_names() ->
      'StartReq',
      'StartReturn',
      'GetKeyVersion',
-     'GetKeyVersionAgain',
      'KeyVersion',
      'PartitionGetKeyVersion',
      'PartitionKeyVersion',
@@ -2678,11 +2551,8 @@ find_msg_def('StartReturn') -> [#{name => snapshot_vc, fnum => 1, rnum => 2, typ
 find_msg_def('GetKeyVersion') ->
     [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('GetKeyVersionAgain') ->
-    [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-     #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
+     #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+     #{name => read_again, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}];
 find_msg_def('KeyVersion') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('PartitionGetKeyVersion') ->
     [#{name => snapshot_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
@@ -2773,7 +2643,6 @@ fqbin_to_msg_name(<<"UniformResp">>) -> 'UniformResp';
 fqbin_to_msg_name(<<"StartReq">>) -> 'StartReq';
 fqbin_to_msg_name(<<"StartReturn">>) -> 'StartReturn';
 fqbin_to_msg_name(<<"GetKeyVersion">>) -> 'GetKeyVersion';
-fqbin_to_msg_name(<<"GetKeyVersionAgain">>) -> 'GetKeyVersionAgain';
 fqbin_to_msg_name(<<"KeyVersion">>) -> 'KeyVersion';
 fqbin_to_msg_name(<<"PartitionGetKeyVersion">>) -> 'PartitionGetKeyVersion';
 fqbin_to_msg_name(<<"PartitionKeyVersion">>) -> 'PartitionKeyVersion';
@@ -2794,7 +2663,6 @@ msg_name_to_fqbin('UniformResp') -> <<"UniformResp">>;
 msg_name_to_fqbin('StartReq') -> <<"StartReq">>;
 msg_name_to_fqbin('StartReturn') -> <<"StartReturn">>;
 msg_name_to_fqbin('GetKeyVersion') -> <<"GetKeyVersion">>;
-msg_name_to_fqbin('GetKeyVersionAgain') -> <<"GetKeyVersionAgain">>;
 msg_name_to_fqbin('KeyVersion') -> <<"KeyVersion">>;
 msg_name_to_fqbin('PartitionGetKeyVersion') -> <<"PartitionGetKeyVersion">>;
 msg_name_to_fqbin('PartitionKeyVersion') -> <<"PartitionKeyVersion">>;
@@ -2852,7 +2720,6 @@ get_msg_containment("grb_msgs") ->
      'ConnectResponse',
      'DecideBlueNode',
      'GetKeyVersion',
-     'GetKeyVersionAgain',
      'KeyVersion',
      'PartitionGetKeyVersion',
      'PartitionKeyVersion',
@@ -2896,7 +2763,6 @@ get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PartitionKeyVersion">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PartitionGetKeyVersion">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"KeyVersion">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"GetKeyVersionAgain">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"GetKeyVersion">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRedReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
