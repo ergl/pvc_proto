@@ -55,26 +55,17 @@ message KeyVersion {
 }
 
 // todo(borja): Add effects
-message NodeGetKeyVersion {
-    message Inner {
-        bytes partition = 1;
-        bool read_again = 2;
-        // list of keys for this partition
-        bytes keys = 3;
-    }
-
+message PartitionGetKeyVersion {
     bytes snapshot_vc = 1;
-    repeated Inner keys = 2;
+    bytes partition = 2;
+    bool read_again = 3;
+    bytes keys = 4;
 }
 
 // todo(borja): Add effects
-message NodeKeyVersion {
-    message Inner {
-        bytes partition = 1;
-        bytes writeset = 2;
-    }
-
-    repeated Inner result = 1;
+message PartitionKeyVersion {
+    bytes partition = 1;
+    bytes writeset = 2;
 }
 
 message PrepareBlueNode {

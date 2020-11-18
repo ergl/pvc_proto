@@ -8,6 +8,7 @@
          uniform_barrier/2,
          start_tx/2,
          key_version/3,
+         key_version_parallel/4,
          key_version_again/3,
          prepare_blue_node/3,
          decide_blue_node/3,
@@ -40,6 +41,13 @@ key_version(Partition, SVC, Key) ->
    ?encode_msg('GetKeyVersion', #{partition => binary:encode_unsigned(Partition),
                                   snapshot_vc => term_to_binary(SVC),
                                   key => Key}).
+
+-spec key_version_parallel(non_neg_integer(), term(), boolean(), [binary()]) -> msg().
+key_version_parallel(Partition, SVC, ReadAgain, Keys) ->
+    ?encode_msg('PartitionGetKeyVersion', #{partition => binary:encode_unsigned(Partition),
+                                            snapshot_vc => term_to_binary(SVC),
+                                            read_again => ReadAgain,
+                                            keys => term_to_binary(Keys)}).
 
 -spec key_version_again(non_neg_integer(), term(), binary()) -> msg().
 key_version_again(Partition, SVC, Key) ->
@@ -95,6 +103,13 @@ decode_from_client('GetKeyVersionAgain', Msg) ->
                 (partition, V) -> binary:decode_unsigned(V);
                 (snapshot_vc, V) -> binary_to_term(V) end, Map);
 
+decode_from_client('PartitionGetKeyVersion', Msg) ->
+    Map = ?proto_msgs:decode_msg(Msg, 'PartitionGetKeyVersion'),
+    maps:map(fun(keys, V) -> binary_to_term(V);
+                (read_again, B) -> B;
+                (partition, V) -> binary:decode_unsigned(V);
+                (snapshot_vc, V) -> binary_to_term(V) end, Map);
+
 decode_from_client('PrepareBlueNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'PrepareBlueNode'),
     DecodeInner = fun(partition, V) -> binary:decode_unsigned(V);
@@ -146,6 +161,10 @@ to_client_enc('GetKeyVersion', {ok, Val}) ->
 to_client_enc('GetKeyVersionAgain', {ok, Val}) ->
     ?encode_msg('KeyVersion', #{value => Val});
 
+to_client_enc('PartitionGetKeyVersion', {ok, Partition, KeyValues}) ->
+    ?encode_msg('PartitionKeyVersion', #{partition => binary:encode_unsigned(Partition),
+                                         writeset => term_to_binary(KeyValues)});
+
 to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]});
 
@@ -179,6 +198,10 @@ decode_from_server('StartReturn', BinMsg) ->
 decode_from_server('KeyVersion', BinMsg) ->
     #{value := Value} = ?proto_msgs:decode_msg(BinMsg, 'KeyVersion'),
     {ok, Value};
+
+decode_from_server('PartitionKeyVersion', BinMsg) ->
+    #{partition := P, writeset := WS} = ?proto_msgs:decode_msg(BinMsg, 'PartitionKeyVersion'),
+    {ok, binary:decode_unsigned(P), binary_to_term(WS)};
 
 decode_from_server('BlueVoteBatch', BinMsg) ->
     #{votes := Votes} = ?proto_msgs:decode_msg(BinMsg, 'BlueVoteBatch'),
@@ -227,8 +250,8 @@ encode_msg_type('DecideBlueNode') -> 11;
 encode_msg_type('CommitRed') -> 12;
 encode_msg_type('CommitRedReturn') -> 13;
 encode_msg_type('GetKeyVersionAgain') -> 14;
-encode_msg_type('NodeGetKeyVersion') -> 15;
-encode_msg_type('NodeKeyVersion') -> 16.
+encode_msg_type('PartitionGetKeyVersion') -> 15;
+encode_msg_type('PartitionKeyVersion') -> 16.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -246,5 +269,5 @@ decode_type_num(11) -> 'DecideBlueNode';
 decode_type_num(12) -> 'CommitRed';
 decode_type_num(13) -> 'CommitRedReturn';
 decode_type_num(14) -> 'GetKeyVersionAgain';
-decode_type_num(15) -> 'NodeGetKeyVersion';
-decode_type_num(16) -> 'NodeKeyVersion'.
+decode_type_num(15) -> 'PartitionGetKeyVersion';
+decode_type_num(16) -> 'PartitionKeyVersion'.
