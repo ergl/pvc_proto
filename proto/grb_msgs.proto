@@ -30,32 +30,27 @@ message StartReturn {
 
 // Keys are opaque byte blobs
 // The vector clock is a serialized erlang term
-// todo(borja): When adding CRDTs, send our effects?
-message GetKeyVersion {
+message OpRequest {
     // Partition number is too long for PB
     // (128 bit number)
     bytes partition = 1;
     bytes key = 2;
     bytes snapshot_vc = 3;
     bool read_again = 4;
+    bytes operation = 5;
 }
 
 // Values are opaque byte blobs
-// todo(borja): Add effects
-message KeyVersion {
+message OpReturn {
     bytes value = 1;
+    bool transform = 2;
 }
 
 message PrepareBlueNode {
-    message PrepareBlueSingle {
-        bytes partition = 1;
-        bytes writeset = 2;
-    }
-
     // todo(borja): No need to encode from erlang term if we use opaque blob
     bytes transaction_id = 1;
     bytes snapshot_vc = 2;
-    repeated PrepareBlueSingle prepares = 3;
+    repeated bytes partitions = 3;
 }
 
 message BlueVoteBatch {

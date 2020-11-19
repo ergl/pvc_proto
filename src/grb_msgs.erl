@@ -78,26 +78,23 @@
       #{snapshot_vc             => iodata()         % = 1
        }.
 
--type 'GetKeyVersion'() ::
+-type 'OpRequest'() ::
       #{partition               => iodata(),        % = 1
         key                     => iodata(),        % = 2
         snapshot_vc             => iodata(),        % = 3
-        read_again              => boolean() | 0 | 1 % = 4
+        read_again              => boolean() | 0 | 1, % = 4
+        operation               => iodata()         % = 5
        }.
 
--type 'KeyVersion'() ::
-      #{value                   => iodata()         % = 1
-       }.
-
--type 'PrepareBlueNode.PrepareBlueSingle'() ::
-      #{partition               => iodata(),        % = 1
-        writeset                => iodata()         % = 2
+-type 'OpReturn'() ::
+      #{value                   => iodata(),        % = 1
+        transform               => boolean() | 0 | 1 % = 2
        }.
 
 -type 'PrepareBlueNode'() ::
       #{transaction_id          => iodata(),        % = 1
         snapshot_vc             => iodata(),        % = 2
-        prepares                => ['PrepareBlueNode.PrepareBlueSingle'()] % = 3
+        partitions              => [iodata()]       % = 3
        }.
 
 -type 'BlueVoteBatch.BlueVote'() ::
@@ -126,12 +123,12 @@
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'GetKeyVersion'/0, 'KeyVersion'/0, 'PrepareBlueNode.PrepareBlueSingle'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'GetKeyVersion'() | 'KeyVersion'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'GetKeyVersion'() | 'KeyVersion'() | 'PrepareBlueNode.PrepareBlueSingle'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -145,9 +142,8 @@ encode_msg(Msg, MsgName, Opts) ->
         'UniformResp' -> encode_msg_UniformResp(id(Msg, TrUserData), TrUserData);
         'StartReq' -> encode_msg_StartReq(id(Msg, TrUserData), TrUserData);
         'StartReturn' -> encode_msg_StartReturn(id(Msg, TrUserData), TrUserData);
-        'GetKeyVersion' -> encode_msg_GetKeyVersion(id(Msg, TrUserData), TrUserData);
-        'KeyVersion' -> encode_msg_KeyVersion(id(Msg, TrUserData), TrUserData);
-        'PrepareBlueNode.PrepareBlueSingle' -> 'encode_msg_PrepareBlueNode.PrepareBlueSingle'(id(Msg, TrUserData), TrUserData);
+        'OpRequest' -> encode_msg_OpRequest(id(Msg, TrUserData), TrUserData);
+        'OpReturn' -> encode_msg_OpReturn(id(Msg, TrUserData), TrUserData);
         'PrepareBlueNode' -> encode_msg_PrepareBlueNode(id(Msg, TrUserData), TrUserData);
         'BlueVoteBatch.BlueVote' -> 'encode_msg_BlueVoteBatch.BlueVote'(id(Msg, TrUserData), TrUserData);
         'BlueVoteBatch' -> encode_msg_BlueVoteBatch(id(Msg, TrUserData), TrUserData);
@@ -268,10 +264,10 @@ encode_msg_StartReturn(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
-encode_msg_GetKeyVersion(Msg, TrUserData) -> encode_msg_GetKeyVersion(Msg, <<>>, TrUserData).
+encode_msg_OpRequest(Msg, TrUserData) -> encode_msg_OpRequest(Msg, <<>>, TrUserData).
 
 
-encode_msg_GetKeyVersion(#{} = M, Bin, TrUserData) ->
+encode_msg_OpRequest(#{} = M, Bin, TrUserData) ->
     B1 = case M of
              #{partition := F1} ->
                  begin
@@ -305,39 +301,34 @@ encode_msg_GetKeyVersion(#{} = M, Bin, TrUserData) ->
                  end;
              _ -> B2
          end,
+    B4 = case M of
+             #{read_again := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     if TrF4 =:= false -> B3;
+                        true -> e_type_bool(TrF4, <<B3/binary, 32>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
     case M of
-        #{read_again := F4} ->
+        #{operation := F5} ->
             begin
-                TrF4 = id(F4, TrUserData),
-                if TrF4 =:= false -> B3;
-                   true -> e_type_bool(TrF4, <<B3/binary, 32>>, TrUserData)
+                TrF5 = id(F5, TrUserData),
+                case iolist_size(TrF5) of
+                    0 -> B4;
+                    _ -> e_type_bytes(TrF5, <<B4/binary, 42>>, TrUserData)
                 end
             end;
-        _ -> B3
+        _ -> B4
     end.
 
-encode_msg_KeyVersion(Msg, TrUserData) -> encode_msg_KeyVersion(Msg, <<>>, TrUserData).
+encode_msg_OpReturn(Msg, TrUserData) -> encode_msg_OpReturn(Msg, <<>>, TrUserData).
 
 
-encode_msg_KeyVersion(#{} = M, Bin, TrUserData) ->
-    case M of
-        #{value := F1} ->
-            begin
-                TrF1 = id(F1, TrUserData),
-                case iolist_size(TrF1) of
-                    0 -> Bin;
-                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
-                end
-            end;
-        _ -> Bin
-    end.
-
-'encode_msg_PrepareBlueNode.PrepareBlueSingle'(Msg, TrUserData) -> 'encode_msg_PrepareBlueNode.PrepareBlueSingle'(Msg, <<>>, TrUserData).
-
-
-'encode_msg_PrepareBlueNode.PrepareBlueSingle'(#{} = M, Bin, TrUserData) ->
+encode_msg_OpReturn(#{} = M, Bin, TrUserData) ->
     B1 = case M of
-             #{partition := F1} ->
+             #{value := F1} ->
                  begin
                      TrF1 = id(F1, TrUserData),
                      case iolist_size(TrF1) of
@@ -348,12 +339,11 @@ encode_msg_KeyVersion(#{} = M, Bin, TrUserData) ->
              _ -> Bin
          end,
     case M of
-        #{writeset := F2} ->
+        #{transform := F2} ->
             begin
                 TrF2 = id(F2, TrUserData),
-                case iolist_size(TrF2) of
-                    0 -> B1;
-                    _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+                if TrF2 =:= false -> B1;
+                   true -> e_type_bool(TrF2, <<B1/binary, 16>>, TrUserData)
                 end
             end;
         _ -> B1
@@ -386,10 +376,10 @@ encode_msg_PrepareBlueNode(#{} = M, Bin, TrUserData) ->
              _ -> B1
          end,
     case M of
-        #{prepares := F3} ->
+        #{partitions := F3} ->
             TrF3 = id(F3, TrUserData),
             if TrF3 == [] -> B2;
-               true -> e_field_PrepareBlueNode_prepares(TrF3, B2, TrUserData)
+               true -> e_field_PrepareBlueNode_partitions(TrF3, B2, TrUserData)
             end;
         _ -> B2
     end.
@@ -527,16 +517,11 @@ encode_msg_CommitRedReturn(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
-e_mfield_PrepareBlueNode_prepares(Msg, Bin, TrUserData) ->
-    SubBin = 'encode_msg_PrepareBlueNode.PrepareBlueSingle'(Msg, <<>>, TrUserData),
-    Bin2 = e_varint(byte_size(SubBin), Bin),
-    <<Bin2/binary, SubBin/binary>>.
-
-e_field_PrepareBlueNode_prepares([Elem | Rest], Bin, TrUserData) ->
+e_field_PrepareBlueNode_partitions([Elem | Rest], Bin, TrUserData) ->
     Bin2 = <<Bin/binary, 26>>,
-    Bin3 = e_mfield_PrepareBlueNode_prepares(id(Elem, TrUserData), Bin2, TrUserData),
-    e_field_PrepareBlueNode_prepares(Rest, Bin3, TrUserData);
-e_field_PrepareBlueNode_prepares([], Bin, _TrUserData) -> Bin.
+    Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2, TrUserData),
+    e_field_PrepareBlueNode_partitions(Rest, Bin3, TrUserData);
+e_field_PrepareBlueNode_partitions([], Bin, _TrUserData) -> Bin.
 
 e_mfield_BlueVoteBatch_votes(Msg, Bin, TrUserData) ->
     SubBin = 'encode_msg_BlueVoteBatch.BlueVote'(Msg, <<>>, TrUserData),
@@ -658,9 +643,8 @@ decode_msg_2_doit('UniformBarrier', Bin, TrUserData) -> id(decode_msg_UniformBar
 decode_msg_2_doit('UniformResp', Bin, TrUserData) -> id(decode_msg_UniformResp(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StartReq', Bin, TrUserData) -> id(decode_msg_StartReq(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StartReturn', Bin, TrUserData) -> id(decode_msg_StartReturn(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('GetKeyVersion', Bin, TrUserData) -> id(decode_msg_GetKeyVersion(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('KeyVersion', Bin, TrUserData) -> id(decode_msg_KeyVersion(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('PrepareBlueNode.PrepareBlueSingle', Bin, TrUserData) -> id('decode_msg_PrepareBlueNode.PrepareBlueSingle'(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('OpRequest', Bin, TrUserData) -> id(decode_msg_OpRequest(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('OpReturn', Bin, TrUserData) -> id(decode_msg_OpReturn(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PrepareBlueNode', Bin, TrUserData) -> id(decode_msg_PrepareBlueNode(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BlueVoteBatch.BlueVote', Bin, TrUserData) -> id('decode_msg_BlueVoteBatch.BlueVote'(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BlueVoteBatch', Bin, TrUserData) -> id(decode_msg_BlueVoteBatch(Bin, TrUserData), TrUserData);
@@ -942,176 +926,135 @@ skip_32_StartReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read
 
 skip_64_StartReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_StartReturn(Rest, Z1, Z2, F@_1, TrUserData).
 
-decode_msg_GetKeyVersion(Bin, TrUserData) -> dfp_read_field_def_GetKeyVersion(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
+decode_msg_OpRequest(Bin, TrUserData) -> dfp_read_field_def_OpRequest(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_GetKeyVersion(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_key(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_GetKeyVersion_read_again(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_GetKeyVersion(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3, read_again => F@_4};
-dfp_read_field_def_GetKeyVersion(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_GetKeyVersion(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+dfp_read_field_def_OpRequest(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_OpRequest_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_OpRequest(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_OpRequest_key(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_OpRequest(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_OpRequest_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_OpRequest(<<32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_OpRequest_read_again(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_OpRequest(<<42, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_OpRequest_operation(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_OpRequest(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3, read_again => F@_4, operation => F@_5};
+dfp_read_field_def_OpRequest(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dg_read_field_def_OpRequest(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-dg_read_field_def_GetKeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_GetKeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dg_read_field_def_GetKeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+dg_read_field_def_OpRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpRequest(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dg_read_field_def_OpRequest(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_GetKeyVersion_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        18 -> d_field_GetKeyVersion_key(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        26 -> d_field_GetKeyVersion_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        32 -> d_field_GetKeyVersion_read_again(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        10 -> d_field_OpRequest_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        18 -> d_field_OpRequest_key(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        26 -> d_field_OpRequest_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        32 -> d_field_OpRequest_read_again(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        42 -> d_field_OpRequest_operation(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                1 -> skip_64_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                2 -> skip_length_delimited_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                3 -> skip_group_GetKeyVersion(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                5 -> skip_32_GetKeyVersion(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData)
+                0 -> skip_varint_OpRequest(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                1 -> skip_64_OpRequest(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                2 -> skip_length_delimited_OpRequest(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                3 -> skip_group_OpRequest(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                5 -> skip_32_OpRequest(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
             end
     end;
-dg_read_field_def_GetKeyVersion(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3, read_again => F@_4}.
+dg_read_field_def_OpRequest(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, _) -> #{partition => F@_1, key => F@_2, snapshot_vc => F@_3, read_again => F@_4, operation => F@_5}.
 
-d_field_GetKeyVersion_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_GetKeyVersion_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
+d_field_OpRequest_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_OpRequest_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_OpRequest_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequest(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-d_field_GetKeyVersion_key(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_key(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_GetKeyVersion_key(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
+d_field_OpRequest_key(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_OpRequest_key(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_OpRequest_key(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequest(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, F@_5, TrUserData).
 
-d_field_GetKeyVersion_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_GetKeyVersion_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, TrUserData) ->
+d_field_OpRequest_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_OpRequest_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_OpRequest_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+    dfp_read_field_def_OpRequest(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, F@_5, TrUserData).
 
-d_field_GetKeyVersion_read_again(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_GetKeyVersion_read_again(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_GetKeyVersion_read_again(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+d_field_OpRequest_read_again(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_OpRequest_read_again(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_OpRequest_read_again(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, F@_5, TrUserData) ->
     {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
-    dfp_read_field_def_GetKeyVersion(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+    dfp_read_field_def_OpRequest(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, F@_5, TrUserData).
 
-skip_varint_GetKeyVersion(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-skip_varint_GetKeyVersion(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+d_field_OpRequest_operation(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_OpRequest_operation(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_OpRequest_operation(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_OpRequest(RestF, 0, 0, F@_1, F@_2, F@_3, F@_4, NewFValue, TrUserData).
 
-skip_length_delimited_GetKeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_GetKeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-skip_length_delimited_GetKeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+skip_varint_OpRequest(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> skip_varint_OpRequest(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+skip_varint_OpRequest(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_OpRequest(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+skip_length_delimited_OpRequest(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> skip_length_delimited_OpRequest(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+skip_length_delimited_OpRequest(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_GetKeyVersion(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequest(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-skip_group_GetKeyVersion(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+skip_group_OpRequest(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_GetKeyVersion(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequest(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-skip_32_GetKeyVersion(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_32_OpRequest(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_OpRequest(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-skip_64_GetKeyVersion(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_GetKeyVersion(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_64_OpRequest(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_OpRequest(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-decode_msg_KeyVersion(Bin, TrUserData) -> dfp_read_field_def_KeyVersion(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+decode_msg_OpReturn(Bin, TrUserData) -> dfp_read_field_def_OpReturn(Bin, 0, 0, id(<<>>, TrUserData), id(false, TrUserData), TrUserData).
 
-dfp_read_field_def_KeyVersion(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_KeyVersion_value(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_KeyVersion(<<>>, 0, 0, F@_1, _) -> #{value => F@_1};
-dfp_read_field_def_KeyVersion(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_KeyVersion(Other, Z1, Z2, F@_1, TrUserData).
+dfp_read_field_def_OpReturn(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_OpReturn_value(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+dfp_read_field_def_OpReturn(<<16, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> d_field_OpReturn_transform(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+dfp_read_field_def_OpReturn(<<>>, 0, 0, F@_1, F@_2, _) -> #{value => F@_1, transform => F@_2};
+dfp_read_field_def_OpReturn(Other, Z1, Z2, F@_1, F@_2, TrUserData) -> dg_read_field_def_OpReturn(Other, Z1, Z2, F@_1, F@_2, TrUserData).
 
-dg_read_field_def_KeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_KeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_KeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+dg_read_field_def_OpReturn(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpReturn(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+dg_read_field_def_OpReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_KeyVersion_value(Rest, 0, 0, F@_1, TrUserData);
+        10 -> d_field_OpReturn_value(Rest, 0, 0, F@_1, F@_2, TrUserData);
+        16 -> d_field_OpReturn_transform(Rest, 0, 0, F@_1, F@_2, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_KeyVersion(Rest, 0, 0, F@_1, TrUserData);
-                1 -> skip_64_KeyVersion(Rest, 0, 0, F@_1, TrUserData);
-                2 -> skip_length_delimited_KeyVersion(Rest, 0, 0, F@_1, TrUserData);
-                3 -> skip_group_KeyVersion(Rest, Key bsr 3, 0, F@_1, TrUserData);
-                5 -> skip_32_KeyVersion(Rest, 0, 0, F@_1, TrUserData)
+                0 -> skip_varint_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                1 -> skip_64_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                2 -> skip_length_delimited_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData);
+                3 -> skip_group_OpReturn(Rest, Key bsr 3, 0, F@_1, F@_2, TrUserData);
+                5 -> skip_32_OpReturn(Rest, 0, 0, F@_1, F@_2, TrUserData)
             end
     end;
-dg_read_field_def_KeyVersion(<<>>, 0, 0, F@_1, _) -> #{value => F@_1}.
+dg_read_field_def_OpReturn(<<>>, 0, 0, F@_1, F@_2, _) -> #{value => F@_1, transform => F@_2}.
 
-d_field_KeyVersion_value(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_KeyVersion_value(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-d_field_KeyVersion_value(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+d_field_OpReturn_value(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_OpReturn_value(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_OpReturn_value(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_KeyVersion(RestF, 0, 0, NewFValue, TrUserData).
+    dfp_read_field_def_OpReturn(RestF, 0, 0, NewFValue, F@_2, TrUserData).
 
-skip_varint_KeyVersion(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_KeyVersion(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_KeyVersion(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_KeyVersion(Rest, Z1, Z2, F@_1, TrUserData).
+d_field_OpReturn_transform(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> d_field_OpReturn_transform(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+d_field_OpReturn_transform(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_OpReturn(RestF, 0, 0, F@_1, NewFValue, TrUserData).
 
-skip_length_delimited_KeyVersion(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_KeyVersion(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_KeyVersion(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+skip_varint_OpReturn(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> skip_varint_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
+skip_varint_OpReturn(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
+
+skip_length_delimited_OpReturn(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> skip_length_delimited_OpReturn(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
+skip_length_delimited_OpReturn(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_KeyVersion(Rest2, 0, 0, F@_1, TrUserData).
+    dfp_read_field_def_OpReturn(Rest2, 0, 0, F@_1, F@_2, TrUserData).
 
-skip_group_KeyVersion(Bin, FNum, Z2, F@_1, TrUserData) ->
+skip_group_OpReturn(Bin, FNum, Z2, F@_1, F@_2, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_KeyVersion(Rest, 0, Z2, F@_1, TrUserData).
+    dfp_read_field_def_OpReturn(Rest, 0, Z2, F@_1, F@_2, TrUserData).
 
-skip_32_KeyVersion(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_KeyVersion(Rest, Z1, Z2, F@_1, TrUserData).
+skip_32_OpReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
-skip_64_KeyVersion(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_KeyVersion(Rest, Z1, Z2, F@_1, TrUserData).
-
-'decode_msg_PrepareBlueNode.PrepareBlueSingle'(Bin, TrUserData) -> 'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
-
-'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> 'd_field_PrepareBlueNode.PrepareBlueSingle_partition'(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
-'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> 'd_field_PrepareBlueNode.PrepareBlueSingle_writeset'(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
-'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(<<>>, 0, 0, F@_1, F@_2, _) -> #{partition => F@_1, writeset => F@_2};
-'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Other, Z1, Z2, F@_1, F@_2, TrUserData) -> 'dg_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Other, Z1, Z2, F@_1, F@_2, TrUserData).
-
-'dg_read_field_def_PrepareBlueNode.PrepareBlueSingle'(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 32 - 7 -> 'dg_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-'dg_read_field_def_PrepareBlueNode.PrepareBlueSingle'(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
-    Key = X bsl N + Acc,
-    case Key of
-        10 -> 'd_field_PrepareBlueNode.PrepareBlueSingle_partition'(Rest, 0, 0, F@_1, F@_2, TrUserData);
-        18 -> 'd_field_PrepareBlueNode.PrepareBlueSingle_writeset'(Rest, 0, 0, F@_1, F@_2, TrUserData);
-        _ ->
-            case Key band 7 of
-                0 -> 'skip_varint_PrepareBlueNode.PrepareBlueSingle'(Rest, 0, 0, F@_1, F@_2, TrUserData);
-                1 -> 'skip_64_PrepareBlueNode.PrepareBlueSingle'(Rest, 0, 0, F@_1, F@_2, TrUserData);
-                2 -> 'skip_length_delimited_PrepareBlueNode.PrepareBlueSingle'(Rest, 0, 0, F@_1, F@_2, TrUserData);
-                3 -> 'skip_group_PrepareBlueNode.PrepareBlueSingle'(Rest, Key bsr 3, 0, F@_1, F@_2, TrUserData);
-                5 -> 'skip_32_PrepareBlueNode.PrepareBlueSingle'(Rest, 0, 0, F@_1, F@_2, TrUserData)
-            end
-    end;
-'dg_read_field_def_PrepareBlueNode.PrepareBlueSingle'(<<>>, 0, 0, F@_1, F@_2, _) -> #{partition => F@_1, writeset => F@_2}.
-
-'d_field_PrepareBlueNode.PrepareBlueSingle_partition'(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> 'd_field_PrepareBlueNode.PrepareBlueSingle_partition'(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-'d_field_PrepareBlueNode.PrepareBlueSingle_partition'(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(RestF, 0, 0, NewFValue, F@_2, TrUserData).
-
-'d_field_PrepareBlueNode.PrepareBlueSingle_writeset'(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> 'd_field_PrepareBlueNode.PrepareBlueSingle_writeset'(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-'d_field_PrepareBlueNode.PrepareBlueSingle_writeset'(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(RestF, 0, 0, F@_1, NewFValue, TrUserData).
-
-'skip_varint_PrepareBlueNode.PrepareBlueSingle'(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> 'skip_varint_PrepareBlueNode.PrepareBlueSingle'(Rest, Z1, Z2, F@_1, F@_2, TrUserData);
-'skip_varint_PrepareBlueNode.PrepareBlueSingle'(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> 'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
-
-'skip_length_delimited_PrepareBlueNode.PrepareBlueSingle'(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) when N < 57 -> 'skip_length_delimited_PrepareBlueNode.PrepareBlueSingle'(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, TrUserData);
-'skip_length_delimited_PrepareBlueNode.PrepareBlueSingle'(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, TrUserData) ->
-    Length = X bsl N + Acc,
-    <<_:Length/binary, Rest2/binary>> = Rest,
-    'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Rest2, 0, 0, F@_1, F@_2, TrUserData).
-
-'skip_group_PrepareBlueNode.PrepareBlueSingle'(Bin, FNum, Z2, F@_1, F@_2, TrUserData) ->
-    {_, Rest} = read_group(Bin, FNum),
-    'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Rest, 0, Z2, F@_1, F@_2, TrUserData).
-
-'skip_32_PrepareBlueNode.PrepareBlueSingle'(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> 'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
-
-'skip_64_PrepareBlueNode.PrepareBlueSingle'(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> 'dfp_read_field_def_PrepareBlueNode.PrepareBlueSingle'(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
+skip_64_OpReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
 decode_msg_PrepareBlueNode(Bin, TrUserData) -> dfp_read_field_def_PrepareBlueNode(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), TrUserData).
 
 dfp_read_field_def_PrepareBlueNode(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_PrepareBlueNode_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
 dfp_read_field_def_PrepareBlueNode(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_PrepareBlueNode_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_PrepareBlueNode(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_PrepareBlueNode_prepares(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_PrepareBlueNode(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) ->
-    S1 = #{transaction_id => F@_1, snapshot_vc => F@_2},
-    if R1 == '$undef' -> S1;
-       true -> S1#{prepares => lists_reverse(R1, TrUserData)}
-    end;
+dfp_read_field_def_PrepareBlueNode(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_PrepareBlueNode_partitions(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
+dfp_read_field_def_PrepareBlueNode(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, partitions => lists_reverse(R1, TrUserData)};
 dfp_read_field_def_PrepareBlueNode(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_PrepareBlueNode(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
 dg_read_field_def_PrepareBlueNode(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_PrepareBlueNode(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
@@ -1120,7 +1063,7 @@ dg_read_field_def_PrepareBlueNode(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2,
     case Key of
         10 -> d_field_PrepareBlueNode_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
         18 -> d_field_PrepareBlueNode_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        26 -> d_field_PrepareBlueNode_prepares(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        26 -> d_field_PrepareBlueNode_partitions(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
         _ ->
             case Key band 7 of
                 0 -> skip_varint_PrepareBlueNode(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
@@ -1130,11 +1073,7 @@ dg_read_field_def_PrepareBlueNode(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2,
                 5 -> skip_32_PrepareBlueNode(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
             end
     end;
-dg_read_field_def_PrepareBlueNode(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) ->
-    S1 = #{transaction_id => F@_1, snapshot_vc => F@_2},
-    if R1 == '$undef' -> S1;
-       true -> S1#{prepares => lists_reverse(R1, TrUserData)}
-    end.
+dg_read_field_def_PrepareBlueNode(<<>>, 0, 0, F@_1, F@_2, R1, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, partitions => lists_reverse(R1, TrUserData)}.
 
 d_field_PrepareBlueNode_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_PrepareBlueNode_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
 d_field_PrepareBlueNode_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, TrUserData) ->
@@ -1146,9 +1085,9 @@ d_field_PrepareBlueNode_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, 
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
     dfp_read_field_def_PrepareBlueNode(RestF, 0, 0, F@_1, NewFValue, F@_3, TrUserData).
 
-d_field_PrepareBlueNode_prepares(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_PrepareBlueNode_prepares(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_PrepareBlueNode_prepares(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, Prev, TrUserData) ->
-    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bs:Len/binary, Rest2/binary>> = Rest, {id('decode_msg_PrepareBlueNode.PrepareBlueSingle'(Bs, TrUserData), TrUserData), Rest2} end,
+d_field_PrepareBlueNode_partitions(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_PrepareBlueNode_partitions(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
+d_field_PrepareBlueNode_partitions(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
     dfp_read_field_def_PrepareBlueNode(RestF, 0, 0, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), TrUserData).
 
 skip_varint_PrepareBlueNode(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_PrepareBlueNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
@@ -1522,9 +1461,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'UniformResp' -> merge_msg_UniformResp(Prev, New, TrUserData);
         'StartReq' -> merge_msg_StartReq(Prev, New, TrUserData);
         'StartReturn' -> merge_msg_StartReturn(Prev, New, TrUserData);
-        'GetKeyVersion' -> merge_msg_GetKeyVersion(Prev, New, TrUserData);
-        'KeyVersion' -> merge_msg_KeyVersion(Prev, New, TrUserData);
-        'PrepareBlueNode.PrepareBlueSingle' -> 'merge_msg_PrepareBlueNode.PrepareBlueSingle'(Prev, New, TrUserData);
+        'OpRequest' -> merge_msg_OpRequest(Prev, New, TrUserData);
+        'OpReturn' -> merge_msg_OpReturn(Prev, New, TrUserData);
         'PrepareBlueNode' -> merge_msg_PrepareBlueNode(Prev, New, TrUserData);
         'BlueVoteBatch.BlueVote' -> 'merge_msg_BlueVoteBatch.BlueVote'(Prev, New, TrUserData);
         'BlueVoteBatch' -> merge_msg_BlueVoteBatch(Prev, New, TrUserData);
@@ -1595,8 +1533,8 @@ merge_msg_StartReturn(PMsg, NMsg, _) ->
         _ -> S1
     end.
 
--compile({nowarn_unused_function,merge_msg_GetKeyVersion/3}).
-merge_msg_GetKeyVersion(PMsg, NMsg, _) ->
+-compile({nowarn_unused_function,merge_msg_OpRequest/3}).
+merge_msg_OpRequest(PMsg, NMsg, _) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
              {_, #{partition := NFpartition}} -> S1#{partition => NFpartition};
@@ -1613,32 +1551,28 @@ merge_msg_GetKeyVersion(PMsg, NMsg, _) ->
              {#{snapshot_vc := PFsnapshot_vc}, _} -> S3#{snapshot_vc => PFsnapshot_vc};
              _ -> S3
          end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{read_again := NFread_again}} -> S4#{read_again => NFread_again};
+             {#{read_again := PFread_again}, _} -> S4#{read_again => PFread_again};
+             _ -> S4
+         end,
     case {PMsg, NMsg} of
-        {_, #{read_again := NFread_again}} -> S4#{read_again => NFread_again};
-        {#{read_again := PFread_again}, _} -> S4#{read_again => PFread_again};
-        _ -> S4
+        {_, #{operation := NFoperation}} -> S5#{operation => NFoperation};
+        {#{operation := PFoperation}, _} -> S5#{operation => PFoperation};
+        _ -> S5
     end.
 
--compile({nowarn_unused_function,merge_msg_KeyVersion/3}).
-merge_msg_KeyVersion(PMsg, NMsg, _) ->
-    S1 = #{},
-    case {PMsg, NMsg} of
-        {_, #{value := NFvalue}} -> S1#{value => NFvalue};
-        {#{value := PFvalue}, _} -> S1#{value => PFvalue};
-        _ -> S1
-    end.
-
--compile({nowarn_unused_function,'merge_msg_PrepareBlueNode.PrepareBlueSingle'/3}).
-'merge_msg_PrepareBlueNode.PrepareBlueSingle'(PMsg, NMsg, _) ->
+-compile({nowarn_unused_function,merge_msg_OpReturn/3}).
+merge_msg_OpReturn(PMsg, NMsg, _) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
-             {_, #{partition := NFpartition}} -> S1#{partition => NFpartition};
-             {#{partition := PFpartition}, _} -> S1#{partition => PFpartition};
+             {_, #{value := NFvalue}} -> S1#{value => NFvalue};
+             {#{value := PFvalue}, _} -> S1#{value => PFvalue};
              _ -> S1
          end,
     case {PMsg, NMsg} of
-        {_, #{writeset := NFwriteset}} -> S2#{writeset => NFwriteset};
-        {#{writeset := PFwriteset}, _} -> S2#{writeset => PFwriteset};
+        {_, #{transform := NFtransform}} -> S2#{transform => NFtransform};
+        {#{transform := PFtransform}, _} -> S2#{transform => PFtransform};
         _ -> S2
     end.
 
@@ -1656,9 +1590,9 @@ merge_msg_PrepareBlueNode(PMsg, NMsg, TrUserData) ->
              _ -> S2
          end,
     case {PMsg, NMsg} of
-        {#{prepares := PFprepares}, #{prepares := NFprepares}} -> S3#{prepares => 'erlang_++'(PFprepares, NFprepares, TrUserData)};
-        {_, #{prepares := NFprepares}} -> S3#{prepares => NFprepares};
-        {#{prepares := PFprepares}, _} -> S3#{prepares => PFprepares};
+        {#{partitions := PFpartitions}, #{partitions := NFpartitions}} -> S3#{partitions => 'erlang_++'(PFpartitions, NFpartitions, TrUserData)};
+        {_, #{partitions := NFpartitions}} -> S3#{partitions => NFpartitions};
+        {#{partitions := PFpartitions}, _} -> S3#{partitions => PFpartitions};
         {_, _} -> S3
     end.
 
@@ -1752,9 +1686,8 @@ verify_msg(Msg, MsgName, Opts) ->
         'UniformResp' -> v_msg_UniformResp(Msg, [MsgName], TrUserData);
         'StartReq' -> v_msg_StartReq(Msg, [MsgName], TrUserData);
         'StartReturn' -> v_msg_StartReturn(Msg, [MsgName], TrUserData);
-        'GetKeyVersion' -> v_msg_GetKeyVersion(Msg, [MsgName], TrUserData);
-        'KeyVersion' -> v_msg_KeyVersion(Msg, [MsgName], TrUserData);
-        'PrepareBlueNode.PrepareBlueSingle' -> 'v_msg_PrepareBlueNode.PrepareBlueSingle'(Msg, [MsgName], TrUserData);
+        'OpRequest' -> v_msg_OpRequest(Msg, [MsgName], TrUserData);
+        'OpReturn' -> v_msg_OpReturn(Msg, [MsgName], TrUserData);
         'PrepareBlueNode' -> v_msg_PrepareBlueNode(Msg, [MsgName], TrUserData);
         'BlueVoteBatch.BlueVote' -> 'v_msg_BlueVoteBatch.BlueVote'(Msg, [MsgName], TrUserData);
         'BlueVoteBatch' -> v_msg_BlueVoteBatch(Msg, [MsgName], TrUserData);
@@ -1861,9 +1794,9 @@ v_msg_StartReturn(#{} = M, Path, TrUserData) ->
 v_msg_StartReturn(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'StartReturn'}, M, Path);
 v_msg_StartReturn(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'StartReturn'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_GetKeyVersion/3}).
--dialyzer({nowarn_function,v_msg_GetKeyVersion/3}).
-v_msg_GetKeyVersion(#{} = M, Path, TrUserData) ->
+-compile({nowarn_unused_function,v_msg_OpRequest/3}).
+-dialyzer({nowarn_function,v_msg_OpRequest/3}).
+v_msg_OpRequest(#{} = M, Path, TrUserData) ->
     case M of
         #{partition := F1} -> v_type_bytes(F1, [partition | Path], TrUserData);
         _ -> ok
@@ -1880,51 +1813,41 @@ v_msg_GetKeyVersion(#{} = M, Path, TrUserData) ->
         #{read_again := F4} -> v_type_bool(F4, [read_again | Path], TrUserData);
         _ -> ok
     end,
+    case M of
+        #{operation := F5} -> v_type_bytes(F5, [operation | Path], TrUserData);
+        _ -> ok
+    end,
     lists:foreach(fun (partition) -> ok;
                       (key) -> ok;
                       (snapshot_vc) -> ok;
                       (read_again) -> ok;
+                      (operation) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
     ok;
-v_msg_GetKeyVersion(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'GetKeyVersion'}, M, Path);
-v_msg_GetKeyVersion(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'GetKeyVersion'}, X, Path).
+v_msg_OpRequest(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpRequest'}, M, Path);
+v_msg_OpRequest(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpRequest'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_KeyVersion/3}).
--dialyzer({nowarn_function,v_msg_KeyVersion/3}).
-v_msg_KeyVersion(#{} = M, Path, TrUserData) ->
+-compile({nowarn_unused_function,v_msg_OpReturn/3}).
+-dialyzer({nowarn_function,v_msg_OpReturn/3}).
+v_msg_OpReturn(#{} = M, Path, TrUserData) ->
     case M of
         #{value := F1} -> v_type_bytes(F1, [value | Path], TrUserData);
         _ -> ok
     end,
+    case M of
+        #{transform := F2} -> v_type_bool(F2, [transform | Path], TrUserData);
+        _ -> ok
+    end,
     lists:foreach(fun (value) -> ok;
+                      (transform) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
     ok;
-v_msg_KeyVersion(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'KeyVersion'}, M, Path);
-v_msg_KeyVersion(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'KeyVersion'}, X, Path).
-
--compile({nowarn_unused_function,'v_msg_PrepareBlueNode.PrepareBlueSingle'/3}).
--dialyzer({nowarn_function,'v_msg_PrepareBlueNode.PrepareBlueSingle'/3}).
-'v_msg_PrepareBlueNode.PrepareBlueSingle'(#{} = M, Path, TrUserData) ->
-    case M of
-        #{partition := F1} -> v_type_bytes(F1, [partition | Path], TrUserData);
-        _ -> ok
-    end,
-    case M of
-        #{writeset := F2} -> v_type_bytes(F2, [writeset | Path], TrUserData);
-        _ -> ok
-    end,
-    lists:foreach(fun (partition) -> ok;
-                      (writeset) -> ok;
-                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
-                  end,
-                  maps:keys(M)),
-    ok;
-'v_msg_PrepareBlueNode.PrepareBlueSingle'(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PrepareBlueNode.PrepareBlueSingle'}, M, Path);
-'v_msg_PrepareBlueNode.PrepareBlueSingle'(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PrepareBlueNode.PrepareBlueSingle'}, X, Path).
+v_msg_OpReturn(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpReturn'}, M, Path);
+v_msg_OpReturn(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpReturn'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_PrepareBlueNode/3}).
 -dialyzer({nowarn_function,v_msg_PrepareBlueNode/3}).
@@ -1938,17 +1861,17 @@ v_msg_PrepareBlueNode(#{} = M, Path, TrUserData) ->
         _ -> ok
     end,
     case M of
-        #{prepares := F3} ->
+        #{partitions := F3} ->
             if is_list(F3) ->
-                   _ = ['v_msg_PrepareBlueNode.PrepareBlueSingle'(Elem, [prepares | Path], TrUserData) || Elem <- F3],
+                   _ = [v_type_bytes(Elem, [partitions | Path], TrUserData) || Elem <- F3],
                    ok;
-               true -> mk_type_error({invalid_list_of, {msg, 'PrepareBlueNode.PrepareBlueSingle'}}, F3, [prepares | Path])
+               true -> mk_type_error({invalid_list_of, bytes}, F3, [partitions | Path])
             end;
         _ -> ok
     end,
     lists:foreach(fun (transaction_id) -> ok;
                       (snapshot_vc) -> ok;
-                      (prepares) -> ok;
+                      (partitions) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -2151,17 +2074,17 @@ get_msg_defs() ->
      {{msg, 'UniformResp'}, []},
      {{msg, 'StartReq'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'StartReturn'}, [#{name => snapshot_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'GetKeyVersion'},
+     {{msg, 'OpRequest'},
       [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
-       #{name => read_again, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}]},
-     {{msg, 'KeyVersion'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'PrepareBlueNode.PrepareBlueSingle'}, [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => writeset, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
+       #{name => read_again, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []},
+       #{name => operation, fnum => 5, rnum => 6, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'OpReturn'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => transform, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}]},
      {{msg, 'PrepareBlueNode'},
       [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => prepares, fnum => 3, rnum => 4, type => {msg, 'PrepareBlueNode.PrepareBlueSingle'}, occurrence => repeated, opts => []}]},
+       #{name => partitions, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}]},
      {{msg, 'BlueVoteBatch.BlueVote'}, [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => prepare_time, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []}]},
      {{msg, 'BlueVoteBatch'}, [#{name => votes, fnum => 1, rnum => 2, type => {msg, 'BlueVoteBatch.BlueVote'}, occurrence => repeated, opts => []}]},
      {{msg, 'DecideBlueNode'},
@@ -2178,42 +2101,14 @@ get_msg_defs() ->
 
 
 get_msg_names() ->
-    ['ConnectRequest',
-     'ConnectResponse',
-     'UniformBarrier',
-     'UniformResp',
-     'StartReq',
-     'StartReturn',
-     'GetKeyVersion',
-     'KeyVersion',
-     'PrepareBlueNode.PrepareBlueSingle',
-     'PrepareBlueNode',
-     'BlueVoteBatch.BlueVote',
-     'BlueVoteBatch',
-     'DecideBlueNode',
-     'CommitRed',
-     'CommitRedReturn'].
+    ['ConnectRequest', 'ConnectResponse', 'UniformBarrier', 'UniformResp', 'StartReq', 'StartReturn', 'OpRequest', 'OpReturn', 'PrepareBlueNode', 'BlueVoteBatch.BlueVote', 'BlueVoteBatch', 'DecideBlueNode', 'CommitRed', 'CommitRedReturn'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['ConnectRequest',
-     'ConnectResponse',
-     'UniformBarrier',
-     'UniformResp',
-     'StartReq',
-     'StartReturn',
-     'GetKeyVersion',
-     'KeyVersion',
-     'PrepareBlueNode.PrepareBlueSingle',
-     'PrepareBlueNode',
-     'BlueVoteBatch.BlueVote',
-     'BlueVoteBatch',
-     'DecideBlueNode',
-     'CommitRed',
-     'CommitRedReturn'].
+    ['ConnectRequest', 'ConnectResponse', 'UniformBarrier', 'UniformResp', 'StartReq', 'StartReturn', 'OpRequest', 'OpReturn', 'PrepareBlueNode', 'BlueVoteBatch.BlueVote', 'BlueVoteBatch', 'DecideBlueNode', 'CommitRed', 'CommitRedReturn'].
 
 
 get_enum_names() -> [].
@@ -2239,17 +2134,17 @@ find_msg_def('UniformBarrier') -> [#{name => client_vc, fnum => 1, rnum => 2, ty
 find_msg_def('UniformResp') -> [];
 find_msg_def('StartReq') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('StartReturn') -> [#{name => snapshot_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('GetKeyVersion') ->
+find_msg_def('OpRequest') ->
     [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => key, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
-     #{name => read_again, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []}];
-find_msg_def('KeyVersion') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('PrepareBlueNode.PrepareBlueSingle') -> [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => writeset, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
+     #{name => read_again, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []},
+     #{name => operation, fnum => 5, rnum => 6, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('OpReturn') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => transform, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}];
 find_msg_def('PrepareBlueNode') ->
     [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => prepares, fnum => 3, rnum => 4, type => {msg, 'PrepareBlueNode.PrepareBlueSingle'}, occurrence => repeated, opts => []}];
+     #{name => partitions, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []}];
 find_msg_def('BlueVoteBatch.BlueVote') -> [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => prepare_time, fnum => 2, rnum => 3, type => uint64, occurrence => optional, opts => []}];
 find_msg_def('BlueVoteBatch') -> [#{name => votes, fnum => 1, rnum => 2, type => {msg, 'BlueVoteBatch.BlueVote'}, occurrence => repeated, opts => []}];
 find_msg_def('DecideBlueNode') ->
@@ -2327,9 +2222,8 @@ fqbin_to_msg_name(<<"UniformBarrier">>) -> 'UniformBarrier';
 fqbin_to_msg_name(<<"UniformResp">>) -> 'UniformResp';
 fqbin_to_msg_name(<<"StartReq">>) -> 'StartReq';
 fqbin_to_msg_name(<<"StartReturn">>) -> 'StartReturn';
-fqbin_to_msg_name(<<"GetKeyVersion">>) -> 'GetKeyVersion';
-fqbin_to_msg_name(<<"KeyVersion">>) -> 'KeyVersion';
-fqbin_to_msg_name(<<"PrepareBlueNode.PrepareBlueSingle">>) -> 'PrepareBlueNode.PrepareBlueSingle';
+fqbin_to_msg_name(<<"OpRequest">>) -> 'OpRequest';
+fqbin_to_msg_name(<<"OpReturn">>) -> 'OpReturn';
 fqbin_to_msg_name(<<"PrepareBlueNode">>) -> 'PrepareBlueNode';
 fqbin_to_msg_name(<<"BlueVoteBatch.BlueVote">>) -> 'BlueVoteBatch.BlueVote';
 fqbin_to_msg_name(<<"BlueVoteBatch">>) -> 'BlueVoteBatch';
@@ -2345,9 +2239,8 @@ msg_name_to_fqbin('UniformBarrier') -> <<"UniformBarrier">>;
 msg_name_to_fqbin('UniformResp') -> <<"UniformResp">>;
 msg_name_to_fqbin('StartReq') -> <<"StartReq">>;
 msg_name_to_fqbin('StartReturn') -> <<"StartReturn">>;
-msg_name_to_fqbin('GetKeyVersion') -> <<"GetKeyVersion">>;
-msg_name_to_fqbin('KeyVersion') -> <<"KeyVersion">>;
-msg_name_to_fqbin('PrepareBlueNode.PrepareBlueSingle') -> <<"PrepareBlueNode.PrepareBlueSingle">>;
+msg_name_to_fqbin('OpRequest') -> <<"OpRequest">>;
+msg_name_to_fqbin('OpReturn') -> <<"OpReturn">>;
 msg_name_to_fqbin('PrepareBlueNode') -> <<"PrepareBlueNode">>;
 msg_name_to_fqbin('BlueVoteBatch.BlueVote') -> <<"BlueVoteBatch.BlueVote">>;
 msg_name_to_fqbin('BlueVoteBatch') -> <<"BlueVoteBatch">>;
@@ -2393,21 +2286,7 @@ get_all_proto_names() -> ["grb_msgs"].
 
 
 get_msg_containment("grb_msgs") ->
-    ['BlueVoteBatch',
-     'BlueVoteBatch.BlueVote',
-     'CommitRed',
-     'CommitRedReturn',
-     'ConnectRequest',
-     'ConnectResponse',
-     'DecideBlueNode',
-     'GetKeyVersion',
-     'KeyVersion',
-     'PrepareBlueNode',
-     'PrepareBlueNode.PrepareBlueSingle',
-     'StartReq',
-     'StartReturn',
-     'UniformBarrier',
-     'UniformResp'];
+    ['BlueVoteBatch', 'BlueVoteBatch.BlueVote', 'CommitRed', 'CommitRedReturn', 'ConnectRequest', 'ConnectResponse', 'DecideBlueNode', 'OpRequest', 'OpReturn', 'PrepareBlueNode', 'StartReq', 'StartReturn', 'UniformBarrier', 'UniformResp'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
@@ -2430,17 +2309,16 @@ get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 get_proto_by_msg_name_as_fqbin(<<"UniformResp">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReq">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"UniformBarrier">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"OpRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRed">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"PrepareBlueNode.PrepareBlueSingle">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PrepareBlueNode">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"DecideBlueNode">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectResponse">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch.BlueVote">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"KeyVersion">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"GetKeyVersion">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"OpReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRedReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
