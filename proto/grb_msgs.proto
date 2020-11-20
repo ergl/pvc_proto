@@ -38,7 +38,14 @@ message OpRequest {
     bytes key = 3;
     bytes snapshot_vc = 4;
     bool read_again = 5;
-    bytes operation = 6;
+
+    // If this is a read, type indicates the type of the key
+    // If this is an update, operation contains the update to
+    // perform on the object
+    oneof payload {
+        bytes type = 6;
+        bytes operation = 7;
+    }
 }
 
 // Values are opaque byte blobs

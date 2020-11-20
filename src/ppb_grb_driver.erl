@@ -7,7 +7,7 @@
 -export([connect/0,
          uniform_barrier/2,
          start_tx/2,
-         read_request/5,
+         read_request/6,
          update_request/6,
          prepare_blue_node/3,
          decide_blue_node/3,
@@ -35,13 +35,14 @@ start_tx(Partition, CVC) ->
     ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC),
                               partition => binary:encode_unsigned(Partition)}).
 
--spec read_request(non_neg_integer(), term(), term(), boolean(), binary()) -> msg().
-read_request(Partition, TxId, SVC, ReadAgain, Key) ->
+-spec read_request(non_neg_integer(), term(), term(), boolean(), binary(), term()) -> msg().
+read_request(Partition, TxId, SVC, ReadAgain, Key, Type) ->
    ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
                               transaction_id => term_to_binary(TxId),
                               snapshot_vc => term_to_binary(SVC),
                               key => Key,
-                              read_again => ReadAgain}).
+                              read_again => ReadAgain,
+                              payload => {type, term_to_binary(Type)}}).
 
 -spec update_request(non_neg_integer(), term(), term(), boolean(), binary(), term()) -> msg().
 update_request(Partition, TxId, SVC, ReadAgain, Key, Update) ->
@@ -50,7 +51,7 @@ update_request(Partition, TxId, SVC, ReadAgain, Key, Update) ->
                                snapshot_vc => term_to_binary(SVC),
                                key => Key,
                                read_again => ReadAgain,
-                               operation => term_to_binary(Update)}).
+                               payload => {operation, term_to_binary(Update)}}).
 
 -spec prepare_blue_node(term(), term(), [non_neg_integer()]) -> msg().
 prepare_blue_node(TxId, SVC, Partitions) ->
@@ -92,16 +93,19 @@ decode_from_client('OpRequest', Msg) ->
         partition := PB,
         transaction_id := PTxId,
         snapshot_vc := PSVC,
-        operation := POp
+        payload := Payload
     } = ?proto_msgs:decode_msg(Msg, 'OpRequest'),
-    M1 = M0#{partition := binary:decode_unsigned(PB),
-             transaction_id := binary_to_term(PTxId),
-             snapshot_vc := binary_to_term(PSVC)},
-    case POp of
-        <<>> ->
-            maps:remove(operation, M1);
-        Other ->
-            M1#{operation := binary_to_term(Other)}
+    M1 = maps:remove(
+        payload,
+        M0#{partition := binary:decode_unsigned(PB),
+            transaction_id := binary_to_term(PTxId),
+            snapshot_vc := binary_to_term(PSVC)}
+    ),
+    case Payload of
+        {type, Typ} ->
+            M1#{type => binary_to_term(Typ)};
+        {operation, Op} ->
+            M1#{operation => binary_to_term(Op)}
     end;
 
 decode_from_client('PrepareBlueNode', Msg) ->
