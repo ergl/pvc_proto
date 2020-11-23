@@ -60,6 +60,14 @@
         replica_id              => iodata()         % = 3
        }.
 
+-type 'PutConflictRelations'() ::
+      #{payload                 => iodata()         % = 1
+       }.
+
+-type 'PutConflictRelationsAck'() ::
+      #{
+       }.
+
 -type 'UniformBarrier'() ::
       #{client_vc               => iodata(),        % = 1
         partition               => iodata()         % = 2
@@ -114,22 +122,23 @@
        }.
 
 -type 'CommitRed'() ::
-      #{transaction_id          => iodata(),        % = 1
-        snapshot_vc             => iodata(),        % = 2
-        prepares                => [iodata()],      % = 3
-        partition               => iodata()         % = 4
+      #{partition               => iodata(),        % = 1
+        transaction_id          => iodata(),        % = 2
+        snapshot_vc             => iodata(),        % = 3
+        transaction_label       => iodata(),        % = 4
+        prepares                => [iodata()]       % = 5
        }.
 
 -type 'CommitRedReturn'() ::
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -139,6 +148,8 @@ encode_msg(Msg, MsgName, Opts) ->
     case MsgName of
         'ConnectRequest' -> encode_msg_ConnectRequest(id(Msg, TrUserData), TrUserData);
         'ConnectResponse' -> encode_msg_ConnectResponse(id(Msg, TrUserData), TrUserData);
+        'PutConflictRelations' -> encode_msg_PutConflictRelations(id(Msg, TrUserData), TrUserData);
+        'PutConflictRelationsAck' -> encode_msg_PutConflictRelationsAck(id(Msg, TrUserData), TrUserData);
         'UniformBarrier' -> encode_msg_UniformBarrier(id(Msg, TrUserData), TrUserData);
         'UniformResp' -> encode_msg_UniformResp(id(Msg, TrUserData), TrUserData);
         'StartReq' -> encode_msg_StartReq(id(Msg, TrUserData), TrUserData);
@@ -192,6 +203,24 @@ encode_msg_ConnectResponse(#{} = M, Bin, TrUserData) ->
             end;
         _ -> B2
     end.
+
+encode_msg_PutConflictRelations(Msg, TrUserData) -> encode_msg_PutConflictRelations(Msg, <<>>, TrUserData).
+
+
+encode_msg_PutConflictRelations(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{payload := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case iolist_size(TrF1) of
+                    0 -> Bin;
+                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_PutConflictRelationsAck(_Msg, _TrUserData) -> <<>>.
 
 encode_msg_UniformBarrier(Msg, TrUserData) -> encode_msg_UniformBarrier(Msg, <<>>, TrUserData).
 
@@ -472,7 +501,7 @@ encode_msg_CommitRed(Msg, TrUserData) -> encode_msg_CommitRed(Msg, <<>>, TrUserD
 
 encode_msg_CommitRed(#{} = M, Bin, TrUserData) ->
     B1 = case M of
-             #{transaction_id := F1} ->
+             #{partition := F1} ->
                  begin
                      TrF1 = id(F1, TrUserData),
                      case iolist_size(TrF1) of
@@ -483,7 +512,7 @@ encode_msg_CommitRed(#{} = M, Bin, TrUserData) ->
              _ -> Bin
          end,
     B2 = case M of
-             #{snapshot_vc := F2} ->
+             #{transaction_id := F2} ->
                  begin
                      TrF2 = id(F2, TrUserData),
                      case iolist_size(TrF2) of
@@ -494,23 +523,34 @@ encode_msg_CommitRed(#{} = M, Bin, TrUserData) ->
              _ -> B1
          end,
     B3 = case M of
-             #{prepares := F3} ->
-                 TrF3 = id(F3, TrUserData),
-                 if TrF3 == [] -> B2;
-                    true -> e_field_CommitRed_prepares(TrF3, B2, TrUserData)
+             #{snapshot_vc := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case iolist_size(TrF3) of
+                         0 -> B2;
+                         _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
                  end;
              _ -> B2
          end,
+    B4 = case M of
+             #{transaction_label := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     case iolist_size(TrF4) of
+                         0 -> B3;
+                         _ -> e_type_bytes(TrF4, <<B3/binary, 34>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
     case M of
-        #{partition := F4} ->
-            begin
-                TrF4 = id(F4, TrUserData),
-                case iolist_size(TrF4) of
-                    0 -> B3;
-                    _ -> e_type_bytes(TrF4, <<B3/binary, 34>>, TrUserData)
-                end
+        #{prepares := F5} ->
+            TrF5 = id(F5, TrUserData),
+            if TrF5 == [] -> B4;
+               true -> e_field_CommitRed_prepares(TrF5, B4, TrUserData)
             end;
-        _ -> B3
+        _ -> B4
     end.
 
 encode_msg_CommitRedReturn(Msg, TrUserData) -> encode_msg_CommitRedReturn(Msg, <<>>, TrUserData).
@@ -550,7 +590,7 @@ e_field_DecideBlueNode_partitions([Elem | Rest], Bin, TrUserData) ->
 e_field_DecideBlueNode_partitions([], Bin, _TrUserData) -> Bin.
 
 e_field_CommitRed_prepares([Elem | Rest], Bin, TrUserData) ->
-    Bin2 = <<Bin/binary, 26>>,
+    Bin2 = <<Bin/binary, 42>>,
     Bin3 = e_type_bytes(id(Elem, TrUserData), Bin2, TrUserData),
     e_field_CommitRed_prepares(Rest, Bin3, TrUserData);
 e_field_CommitRed_prepares([], Bin, _TrUserData) -> Bin.
@@ -648,6 +688,8 @@ decode_msg_1_catch(Bin, MsgName, TrUserData) ->
 
 decode_msg_2_doit('ConnectRequest', Bin, TrUserData) -> id(decode_msg_ConnectRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ConnectResponse', Bin, TrUserData) -> id(decode_msg_ConnectResponse(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PutConflictRelations', Bin, TrUserData) -> id(decode_msg_PutConflictRelations(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PutConflictRelationsAck', Bin, TrUserData) -> id(decode_msg_PutConflictRelationsAck(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('UniformBarrier', Bin, TrUserData) -> id(decode_msg_UniformBarrier(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('UniformResp', Bin, TrUserData) -> id(decode_msg_UniformResp(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('StartReq', Bin, TrUserData) -> id(decode_msg_StartReq(Bin, TrUserData), TrUserData);
@@ -754,6 +796,84 @@ skip_group_ConnectResponse(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
 skip_32_ConnectResponse(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
 skip_64_ConnectResponse(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_PutConflictRelations(Bin, TrUserData) -> dfp_read_field_def_PutConflictRelations(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_PutConflictRelations(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_PutConflictRelations_payload(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_PutConflictRelations(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
+dfp_read_field_def_PutConflictRelations(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_PutConflictRelations(Other, Z1, Z2, F@_1, TrUserData).
+
+dg_read_field_def_PutConflictRelations(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_PutConflictRelations(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_PutConflictRelations(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_PutConflictRelations_payload(Rest, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_PutConflictRelations(Rest, 0, 0, F@_1, TrUserData);
+                1 -> skip_64_PutConflictRelations(Rest, 0, 0, F@_1, TrUserData);
+                2 -> skip_length_delimited_PutConflictRelations(Rest, 0, 0, F@_1, TrUserData);
+                3 -> skip_group_PutConflictRelations(Rest, Key bsr 3, 0, F@_1, TrUserData);
+                5 -> skip_32_PutConflictRelations(Rest, 0, 0, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_PutConflictRelations(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
+
+d_field_PutConflictRelations_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_PutConflictRelations_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_PutConflictRelations_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_PutConflictRelations(RestF, 0, 0, NewFValue, TrUserData).
+
+skip_varint_PutConflictRelations(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_PutConflictRelations(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_PutConflictRelations(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_PutConflictRelations(Rest, Z1, Z2, F@_1, TrUserData).
+
+skip_length_delimited_PutConflictRelations(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_PutConflictRelations(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_PutConflictRelations(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PutConflictRelations(Rest2, 0, 0, F@_1, TrUserData).
+
+skip_group_PutConflictRelations(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PutConflictRelations(Rest, 0, Z2, F@_1, TrUserData).
+
+skip_32_PutConflictRelations(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_PutConflictRelations(Rest, Z1, Z2, F@_1, TrUserData).
+
+skip_64_PutConflictRelations(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_PutConflictRelations(Rest, Z1, Z2, F@_1, TrUserData).
+
+decode_msg_PutConflictRelationsAck(Bin, TrUserData) -> dfp_read_field_def_PutConflictRelationsAck(Bin, 0, 0, TrUserData).
+
+dfp_read_field_def_PutConflictRelationsAck(<<>>, 0, 0, _) -> #{};
+dfp_read_field_def_PutConflictRelationsAck(Other, Z1, Z2, TrUserData) -> dg_read_field_def_PutConflictRelationsAck(Other, Z1, Z2, TrUserData).
+
+dg_read_field_def_PutConflictRelationsAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 32 - 7 -> dg_read_field_def_PutConflictRelationsAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+dg_read_field_def_PutConflictRelationsAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+        0 -> skip_varint_PutConflictRelationsAck(Rest, 0, 0, TrUserData);
+        1 -> skip_64_PutConflictRelationsAck(Rest, 0, 0, TrUserData);
+        2 -> skip_length_delimited_PutConflictRelationsAck(Rest, 0, 0, TrUserData);
+        3 -> skip_group_PutConflictRelationsAck(Rest, Key bsr 3, 0, TrUserData);
+        5 -> skip_32_PutConflictRelationsAck(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_PutConflictRelationsAck(<<>>, 0, 0, _) -> #{}.
+
+skip_varint_PutConflictRelationsAck(<<1:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> skip_varint_PutConflictRelationsAck(Rest, Z1, Z2, TrUserData);
+skip_varint_PutConflictRelationsAck(<<0:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PutConflictRelationsAck(Rest, Z1, Z2, TrUserData).
+
+skip_length_delimited_PutConflictRelationsAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 57 -> skip_length_delimited_PutConflictRelationsAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+skip_length_delimited_PutConflictRelationsAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PutConflictRelationsAck(Rest2, 0, 0, TrUserData).
+
+skip_group_PutConflictRelationsAck(Bin, FNum, Z2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PutConflictRelationsAck(Rest, 0, Z2, TrUserData).
+
+skip_32_PutConflictRelationsAck(<<_:32, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PutConflictRelationsAck(Rest, Z1, Z2, TrUserData).
+
+skip_64_PutConflictRelationsAck(<<_:64, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PutConflictRelationsAck(Rest, Z1, Z2, TrUserData).
 
 decode_msg_UniformBarrier(Bin, TrUserData) -> dfp_read_field_def_UniformBarrier(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
 
@@ -1299,70 +1419,77 @@ skip_32_DecideBlueNode(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserDa
 
 skip_64_DecideBlueNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_DecideBlueNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
-decode_msg_CommitRed(Bin, TrUserData) -> dfp_read_field_def_CommitRed(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), id(<<>>, TrUserData), TrUserData).
+decode_msg_CommitRed(Bin, TrUserData) -> dfp_read_field_def_CommitRed(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), TrUserData).
 
-dfp_read_field_def_CommitRed(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_CommitRed(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_CommitRed(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_prepares(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_CommitRed(<<34, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_CommitRed_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, R1, F@_4, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData), partition => F@_4};
-dfp_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+dfp_read_field_def_CommitRed(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_CommitRed_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_CommitRed(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_CommitRed_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_CommitRed(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_CommitRed_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_CommitRed(<<34, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_CommitRed_transaction_label(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_CommitRed(<<42, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> d_field_CommitRed_prepares(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dfp_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, R1, TrUserData) -> #{partition => F@_1, transaction_id => F@_2, snapshot_vc => F@_3, transaction_label => F@_4, prepares => lists_reverse(R1, TrUserData)};
+dfp_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dg_read_field_def_CommitRed(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-dg_read_field_def_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dg_read_field_def_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+dg_read_field_def_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 32 - 7 -> dg_read_field_def_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+dg_read_field_def_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_CommitRed_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        18 -> d_field_CommitRed_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        26 -> d_field_CommitRed_prepares(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        34 -> d_field_CommitRed_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        10 -> d_field_CommitRed_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        18 -> d_field_CommitRed_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        26 -> d_field_CommitRed_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        34 -> d_field_CommitRed_transaction_label(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+        42 -> d_field_CommitRed_prepares(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                1 -> skip_64_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                2 -> skip_length_delimited_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                3 -> skip_group_CommitRed(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                5 -> skip_32_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData)
+                0 -> skip_varint_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                1 -> skip_64_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                2 -> skip_length_delimited_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                3 -> skip_group_CommitRed(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+                5 -> skip_32_CommitRed(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData)
             end
     end;
-dg_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, R1, F@_4, TrUserData) -> #{transaction_id => F@_1, snapshot_vc => F@_2, prepares => lists_reverse(R1, TrUserData), partition => F@_4}.
+dg_read_field_def_CommitRed(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, R1, TrUserData) -> #{partition => F@_1, transaction_id => F@_2, snapshot_vc => F@_3, transaction_label => F@_4, prepares => lists_reverse(R1, TrUserData)}.
 
-d_field_CommitRed_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_CommitRed_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
+d_field_CommitRed_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_CommitRed_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_CommitRed_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-d_field_CommitRed_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_CommitRed_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
+d_field_CommitRed_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_CommitRed_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_CommitRed_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, F@_5, TrUserData).
 
-d_field_CommitRed_prepares(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_prepares(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_CommitRed_prepares(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, Prev, F@_4, TrUserData) ->
+d_field_CommitRed_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_CommitRed_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_CommitRed_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, cons(NewFValue, Prev, TrUserData), F@_4, TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, F@_5, TrUserData).
 
-d_field_CommitRed_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_CommitRed_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_CommitRed_partition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+d_field_CommitRed_transaction_label(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_CommitRed_transaction_label(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_CommitRed_transaction_label(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, F@_5, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, F@_5, TrUserData).
 
-skip_varint_CommitRed(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-skip_varint_CommitRed(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+d_field_CommitRed_prepares(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> d_field_CommitRed_prepares(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+d_field_CommitRed_prepares(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, Prev, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_CommitRed(RestF, 0, 0, F@_1, F@_2, F@_3, F@_4, cons(NewFValue, Prev, TrUserData), TrUserData).
 
-skip_length_delimited_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-skip_length_delimited_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+skip_varint_CommitRed(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> skip_varint_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+skip_varint_CommitRed(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
+
+skip_length_delimited_CommitRed(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) when N < 57 -> skip_length_delimited_CommitRed(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData);
+skip_length_delimited_CommitRed(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_CommitRed(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_CommitRed(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-skip_group_CommitRed(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+skip_group_CommitRed(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_CommitRed(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_CommitRed(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-skip_32_CommitRed(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_32_CommitRed(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
-skip_64_CommitRed(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_64_CommitRed(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData) -> dfp_read_field_def_CommitRed(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, TrUserData).
 
 decode_msg_CommitRedReturn(Bin, TrUserData) -> dfp_read_field_def_CommitRedReturn(Bin, 0, 0, id('$undef', TrUserData), TrUserData).
 
@@ -1488,6 +1615,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
     case MsgName of
         'ConnectRequest' -> merge_msg_ConnectRequest(Prev, New, TrUserData);
         'ConnectResponse' -> merge_msg_ConnectResponse(Prev, New, TrUserData);
+        'PutConflictRelations' -> merge_msg_PutConflictRelations(Prev, New, TrUserData);
+        'PutConflictRelationsAck' -> merge_msg_PutConflictRelationsAck(Prev, New, TrUserData);
         'UniformBarrier' -> merge_msg_UniformBarrier(Prev, New, TrUserData);
         'UniformResp' -> merge_msg_UniformResp(Prev, New, TrUserData);
         'StartReq' -> merge_msg_StartReq(Prev, New, TrUserData);
@@ -1523,6 +1652,18 @@ merge_msg_ConnectResponse(PMsg, NMsg, _) ->
         {#{replica_id := PFreplica_id}, _} -> S3#{replica_id => PFreplica_id};
         _ -> S3
     end.
+
+-compile({nowarn_unused_function,merge_msg_PutConflictRelations/3}).
+merge_msg_PutConflictRelations(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{payload := NFpayload}} -> S1#{payload => NFpayload};
+        {#{payload := PFpayload}, _} -> S1#{payload => PFpayload};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PutConflictRelationsAck/3}).
+merge_msg_PutConflictRelationsAck(_Prev, New, _TrUserData) -> New.
 
 -compile({nowarn_unused_function,merge_msg_UniformBarrier/3}).
 merge_msg_UniformBarrier(PMsg, NMsg, _) ->
@@ -1680,25 +1821,30 @@ merge_msg_DecideBlueNode(PMsg, NMsg, TrUserData) ->
 merge_msg_CommitRed(PMsg, NMsg, TrUserData) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
-             {_, #{transaction_id := NFtransaction_id}} -> S1#{transaction_id => NFtransaction_id};
-             {#{transaction_id := PFtransaction_id}, _} -> S1#{transaction_id => PFtransaction_id};
+             {_, #{partition := NFpartition}} -> S1#{partition => NFpartition};
+             {#{partition := PFpartition}, _} -> S1#{partition => PFpartition};
              _ -> S1
          end,
     S3 = case {PMsg, NMsg} of
-             {_, #{snapshot_vc := NFsnapshot_vc}} -> S2#{snapshot_vc => NFsnapshot_vc};
-             {#{snapshot_vc := PFsnapshot_vc}, _} -> S2#{snapshot_vc => PFsnapshot_vc};
+             {_, #{transaction_id := NFtransaction_id}} -> S2#{transaction_id => NFtransaction_id};
+             {#{transaction_id := PFtransaction_id}, _} -> S2#{transaction_id => PFtransaction_id};
              _ -> S2
          end,
     S4 = case {PMsg, NMsg} of
-             {#{prepares := PFprepares}, #{prepares := NFprepares}} -> S3#{prepares => 'erlang_++'(PFprepares, NFprepares, TrUserData)};
-             {_, #{prepares := NFprepares}} -> S3#{prepares => NFprepares};
-             {#{prepares := PFprepares}, _} -> S3#{prepares => PFprepares};
-             {_, _} -> S3
+             {_, #{snapshot_vc := NFsnapshot_vc}} -> S3#{snapshot_vc => NFsnapshot_vc};
+             {#{snapshot_vc := PFsnapshot_vc}, _} -> S3#{snapshot_vc => PFsnapshot_vc};
+             _ -> S3
+         end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{transaction_label := NFtransaction_label}} -> S4#{transaction_label => NFtransaction_label};
+             {#{transaction_label := PFtransaction_label}, _} -> S4#{transaction_label => PFtransaction_label};
+             _ -> S4
          end,
     case {PMsg, NMsg} of
-        {_, #{partition := NFpartition}} -> S4#{partition => NFpartition};
-        {#{partition := PFpartition}, _} -> S4#{partition => PFpartition};
-        _ -> S4
+        {#{prepares := PFprepares}, #{prepares := NFprepares}} -> S5#{prepares => 'erlang_++'(PFprepares, NFprepares, TrUserData)};
+        {_, #{prepares := NFprepares}} -> S5#{prepares => NFprepares};
+        {#{prepares := PFprepares}, _} -> S5#{prepares => PFprepares};
+        {_, _} -> S5
     end.
 
 -compile({nowarn_unused_function,merge_msg_CommitRedReturn/3}).
@@ -1718,6 +1864,8 @@ verify_msg(Msg, MsgName, Opts) ->
     case MsgName of
         'ConnectRequest' -> v_msg_ConnectRequest(Msg, [MsgName], TrUserData);
         'ConnectResponse' -> v_msg_ConnectResponse(Msg, [MsgName], TrUserData);
+        'PutConflictRelations' -> v_msg_PutConflictRelations(Msg, [MsgName], TrUserData);
+        'PutConflictRelationsAck' -> v_msg_PutConflictRelationsAck(Msg, [MsgName], TrUserData);
         'UniformBarrier' -> v_msg_UniformBarrier(Msg, [MsgName], TrUserData);
         'UniformResp' -> v_msg_UniformResp(Msg, [MsgName], TrUserData);
         'StartReq' -> v_msg_StartReq(Msg, [MsgName], TrUserData);
@@ -1766,6 +1914,29 @@ v_msg_ConnectResponse(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_ConnectResponse(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ConnectResponse'}, M, Path);
 v_msg_ConnectResponse(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ConnectResponse'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_PutConflictRelations/3}).
+-dialyzer({nowarn_function,v_msg_PutConflictRelations/3}).
+v_msg_PutConflictRelations(#{} = M, Path, TrUserData) ->
+    case M of
+        #{payload := F1} -> v_type_bytes(F1, [payload | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (payload) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_PutConflictRelations(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PutConflictRelations'}, M, Path);
+v_msg_PutConflictRelations(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PutConflictRelations'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_PutConflictRelationsAck/3}).
+-dialyzer({nowarn_function,v_msg_PutConflictRelationsAck/3}).
+v_msg_PutConflictRelationsAck(#{} = M, Path, _) ->
+    lists:foreach(fun (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path) end, maps:keys(M)),
+    ok;
+v_msg_PutConflictRelationsAck(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PutConflictRelationsAck'}, M, Path);
+v_msg_PutConflictRelationsAck(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PutConflictRelationsAck'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_UniformBarrier/3}).
 -dialyzer({nowarn_function,v_msg_UniformBarrier/3}).
@@ -1996,30 +2167,35 @@ v_msg_DecideBlueNode(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'Deci
 -dialyzer({nowarn_function,v_msg_CommitRed/3}).
 v_msg_CommitRed(#{} = M, Path, TrUserData) ->
     case M of
-        #{transaction_id := F1} -> v_type_bytes(F1, [transaction_id | Path], TrUserData);
+        #{partition := F1} -> v_type_bytes(F1, [partition | Path], TrUserData);
         _ -> ok
     end,
     case M of
-        #{snapshot_vc := F2} -> v_type_bytes(F2, [snapshot_vc | Path], TrUserData);
+        #{transaction_id := F2} -> v_type_bytes(F2, [transaction_id | Path], TrUserData);
         _ -> ok
     end,
     case M of
-        #{prepares := F3} ->
-            if is_list(F3) ->
-                   _ = [v_type_bytes(Elem, [prepares | Path], TrUserData) || Elem <- F3],
+        #{snapshot_vc := F3} -> v_type_bytes(F3, [snapshot_vc | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{transaction_label := F4} -> v_type_bytes(F4, [transaction_label | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{prepares := F5} ->
+            if is_list(F5) ->
+                   _ = [v_type_bytes(Elem, [prepares | Path], TrUserData) || Elem <- F5],
                    ok;
-               true -> mk_type_error({invalid_list_of, bytes}, F3, [prepares | Path])
+               true -> mk_type_error({invalid_list_of, bytes}, F5, [prepares | Path])
             end;
         _ -> ok
     end,
-    case M of
-        #{partition := F4} -> v_type_bytes(F4, [partition | Path], TrUserData);
-        _ -> ok
-    end,
-    lists:foreach(fun (transaction_id) -> ok;
+    lists:foreach(fun (partition) -> ok;
+                      (transaction_id) -> ok;
                       (snapshot_vc) -> ok;
+                      (transaction_label) -> ok;
                       (prepares) -> ok;
-                      (partition) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -2113,6 +2289,8 @@ get_msg_defs() ->
       [#{name => num_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
        #{name => ring_payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => replica_id, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'PutConflictRelations'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'PutConflictRelationsAck'}, []},
      {{msg, 'UniformBarrier'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'UniformResp'}, []},
      {{msg, 'StartReq'}, [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
@@ -2136,23 +2314,54 @@ get_msg_defs() ->
        #{name => partitions, fnum => 2, rnum => 3, type => bytes, occurrence => repeated, opts => []},
        #{name => commit_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'CommitRed'},
-      [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-       #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []},
-       #{name => partition, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}]},
+      [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
+       #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+       #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+       #{name => transaction_label, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []},
+       #{name => prepares, fnum => 5, rnum => 6, type => bytes, occurrence => repeated, opts => []}]},
      {{msg, 'CommitRedReturn'},
       [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}]}].
 
 
 get_msg_names() ->
-    ['ConnectRequest', 'ConnectResponse', 'UniformBarrier', 'UniformResp', 'StartReq', 'StartReturn', 'OpRequest', 'OpReturn', 'PrepareBlueNode', 'BlueVoteBatch.BlueVote', 'BlueVoteBatch', 'DecideBlueNode', 'CommitRed', 'CommitRedReturn'].
+    ['ConnectRequest',
+     'ConnectResponse',
+     'PutConflictRelations',
+     'PutConflictRelationsAck',
+     'UniformBarrier',
+     'UniformResp',
+     'StartReq',
+     'StartReturn',
+     'OpRequest',
+     'OpReturn',
+     'PrepareBlueNode',
+     'BlueVoteBatch.BlueVote',
+     'BlueVoteBatch',
+     'DecideBlueNode',
+     'CommitRed',
+     'CommitRedReturn'].
 
 
 get_group_names() -> [].
 
 
 get_msg_or_group_names() ->
-    ['ConnectRequest', 'ConnectResponse', 'UniformBarrier', 'UniformResp', 'StartReq', 'StartReturn', 'OpRequest', 'OpReturn', 'PrepareBlueNode', 'BlueVoteBatch.BlueVote', 'BlueVoteBatch', 'DecideBlueNode', 'CommitRed', 'CommitRedReturn'].
+    ['ConnectRequest',
+     'ConnectResponse',
+     'PutConflictRelations',
+     'PutConflictRelationsAck',
+     'UniformBarrier',
+     'UniformResp',
+     'StartReq',
+     'StartReturn',
+     'OpRequest',
+     'OpReturn',
+     'PrepareBlueNode',
+     'BlueVoteBatch.BlueVote',
+     'BlueVoteBatch',
+     'DecideBlueNode',
+     'CommitRed',
+     'CommitRedReturn'].
 
 
 get_enum_names() -> [].
@@ -2174,6 +2383,8 @@ find_msg_def('ConnectResponse') ->
     [#{name => num_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
      #{name => ring_payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => replica_id, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('PutConflictRelations') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('PutConflictRelationsAck') -> [];
 find_msg_def('UniformBarrier') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('UniformResp') -> [];
 find_msg_def('StartReq') -> [#{name => client_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => partition, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
@@ -2197,10 +2408,11 @@ find_msg_def('DecideBlueNode') ->
      #{name => partitions, fnum => 2, rnum => 3, type => bytes, occurrence => repeated, opts => []},
      #{name => commit_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('CommitRed') ->
-    [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-     #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => prepares, fnum => 3, rnum => 4, type => bytes, occurrence => repeated, opts => []},
-     #{name => partition, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}];
+    [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
+     #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+     #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+     #{name => transaction_label, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []},
+     #{name => prepares, fnum => 5, rnum => 6, type => bytes, occurrence => repeated, opts => []}];
 find_msg_def('CommitRedReturn') ->
     [#{name => resp, rnum => 2, fields => [#{name => commit_vc, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => abort_reason, fnum => 2, rnum => 2, type => uint32, occurrence => optional, opts => []}]}];
 find_msg_def(_) -> error.
@@ -2263,6 +2475,8 @@ service_and_rpc_name_to_fqbins(S, R) -> error({gpb_error, {badservice_or_rpc, {S
 
 fqbin_to_msg_name(<<"ConnectRequest">>) -> 'ConnectRequest';
 fqbin_to_msg_name(<<"ConnectResponse">>) -> 'ConnectResponse';
+fqbin_to_msg_name(<<"PutConflictRelations">>) -> 'PutConflictRelations';
+fqbin_to_msg_name(<<"PutConflictRelationsAck">>) -> 'PutConflictRelationsAck';
 fqbin_to_msg_name(<<"UniformBarrier">>) -> 'UniformBarrier';
 fqbin_to_msg_name(<<"UniformResp">>) -> 'UniformResp';
 fqbin_to_msg_name(<<"StartReq">>) -> 'StartReq';
@@ -2280,6 +2494,8 @@ fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
 msg_name_to_fqbin('ConnectRequest') -> <<"ConnectRequest">>;
 msg_name_to_fqbin('ConnectResponse') -> <<"ConnectResponse">>;
+msg_name_to_fqbin('PutConflictRelations') -> <<"PutConflictRelations">>;
+msg_name_to_fqbin('PutConflictRelationsAck') -> <<"PutConflictRelationsAck">>;
 msg_name_to_fqbin('UniformBarrier') -> <<"UniformBarrier">>;
 msg_name_to_fqbin('UniformResp') -> <<"UniformResp">>;
 msg_name_to_fqbin('StartReq') -> <<"StartReq">>;
@@ -2331,7 +2547,22 @@ get_all_proto_names() -> ["grb_msgs"].
 
 
 get_msg_containment("grb_msgs") ->
-    ['BlueVoteBatch', 'BlueVoteBatch.BlueVote', 'CommitRed', 'CommitRedReturn', 'ConnectRequest', 'ConnectResponse', 'DecideBlueNode', 'OpRequest', 'OpReturn', 'PrepareBlueNode', 'StartReq', 'StartReturn', 'UniformBarrier', 'UniformResp'];
+    ['BlueVoteBatch',
+     'BlueVoteBatch.BlueVote',
+     'CommitRed',
+     'CommitRedReturn',
+     'ConnectRequest',
+     'ConnectResponse',
+     'DecideBlueNode',
+     'OpRequest',
+     'OpReturn',
+     'PrepareBlueNode',
+     'PutConflictRelations',
+     'PutConflictRelationsAck',
+     'StartReq',
+     'StartReturn',
+     'UniformBarrier',
+     'UniformResp'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
@@ -2354,6 +2585,7 @@ get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 get_proto_by_msg_name_as_fqbin(<<"UniformResp">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReq">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"UniformBarrier">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"PutConflictRelations">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRed">>) -> "grb_msgs";
@@ -2362,6 +2594,7 @@ get_proto_by_msg_name_as_fqbin(<<"DecideBlueNode">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectResponse">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch.BlueVote">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"PutConflictRelationsAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRedReturn">>) -> "grb_msgs";

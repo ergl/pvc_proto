@@ -12,6 +12,12 @@ message ConnectResponse {
     bytes replica_id = 3;
 }
 
+message PutConflictRelations {
+    bytes payload = 1;
+}
+
+message PutConflictRelationsAck {}
+
 message UniformBarrier {
     bytes client_vc = 1;
     bytes partition = 2;
@@ -77,10 +83,11 @@ message DecideBlueNode {
 }
 
 message CommitRed {
-    bytes transaction_id = 1;
-    bytes snapshot_vc = 2;
-    repeated bytes prepares = 3;
-    bytes partition = 4;
+    bytes partition = 1;
+    bytes transaction_id = 2;
+    bytes snapshot_vc = 3;
+    bytes transaction_label = 4;
+    repeated bytes prepares = 5;
 }
 
 message CommitRedReturn {

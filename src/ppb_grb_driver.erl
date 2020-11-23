@@ -5,13 +5,14 @@
          from_server_dec/1]).
 
 -export([connect/0,
+         put_conflicts/1,
          uniform_barrier/2,
          start_tx/2,
          read_request/6,
          update_request/6,
          prepare_blue_node/3,
          decide_blue_node/3,
-         commit_red/4]).
+         commit_red/5]).
 
 -define(proto_msgs, grb_msgs).
 -define(encode_msg(Type, Body), encode_raw_bits(Type, ?proto_msgs:encode_msg(Body, Type))).
@@ -24,6 +25,10 @@
 
 -spec connect() -> msg().
 connect() -> ?encode_msg('ConnectRequest', #{}).
+
+-spec put_conflicts(#{binary() := binary()}) -> msg().
+put_conflicts(ConflictMap) ->
+    ?encode_msg('PutConflictRelations', #{payload => term_to_binary(ConflictMap)}).
 
 -spec uniform_barrier(non_neg_integer(), term()) -> msg().
 uniform_barrier(Partition, CVC) ->
@@ -67,13 +72,14 @@ decide_blue_node(TxId, Partitions, CommitVC) ->
                                     partitions => PBinary,
                                     commit_vc => term_to_binary(CommitVC)}).
 
--spec commit_red(term(), term(), term(), [{non_neg_integer(), term(), term()}]) -> msg().
-commit_red(Partition, TxId, SVC, Prepares) ->
+-spec commit_red(term(), term(), binary(), term(), [{non_neg_integer(), term(), term()}]) -> msg().
+commit_red(Partition, TxId, Label, SVC, Prepares) ->
     BinPrepares = lists:map(fun term_to_binary/1, Prepares),
-    ?encode_msg('CommitRed', #{transaction_id => term_to_binary(TxId),
+    ?encode_msg('CommitRed', #{partition => binary:encode_unsigned(Partition),
+                               transaction_id => term_to_binary(TxId),
                                snapshot_vc => term_to_binary(SVC),
-                               prepares => BinPrepares,
-                               partition => binary:encode_unsigned(Partition)}).
+                               transaction_label => Label,
+                               prepares => BinPrepares}).
 
 %%====================================================================
 %% Module API functions
@@ -122,7 +128,12 @@ decode_from_client('CommitRed', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'CommitRed'),
     maps:map(fun(prepares, V) -> lists:map(fun binary_to_term/1, V);
                  (partition, V) -> binary:decode_unsigned(V);
+                 (transaction_label, V) -> V;
                  (_, V) -> binary_to_term(V) end, Map);
+
+decode_from_client('PutConflictRelations', Msg) ->
+    #{payload := P} = ?proto_msgs:decode_msg(Msg, 'PutConflictRelations'),
+    #{payload => binary_to_term(P)};
 
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->
     Map = ?proto_msgs:decode_msg(Msg, Type),
@@ -164,7 +175,10 @@ to_client_enc('CommitRed', {ok, CommitVC}) ->
     ?encode_msg('CommitRedReturn', #{resp => {commit_vc, term_to_binary(CommitVC)}});
 
 to_client_enc('CommitRed', {abort, Reason}) ->
-    ?encode_msg('CommitRedReturn', #{resp => {abort_reason, common:encode_error({grb, Reason})}}).
+    ?encode_msg('CommitRedReturn', #{resp => {abort_reason, common:encode_error({grb, Reason})}});
+
+to_client_enc('PutConflictRelations', ok) ->
+    ?encode_msg('PutConflictRelationsAck', #{}).
 
 encode_blue_prepare({ok, From, SeqNumber}) ->
     #{partition => binary:encode_unsigned(From), prepare_time => SeqNumber}.
@@ -207,7 +221,10 @@ decode_from_server('CommitRedReturn', BinMsg) ->
             {abort, common:decode_error({grb, Code})};
         {commit_vc, BinVC} ->
             {ok, binary_to_term(BinVC)}
-    end.
+    end;
+
+decode_from_server('PutConflictRelationsAck', _) ->
+    ok.
 
 %%====================================================================
 %% Internal functions
@@ -241,7 +258,9 @@ encode_msg_type('PrepareBlueNode') -> 9;
 encode_msg_type('BlueVoteBatch') -> 10;
 encode_msg_type('DecideBlueNode') -> 11;
 encode_msg_type('CommitRed') -> 12;
-encode_msg_type('CommitRedReturn') -> 13.
+encode_msg_type('CommitRedReturn') -> 13;
+encode_msg_type('PutConflictRelations') -> 14;
+encode_msg_type('PutConflictRelationsAck') -> 15.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -257,4 +276,6 @@ decode_type_num( 9) -> 'PrepareBlueNode';
 decode_type_num(10) -> 'BlueVoteBatch';
 decode_type_num(11) -> 'DecideBlueNode';
 decode_type_num(12) -> 'CommitRed';
-decode_type_num(13) -> 'CommitRedReturn'.
+decode_type_num(13) -> 'CommitRedReturn';
+decode_type_num(14) -> 'PutConflictRelations';
+decode_type_num(15) -> 'PutConflictRelationsAck'.
