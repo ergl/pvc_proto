@@ -18,6 +18,13 @@ message PutConflictRelations {
 
 message PutConflictRelationsAck {}
 
+message PutDirect {
+    bytes partition = 1;
+    bytes payload = 2;
+}
+
+message PutDirectAck {}
+
 message UniformBarrier {
     bytes client_vc = 1;
     bytes partition = 2;
@@ -58,6 +65,17 @@ message OpRequest {
 message OpReturn {
     bytes value = 1;
     bool transform = 2;
+}
+
+message OpRequestNode {
+    bytes transaction_id = 1;
+    bytes snapshot_vc = 2;
+    bool is_read = 3;
+    bytes ops = 4;
+}
+
+message OpReturnNode {
+    bytes payload = 1;
 }
 
 message PrepareBlueNode {

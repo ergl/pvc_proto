@@ -6,10 +6,13 @@
 
 -export([connect/0,
          put_conflicts/1,
+         put_direct/2,
          uniform_barrier/2,
          start_tx/2,
          read_request/6,
          update_request/6,
+         read_request_node/3,
+         update_request_node/3,
          prepare_blue_node/3,
          decide_blue_node/3,
          commit_red/5]).
@@ -29,6 +32,11 @@ connect() -> ?encode_msg('ConnectRequest', #{}).
 -spec put_conflicts(#{binary() := binary()}) -> msg().
 put_conflicts(ConflictMap) ->
     ?encode_msg('PutConflictRelations', #{payload => term_to_binary(ConflictMap)}).
+
+-spec put_direct(non_neg_integer(), #{term() := term()}) -> msg().
+put_direct(Partition, WS) ->
+    ?encode_msg('PutDirect', #{partition => binary:encode_unsigned(Partition),
+                               payload => term_to_binary(WS)}).
 
 -spec uniform_barrier(non_neg_integer(), term()) -> msg().
 uniform_barrier(Partition, CVC) ->
@@ -57,6 +65,20 @@ update_request(Partition, TxId, SVC, ReadAgain, Key, Update) ->
                                key => Key,
                                read_again => ReadAgain,
                                payload => {operation, term_to_binary(Update)}}).
+
+-spec read_request_node(term(), term(), #{ non_neg_integer() := {boolean(), [{binary(), term()}]} }) -> msg().
+read_request_node(TxId, SVC, Contents) ->
+    ?encode_msg('OpRequestNode', #{transaction_id => term_to_binary(TxId),
+                                   snapshot_vc => term_to_binary(SVC),
+                                   is_read => true,
+                                   ops => term_to_binary(Contents)}).
+
+-spec update_request_node(term(), term(), #{ non_neg_integer() := {boolean(), [{binary(), term()}]} }) -> msg().
+update_request_node(TxId, SVC, Contents) ->
+    ?encode_msg('OpRequestNode', #{transaction_id => term_to_binary(TxId),
+                                   snapshot_vc => term_to_binary(SVC),
+                                   is_read => false,
+                                   ops => term_to_binary(Contents)}).
 
 -spec prepare_blue_node(term(), term(), [non_neg_integer()]) -> msg().
 prepare_blue_node(TxId, SVC, Partitions) ->
@@ -114,6 +136,24 @@ decode_from_client('OpRequest', Msg) ->
             M1#{operation => binary_to_term(Op)}
     end;
 
+decode_from_client('OpRequestNode', Msg) ->
+    M0 = #{
+        transaction_id := PTxId,
+        snapshot_vc := PSVC,
+        is_read := IsRead,
+        ops := Ops
+    } = ?proto_msgs:decode_msg(Msg, 'OpRequestNode'),
+    M1 = M0#{snapshot_vc := binary_to_term(PSVC),
+             transaction_id := binary_to_term(PTxId)},
+    M2 = maps:remove(is_read, M1),
+    M3 = maps:remove(ops, M2),
+    if
+        IsRead ->
+            M3#{reads => binary_to_term(Ops)};
+        true ->
+            M3#{operations => binary_to_term(Ops)}
+    end;
+
 decode_from_client('PrepareBlueNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'PrepareBlueNode'),
     maps:map(fun(partitions, V) -> [binary:decode_unsigned(P) || P <- V];
@@ -134,6 +174,10 @@ decode_from_client('CommitRed', Msg) ->
 decode_from_client('PutConflictRelations', Msg) ->
     #{payload := P} = ?proto_msgs:decode_msg(Msg, 'PutConflictRelations'),
     #{payload => binary_to_term(P)};
+
+decode_from_client('PutDirect', Msg) ->
+    #{partition := PB, payload := PLB} = ?proto_msgs:decode_msg(Msg, 'PutDirect'),
+    #{partition => binary:decode_unsigned(PB), payload => term_to_binary(PLB)};
 
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->
     Map = ?proto_msgs:decode_msg(Msg, Type),
@@ -156,6 +200,9 @@ to_client_enc('ConnectRequest', {ok, ReplicaID, NumPartitions, Ring}) ->
                   ring_payload => term_to_binary(Ring),
                   replica_id => term_to_binary(ReplicaID)});
 
+to_client_enc('PutDirect', ok) ->
+    ?encode_msg('PutDirectAck', #{});
+
 to_client_enc('StartReq', SVC) ->
     ?encode_msg('StartReturn', #{snapshot_vc => term_to_binary(SVC)});
 
@@ -167,6 +214,9 @@ to_client_enc('OpRequest', {ok, Val}) when is_binary(Val) ->
 
 to_client_enc('OpRequest', {ok, Val}) ->
     ?encode_msg('OpReturn', #{value => term_to_binary(Val), transform => true});
+
+to_client_enc('OpRequestNode', Responses) ->
+    ?encode_msg('OpReturnNode', #{payload => term_to_binary(Responses)});
 
 to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]});
@@ -210,6 +260,10 @@ decode_from_server('OpReturn', BinMsg) ->
             {ok, Value}
     end;
 
+decode_from_server('OpReturnNode', BinMsg) ->
+    #{payload := Payload} = ?proto_msgs:decode_msg(BinMsg, 'OpReturnNode'),
+    {ok, binary_to_term(Payload)};
+
 decode_from_server('BlueVoteBatch', BinMsg) ->
     #{votes := Votes} = ?proto_msgs:decode_msg(BinMsg, 'BlueVoteBatch'),
     [ {ok, binary:decode_unsigned(P), PT} || #{partition := P, prepare_time := PT} <- Votes];
@@ -224,6 +278,9 @@ decode_from_server('CommitRedReturn', BinMsg) ->
     end;
 
 decode_from_server('PutConflictRelationsAck', _) ->
+    ok;
+
+decode_from_server('PutDirectAck', _) ->
     ok.
 
 %%====================================================================
@@ -260,7 +317,11 @@ encode_msg_type('DecideBlueNode') -> 11;
 encode_msg_type('CommitRed') -> 12;
 encode_msg_type('CommitRedReturn') -> 13;
 encode_msg_type('PutConflictRelations') -> 14;
-encode_msg_type('PutConflictRelationsAck') -> 15.
+encode_msg_type('PutConflictRelationsAck') -> 15;
+encode_msg_type('PutDirect') -> 16;
+encode_msg_type('PutDirectAck') -> 17;
+encode_msg_type('OpRequestNode') -> 18;
+encode_msg_type('OpReturnNode') -> 19.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -278,4 +339,8 @@ decode_type_num(11) -> 'DecideBlueNode';
 decode_type_num(12) -> 'CommitRed';
 decode_type_num(13) -> 'CommitRedReturn';
 decode_type_num(14) -> 'PutConflictRelations';
-decode_type_num(15) -> 'PutConflictRelationsAck'.
+decode_type_num(15) -> 'PutConflictRelationsAck';
+decode_type_num(16) -> 'PutDirect';
+decode_type_num(17) -> 'PutDirectAck';
+decode_type_num(18) -> 'OpRequestNode';
+decode_type_num(19) -> 'OpReturnNode'.
