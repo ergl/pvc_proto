@@ -266,8 +266,8 @@ decode_from_server('OpReturn', BinMsg) ->
             {ok, Value}
     end;
 
-decode_from_server('OpReturnNode', BinMsg) ->
-    #{payload := Payload} = ?proto_msgs:decode_msg(BinMsg, 'OpReturnNode'),
+decode_from_server('OpReturnPartition', BinMsg) ->
+    #{payload := Payload} = ?proto_msgs:decode_msg(BinMsg, 'OpReturnPartition'),
     {ok, binary_to_term(Payload)};
 
 decode_from_server('BlueVoteBatch', BinMsg) ->
