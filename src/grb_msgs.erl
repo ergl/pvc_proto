@@ -109,14 +109,16 @@
         transform               => boolean() | 0 | 1 % = 2
        }.
 
--type 'OpRequestNode'() ::
-      #{transaction_id          => iodata(),        % = 1
-        snapshot_vc             => iodata(),        % = 2
-        is_read                 => boolean() | 0 | 1, % = 3
-        ops                     => iodata()         % = 4
+-type 'OpRequestPartition'() ::
+      #{partition               => iodata(),        % = 1
+        transaction_id          => iodata(),        % = 2
+        snapshot_vc             => iodata(),        % = 3
+        is_read                 => boolean() | 0 | 1, % = 4
+        read_again              => boolean() | 0 | 1, % = 5
+        ops                     => iodata()         % = 6
        }.
 
--type 'OpReturnNode'() ::
+-type 'OpReturnPartition'() ::
       #{payload                 => iodata()         % = 1
        }.
 
@@ -153,12 +155,12 @@
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'PutDirect'/0, 'PutDirectAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'OpRequestNode'/0, 'OpReturnNode'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'PutDirect'/0, 'PutDirectAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'OpRequestPartition'/0, 'OpReturnPartition'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpRequestNode'() | 'OpReturnNode'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpRequestNode'() | 'OpReturnNode'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -178,8 +180,8 @@ encode_msg(Msg, MsgName, Opts) ->
         'StartReturn' -> encode_msg_StartReturn(id(Msg, TrUserData), TrUserData);
         'OpRequest' -> encode_msg_OpRequest(id(Msg, TrUserData), TrUserData);
         'OpReturn' -> encode_msg_OpReturn(id(Msg, TrUserData), TrUserData);
-        'OpRequestNode' -> encode_msg_OpRequestNode(id(Msg, TrUserData), TrUserData);
-        'OpReturnNode' -> encode_msg_OpReturnNode(id(Msg, TrUserData), TrUserData);
+        'OpRequestPartition' -> encode_msg_OpRequestPartition(id(Msg, TrUserData), TrUserData);
+        'OpReturnPartition' -> encode_msg_OpReturnPartition(id(Msg, TrUserData), TrUserData);
         'PrepareBlueNode' -> encode_msg_PrepareBlueNode(id(Msg, TrUserData), TrUserData);
         'BlueVoteBatch.BlueVote' -> 'encode_msg_BlueVoteBatch.BlueVote'(id(Msg, TrUserData), TrUserData);
         'BlueVoteBatch' -> encode_msg_BlueVoteBatch(id(Msg, TrUserData), TrUserData);
@@ -440,12 +442,12 @@ encode_msg_OpReturn(#{} = M, Bin, TrUserData) ->
         _ -> B1
     end.
 
-encode_msg_OpRequestNode(Msg, TrUserData) -> encode_msg_OpRequestNode(Msg, <<>>, TrUserData).
+encode_msg_OpRequestPartition(Msg, TrUserData) -> encode_msg_OpRequestPartition(Msg, <<>>, TrUserData).
 
 
-encode_msg_OpRequestNode(#{} = M, Bin, TrUserData) ->
+encode_msg_OpRequestPartition(#{} = M, Bin, TrUserData) ->
     B1 = case M of
-             #{transaction_id := F1} ->
+             #{partition := F1} ->
                  begin
                      TrF1 = id(F1, TrUserData),
                      case iolist_size(TrF1) of
@@ -456,7 +458,7 @@ encode_msg_OpRequestNode(#{} = M, Bin, TrUserData) ->
              _ -> Bin
          end,
     B2 = case M of
-             #{snapshot_vc := F2} ->
+             #{transaction_id := F2} ->
                  begin
                      TrF2 = id(F2, TrUserData),
                      case iolist_size(TrF2) of
@@ -467,31 +469,52 @@ encode_msg_OpRequestNode(#{} = M, Bin, TrUserData) ->
              _ -> B1
          end,
     B3 = case M of
-             #{is_read := F3} ->
+             #{snapshot_vc := F3} ->
                  begin
                      TrF3 = id(F3, TrUserData),
-                     if TrF3 =:= false -> B2;
-                        true -> e_type_bool(TrF3, <<B2/binary, 24>>, TrUserData)
+                     case iolist_size(TrF3) of
+                         0 -> B2;
+                         _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
                      end
                  end;
              _ -> B2
          end,
+    B4 = case M of
+             #{is_read := F4} ->
+                 begin
+                     TrF4 = id(F4, TrUserData),
+                     if TrF4 =:= false -> B3;
+                        true -> e_type_bool(TrF4, <<B3/binary, 32>>, TrUserData)
+                     end
+                 end;
+             _ -> B3
+         end,
+    B5 = case M of
+             #{read_again := F5} ->
+                 begin
+                     TrF5 = id(F5, TrUserData),
+                     if TrF5 =:= false -> B4;
+                        true -> e_type_bool(TrF5, <<B4/binary, 40>>, TrUserData)
+                     end
+                 end;
+             _ -> B4
+         end,
     case M of
-        #{ops := F4} ->
+        #{ops := F6} ->
             begin
-                TrF4 = id(F4, TrUserData),
-                case iolist_size(TrF4) of
-                    0 -> B3;
-                    _ -> e_type_bytes(TrF4, <<B3/binary, 34>>, TrUserData)
+                TrF6 = id(F6, TrUserData),
+                case iolist_size(TrF6) of
+                    0 -> B5;
+                    _ -> e_type_bytes(TrF6, <<B5/binary, 50>>, TrUserData)
                 end
             end;
-        _ -> B3
+        _ -> B5
     end.
 
-encode_msg_OpReturnNode(Msg, TrUserData) -> encode_msg_OpReturnNode(Msg, <<>>, TrUserData).
+encode_msg_OpReturnPartition(Msg, TrUserData) -> encode_msg_OpReturnPartition(Msg, <<>>, TrUserData).
 
 
-encode_msg_OpReturnNode(#{} = M, Bin, TrUserData) ->
+encode_msg_OpReturnPartition(#{} = M, Bin, TrUserData) ->
     case M of
         #{payload := F1} ->
             begin
@@ -815,8 +838,8 @@ decode_msg_2_doit('StartReq', Bin, TrUserData) -> id(decode_msg_StartReq(Bin, Tr
 decode_msg_2_doit('StartReturn', Bin, TrUserData) -> id(decode_msg_StartReturn(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('OpRequest', Bin, TrUserData) -> id(decode_msg_OpRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('OpReturn', Bin, TrUserData) -> id(decode_msg_OpReturn(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('OpRequestNode', Bin, TrUserData) -> id(decode_msg_OpRequestNode(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('OpReturnNode', Bin, TrUserData) -> id(decode_msg_OpReturnNode(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('OpRequestPartition', Bin, TrUserData) -> id(decode_msg_OpRequestPartition(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('OpReturnPartition', Bin, TrUserData) -> id(decode_msg_OpReturnPartition(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PrepareBlueNode', Bin, TrUserData) -> id(decode_msg_PrepareBlueNode(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BlueVoteBatch.BlueVote', Bin, TrUserData) -> id('decode_msg_BlueVoteBatch.BlueVote'(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('BlueVoteBatch', Bin, TrUserData) -> id(decode_msg_BlueVoteBatch(Bin, TrUserData), TrUserData);
@@ -1406,114 +1429,132 @@ skip_32_OpReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_r
 
 skip_64_OpReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
-decode_msg_OpRequestNode(Bin, TrUserData) -> dfp_read_field_def_OpRequestNode(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), id(<<>>, TrUserData), TrUserData).
+decode_msg_OpRequestPartition(Bin, TrUserData) -> dfp_read_field_def_OpRequestPartition(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), id(false, TrUserData), id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_OpRequestNode(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpRequestNode_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_OpRequestNode(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpRequestNode_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_OpRequestNode(<<24, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpRequestNode_is_read(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_OpRequestNode(<<34, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpRequestNode_ops(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dfp_read_field_def_OpRequestNode(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{transaction_id => F@_1, snapshot_vc => F@_2, is_read => F@_3, ops => F@_4};
-dfp_read_field_def_OpRequestNode(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_OpRequestNode(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+dfp_read_field_def_OpRequestPartition(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_OpRequestPartition(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_OpRequestPartition(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_snapshot_vc(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_OpRequestPartition(<<32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_is_read(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_OpRequestPartition(<<40, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_read_again(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_OpRequestPartition(<<50, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_ops(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dfp_read_field_def_OpRequestPartition(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) -> #{partition => F@_1, transaction_id => F@_2, snapshot_vc => F@_3, is_read => F@_4, read_again => F@_5, ops => F@_6};
+dfp_read_field_def_OpRequestPartition(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dg_read_field_def_OpRequestPartition(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-dg_read_field_def_OpRequestNode(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpRequestNode(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-dg_read_field_def_OpRequestNode(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+dg_read_field_def_OpRequestPartition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 32 - 7 ->
+    dg_read_field_def_OpRequestPartition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+dg_read_field_def_OpRequestPartition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_OpRequestNode_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        18 -> d_field_OpRequestNode_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        24 -> d_field_OpRequestNode_is_read(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-        34 -> d_field_OpRequestNode_ops(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        10 -> d_field_OpRequestPartition_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        18 -> d_field_OpRequestPartition_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        26 -> d_field_OpRequestPartition_snapshot_vc(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        32 -> d_field_OpRequestPartition_is_read(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        40 -> d_field_OpRequestPartition_read_again(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+        50 -> d_field_OpRequestPartition_ops(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_OpRequestNode(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                1 -> skip_64_OpRequestNode(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                2 -> skip_length_delimited_OpRequestNode(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                3 -> skip_group_OpRequestNode(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
-                5 -> skip_32_OpRequestNode(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData)
+                0 -> skip_varint_OpRequestPartition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                1 -> skip_64_OpRequestPartition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                2 -> skip_length_delimited_OpRequestPartition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                3 -> skip_group_OpRequestPartition(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+                5 -> skip_32_OpRequestPartition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData)
             end
     end;
-dg_read_field_def_OpRequestNode(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{transaction_id => F@_1, snapshot_vc => F@_2, is_read => F@_3, ops => F@_4}.
+dg_read_field_def_OpRequestPartition(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, _) -> #{partition => F@_1, transaction_id => F@_2, snapshot_vc => F@_3, is_read => F@_4, read_again => F@_5, ops => F@_6}.
 
-d_field_OpRequestNode_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpRequestNode_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_OpRequestNode_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
+d_field_OpRequestPartition_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_OpRequestPartition_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_OpRequestPartition_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_OpRequestNode(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequestPartition(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-d_field_OpRequestNode_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpRequestNode_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_OpRequestNode_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
+d_field_OpRequestPartition_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_OpRequestPartition_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_OpRequestPartition_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_OpRequestNode(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequestPartition(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-d_field_OpRequestNode_is_read(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpRequestNode_is_read(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_OpRequestNode_is_read(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, TrUserData) ->
+d_field_OpRequestPartition_snapshot_vc(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    d_field_OpRequestPartition_snapshot_vc(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_OpRequestPartition_snapshot_vc(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, F@_5, F@_6, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_OpRequestPartition(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, F@_5, F@_6, TrUserData).
+
+d_field_OpRequestPartition_is_read(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_OpRequestPartition_is_read(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_OpRequestPartition_is_read(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, F@_5, F@_6, TrUserData) ->
     {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
-    dfp_read_field_def_OpRequestNode(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+    dfp_read_field_def_OpRequestPartition(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, F@_5, F@_6, TrUserData).
 
-d_field_OpRequestNode_ops(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpRequestNode_ops(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-d_field_OpRequestNode_ops(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+d_field_OpRequestPartition_read_again(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_OpRequestPartition_read_again(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_OpRequestPartition_read_again(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, _, F@_6, TrUserData) ->
+    {NewFValue, RestF} = {id(X bsl N + Acc =/= 0, TrUserData), Rest},
+    dfp_read_field_def_OpRequestPartition(RestF, 0, 0, F@_1, F@_2, F@_3, F@_4, NewFValue, F@_6, TrUserData).
+
+d_field_OpRequestPartition_ops(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 -> d_field_OpRequestPartition_ops(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+d_field_OpRequestPartition_ops(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, _, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_OpRequestNode(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+    dfp_read_field_def_OpRequestPartition(RestF, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, NewFValue, TrUserData).
 
-skip_varint_OpRequestNode(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_OpRequestNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
-skip_varint_OpRequestNode(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpRequestNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_varint_OpRequestPartition(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> skip_varint_OpRequestPartition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+skip_varint_OpRequestPartition(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_OpRequestPartition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-skip_length_delimited_OpRequestNode(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_OpRequestNode(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
-skip_length_delimited_OpRequestNode(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+skip_length_delimited_OpRequestPartition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) when N < 57 ->
+    skip_length_delimited_OpRequestPartition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
+skip_length_delimited_OpRequestPartition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_OpRequestNode(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequestPartition(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-skip_group_OpRequestNode(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+skip_group_OpRequestPartition(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_OpRequestNode(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+    dfp_read_field_def_OpRequestPartition(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-skip_32_OpRequestNode(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpRequestNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_32_OpRequestPartition(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_OpRequestPartition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-skip_64_OpRequestNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpRequestNode(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+skip_64_OpRequestPartition(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> dfp_read_field_def_OpRequestPartition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData).
 
-decode_msg_OpReturnNode(Bin, TrUserData) -> dfp_read_field_def_OpReturnNode(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+decode_msg_OpReturnPartition(Bin, TrUserData) -> dfp_read_field_def_OpReturnPartition(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_OpReturnNode(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_OpReturnNode_payload(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_OpReturnNode(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
-dfp_read_field_def_OpReturnNode(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_OpReturnNode(Other, Z1, Z2, F@_1, TrUserData).
+dfp_read_field_def_OpReturnPartition(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_OpReturnPartition_payload(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_OpReturnPartition(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
+dfp_read_field_def_OpReturnPartition(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_OpReturnPartition(Other, Z1, Z2, F@_1, TrUserData).
 
-dg_read_field_def_OpReturnNode(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpReturnNode(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_OpReturnNode(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+dg_read_field_def_OpReturnPartition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpReturnPartition(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_OpReturnPartition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_OpReturnNode_payload(Rest, 0, 0, F@_1, TrUserData);
+        10 -> d_field_OpReturnPartition_payload(Rest, 0, 0, F@_1, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_OpReturnNode(Rest, 0, 0, F@_1, TrUserData);
-                1 -> skip_64_OpReturnNode(Rest, 0, 0, F@_1, TrUserData);
-                2 -> skip_length_delimited_OpReturnNode(Rest, 0, 0, F@_1, TrUserData);
-                3 -> skip_group_OpReturnNode(Rest, Key bsr 3, 0, F@_1, TrUserData);
-                5 -> skip_32_OpReturnNode(Rest, 0, 0, F@_1, TrUserData)
+                0 -> skip_varint_OpReturnPartition(Rest, 0, 0, F@_1, TrUserData);
+                1 -> skip_64_OpReturnPartition(Rest, 0, 0, F@_1, TrUserData);
+                2 -> skip_length_delimited_OpReturnPartition(Rest, 0, 0, F@_1, TrUserData);
+                3 -> skip_group_OpReturnPartition(Rest, Key bsr 3, 0, F@_1, TrUserData);
+                5 -> skip_32_OpReturnPartition(Rest, 0, 0, F@_1, TrUserData)
             end
     end;
-dg_read_field_def_OpReturnNode(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
+dg_read_field_def_OpReturnPartition(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
 
-d_field_OpReturnNode_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_OpReturnNode_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-d_field_OpReturnNode_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+d_field_OpReturnPartition_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_OpReturnPartition_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_OpReturnPartition_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_OpReturnNode(RestF, 0, 0, NewFValue, TrUserData).
+    dfp_read_field_def_OpReturnPartition(RestF, 0, 0, NewFValue, TrUserData).
 
-skip_varint_OpReturnNode(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_OpReturnNode(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_OpReturnNode(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturnNode(Rest, Z1, Z2, F@_1, TrUserData).
+skip_varint_OpReturnPartition(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_OpReturnPartition(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_OpReturnPartition(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturnPartition(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_length_delimited_OpReturnNode(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_OpReturnNode(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_OpReturnNode(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+skip_length_delimited_OpReturnPartition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_OpReturnPartition(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_OpReturnPartition(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_OpReturnNode(Rest2, 0, 0, F@_1, TrUserData).
+    dfp_read_field_def_OpReturnPartition(Rest2, 0, 0, F@_1, TrUserData).
 
-skip_group_OpReturnNode(Bin, FNum, Z2, F@_1, TrUserData) ->
+skip_group_OpReturnPartition(Bin, FNum, Z2, F@_1, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_OpReturnNode(Rest, 0, Z2, F@_1, TrUserData).
+    dfp_read_field_def_OpReturnPartition(Rest, 0, Z2, F@_1, TrUserData).
 
-skip_32_OpReturnNode(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturnNode(Rest, Z1, Z2, F@_1, TrUserData).
+skip_32_OpReturnPartition(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturnPartition(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_64_OpReturnNode(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturnNode(Rest, Z1, Z2, F@_1, TrUserData).
+skip_64_OpReturnPartition(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_OpReturnPartition(Rest, Z1, Z2, F@_1, TrUserData).
 
 decode_msg_PrepareBlueNode(Bin, TrUserData) -> dfp_read_field_def_PrepareBlueNode(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id([], TrUserData), TrUserData).
 
@@ -1940,8 +1981,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'StartReturn' -> merge_msg_StartReturn(Prev, New, TrUserData);
         'OpRequest' -> merge_msg_OpRequest(Prev, New, TrUserData);
         'OpReturn' -> merge_msg_OpReturn(Prev, New, TrUserData);
-        'OpRequestNode' -> merge_msg_OpRequestNode(Prev, New, TrUserData);
-        'OpReturnNode' -> merge_msg_OpReturnNode(Prev, New, TrUserData);
+        'OpRequestPartition' -> merge_msg_OpRequestPartition(Prev, New, TrUserData);
+        'OpReturnPartition' -> merge_msg_OpReturnPartition(Prev, New, TrUserData);
         'PrepareBlueNode' -> merge_msg_PrepareBlueNode(Prev, New, TrUserData);
         'BlueVoteBatch.BlueVote' -> 'merge_msg_BlueVoteBatch.BlueVote'(Prev, New, TrUserData);
         'BlueVoteBatch' -> merge_msg_BlueVoteBatch(Prev, New, TrUserData);
@@ -2089,32 +2130,42 @@ merge_msg_OpReturn(PMsg, NMsg, _) ->
         _ -> S2
     end.
 
--compile({nowarn_unused_function,merge_msg_OpRequestNode/3}).
-merge_msg_OpRequestNode(PMsg, NMsg, _) ->
+-compile({nowarn_unused_function,merge_msg_OpRequestPartition/3}).
+merge_msg_OpRequestPartition(PMsg, NMsg, _) ->
     S1 = #{},
     S2 = case {PMsg, NMsg} of
-             {_, #{transaction_id := NFtransaction_id}} -> S1#{transaction_id => NFtransaction_id};
-             {#{transaction_id := PFtransaction_id}, _} -> S1#{transaction_id => PFtransaction_id};
+             {_, #{partition := NFpartition}} -> S1#{partition => NFpartition};
+             {#{partition := PFpartition}, _} -> S1#{partition => PFpartition};
              _ -> S1
          end,
     S3 = case {PMsg, NMsg} of
-             {_, #{snapshot_vc := NFsnapshot_vc}} -> S2#{snapshot_vc => NFsnapshot_vc};
-             {#{snapshot_vc := PFsnapshot_vc}, _} -> S2#{snapshot_vc => PFsnapshot_vc};
+             {_, #{transaction_id := NFtransaction_id}} -> S2#{transaction_id => NFtransaction_id};
+             {#{transaction_id := PFtransaction_id}, _} -> S2#{transaction_id => PFtransaction_id};
              _ -> S2
          end,
     S4 = case {PMsg, NMsg} of
-             {_, #{is_read := NFis_read}} -> S3#{is_read => NFis_read};
-             {#{is_read := PFis_read}, _} -> S3#{is_read => PFis_read};
+             {_, #{snapshot_vc := NFsnapshot_vc}} -> S3#{snapshot_vc => NFsnapshot_vc};
+             {#{snapshot_vc := PFsnapshot_vc}, _} -> S3#{snapshot_vc => PFsnapshot_vc};
              _ -> S3
          end,
+    S5 = case {PMsg, NMsg} of
+             {_, #{is_read := NFis_read}} -> S4#{is_read => NFis_read};
+             {#{is_read := PFis_read}, _} -> S4#{is_read => PFis_read};
+             _ -> S4
+         end,
+    S6 = case {PMsg, NMsg} of
+             {_, #{read_again := NFread_again}} -> S5#{read_again => NFread_again};
+             {#{read_again := PFread_again}, _} -> S5#{read_again => PFread_again};
+             _ -> S5
+         end,
     case {PMsg, NMsg} of
-        {_, #{ops := NFops}} -> S4#{ops => NFops};
-        {#{ops := PFops}, _} -> S4#{ops => PFops};
-        _ -> S4
+        {_, #{ops := NFops}} -> S6#{ops => NFops};
+        {#{ops := PFops}, _} -> S6#{ops => PFops};
+        _ -> S6
     end.
 
--compile({nowarn_unused_function,merge_msg_OpReturnNode/3}).
-merge_msg_OpReturnNode(PMsg, NMsg, _) ->
+-compile({nowarn_unused_function,merge_msg_OpReturnPartition/3}).
+merge_msg_OpReturnPartition(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
         {_, #{payload := NFpayload}} -> S1#{payload => NFpayload};
@@ -2243,8 +2294,8 @@ verify_msg(Msg, MsgName, Opts) ->
         'StartReturn' -> v_msg_StartReturn(Msg, [MsgName], TrUserData);
         'OpRequest' -> v_msg_OpRequest(Msg, [MsgName], TrUserData);
         'OpReturn' -> v_msg_OpReturn(Msg, [MsgName], TrUserData);
-        'OpRequestNode' -> v_msg_OpRequestNode(Msg, [MsgName], TrUserData);
-        'OpReturnNode' -> v_msg_OpReturnNode(Msg, [MsgName], TrUserData);
+        'OpRequestPartition' -> v_msg_OpRequestPartition(Msg, [MsgName], TrUserData);
+        'OpReturnPartition' -> v_msg_OpReturnPartition(Msg, [MsgName], TrUserData);
         'PrepareBlueNode' -> v_msg_PrepareBlueNode(Msg, [MsgName], TrUserData);
         'BlueVoteBatch.BlueVote' -> 'v_msg_BlueVoteBatch.BlueVote'(Msg, [MsgName], TrUserData);
         'BlueVoteBatch' -> v_msg_BlueVoteBatch(Msg, [MsgName], TrUserData);
@@ -2464,39 +2515,49 @@ v_msg_OpReturn(#{} = M, Path, TrUserData) ->
 v_msg_OpReturn(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpReturn'}, M, Path);
 v_msg_OpReturn(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpReturn'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_OpRequestNode/3}).
--dialyzer({nowarn_function,v_msg_OpRequestNode/3}).
-v_msg_OpRequestNode(#{} = M, Path, TrUserData) ->
+-compile({nowarn_unused_function,v_msg_OpRequestPartition/3}).
+-dialyzer({nowarn_function,v_msg_OpRequestPartition/3}).
+v_msg_OpRequestPartition(#{} = M, Path, TrUserData) ->
     case M of
-        #{transaction_id := F1} -> v_type_bytes(F1, [transaction_id | Path], TrUserData);
+        #{partition := F1} -> v_type_bytes(F1, [partition | Path], TrUserData);
         _ -> ok
     end,
     case M of
-        #{snapshot_vc := F2} -> v_type_bytes(F2, [snapshot_vc | Path], TrUserData);
+        #{transaction_id := F2} -> v_type_bytes(F2, [transaction_id | Path], TrUserData);
         _ -> ok
     end,
     case M of
-        #{is_read := F3} -> v_type_bool(F3, [is_read | Path], TrUserData);
+        #{snapshot_vc := F3} -> v_type_bytes(F3, [snapshot_vc | Path], TrUserData);
         _ -> ok
     end,
     case M of
-        #{ops := F4} -> v_type_bytes(F4, [ops | Path], TrUserData);
+        #{is_read := F4} -> v_type_bool(F4, [is_read | Path], TrUserData);
         _ -> ok
     end,
-    lists:foreach(fun (transaction_id) -> ok;
+    case M of
+        #{read_again := F5} -> v_type_bool(F5, [read_again | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{ops := F6} -> v_type_bytes(F6, [ops | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (partition) -> ok;
+                      (transaction_id) -> ok;
                       (snapshot_vc) -> ok;
                       (is_read) -> ok;
+                      (read_again) -> ok;
                       (ops) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
     ok;
-v_msg_OpRequestNode(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpRequestNode'}, M, Path);
-v_msg_OpRequestNode(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpRequestNode'}, X, Path).
+v_msg_OpRequestPartition(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpRequestPartition'}, M, Path);
+v_msg_OpRequestPartition(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpRequestPartition'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_OpReturnNode/3}).
--dialyzer({nowarn_function,v_msg_OpReturnNode/3}).
-v_msg_OpReturnNode(#{} = M, Path, TrUserData) ->
+-compile({nowarn_unused_function,v_msg_OpReturnPartition/3}).
+-dialyzer({nowarn_function,v_msg_OpReturnPartition/3}).
+v_msg_OpReturnPartition(#{} = M, Path, TrUserData) ->
     case M of
         #{payload := F1} -> v_type_bytes(F1, [payload | Path], TrUserData);
         _ -> ok
@@ -2506,8 +2567,8 @@ v_msg_OpReturnNode(#{} = M, Path, TrUserData) ->
                   end,
                   maps:keys(M)),
     ok;
-v_msg_OpReturnNode(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpReturnNode'}, M, Path);
-v_msg_OpReturnNode(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpReturnNode'}, X, Path).
+v_msg_OpReturnPartition(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpReturnPartition'}, M, Path);
+v_msg_OpReturnPartition(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpReturnPartition'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_PrepareBlueNode/3}).
 -dialyzer({nowarn_function,v_msg_PrepareBlueNode/3}).
@@ -2751,12 +2812,14 @@ get_msg_defs() ->
        #{name => read_again, fnum => 5, rnum => 6, type => bool, occurrence => optional, opts => []},
        #{name => payload, rnum => 7, fields => [#{name => type, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []}, #{name => operation, fnum => 7, rnum => 7, type => bytes, occurrence => optional, opts => []}]}]},
      {{msg, 'OpReturn'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => transform, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}]},
-     {{msg, 'OpRequestNode'},
-      [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-       #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-       #{name => is_read, fnum => 3, rnum => 4, type => bool, occurrence => optional, opts => []},
-       #{name => ops, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}]},
-     {{msg, 'OpReturnNode'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'OpRequestPartition'},
+      [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
+       #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+       #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+       #{name => is_read, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []},
+       #{name => read_again, fnum => 5, rnum => 6, type => bool, occurrence => optional, opts => []},
+       #{name => ops, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'OpReturnPartition'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'PrepareBlueNode'},
       [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
@@ -2790,8 +2853,8 @@ get_msg_names() ->
      'StartReturn',
      'OpRequest',
      'OpReturn',
-     'OpRequestNode',
-     'OpReturnNode',
+     'OpRequestPartition',
+     'OpReturnPartition',
      'PrepareBlueNode',
      'BlueVoteBatch.BlueVote',
      'BlueVoteBatch',
@@ -2816,8 +2879,8 @@ get_msg_or_group_names() ->
      'StartReturn',
      'OpRequest',
      'OpReturn',
-     'OpRequestNode',
-     'OpReturnNode',
+     'OpRequestPartition',
+     'OpReturnPartition',
      'PrepareBlueNode',
      'BlueVoteBatch.BlueVote',
      'BlueVoteBatch',
@@ -2861,12 +2924,14 @@ find_msg_def('OpRequest') ->
      #{name => read_again, fnum => 5, rnum => 6, type => bool, occurrence => optional, opts => []},
      #{name => payload, rnum => 7, fields => [#{name => type, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []}, #{name => operation, fnum => 7, rnum => 7, type => bytes, occurrence => optional, opts => []}]}];
 find_msg_def('OpReturn') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => transform, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}];
-find_msg_def('OpRequestNode') ->
-    [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
-     #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
-     #{name => is_read, fnum => 3, rnum => 4, type => bool, occurrence => optional, opts => []},
-     #{name => ops, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('OpReturnNode') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('OpRequestPartition') ->
+    [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
+     #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+     #{name => snapshot_vc, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+     #{name => is_read, fnum => 4, rnum => 5, type => bool, occurrence => optional, opts => []},
+     #{name => read_again, fnum => 5, rnum => 6, type => bool, occurrence => optional, opts => []},
+     #{name => ops, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('OpReturnPartition') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('PrepareBlueNode') ->
     [#{name => transaction_id, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => snapshot_vc, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
@@ -2955,8 +3020,8 @@ fqbin_to_msg_name(<<"StartReq">>) -> 'StartReq';
 fqbin_to_msg_name(<<"StartReturn">>) -> 'StartReturn';
 fqbin_to_msg_name(<<"OpRequest">>) -> 'OpRequest';
 fqbin_to_msg_name(<<"OpReturn">>) -> 'OpReturn';
-fqbin_to_msg_name(<<"OpRequestNode">>) -> 'OpRequestNode';
-fqbin_to_msg_name(<<"OpReturnNode">>) -> 'OpReturnNode';
+fqbin_to_msg_name(<<"OpRequestPartition">>) -> 'OpRequestPartition';
+fqbin_to_msg_name(<<"OpReturnPartition">>) -> 'OpReturnPartition';
 fqbin_to_msg_name(<<"PrepareBlueNode">>) -> 'PrepareBlueNode';
 fqbin_to_msg_name(<<"BlueVoteBatch.BlueVote">>) -> 'BlueVoteBatch.BlueVote';
 fqbin_to_msg_name(<<"BlueVoteBatch">>) -> 'BlueVoteBatch';
@@ -2978,8 +3043,8 @@ msg_name_to_fqbin('StartReq') -> <<"StartReq">>;
 msg_name_to_fqbin('StartReturn') -> <<"StartReturn">>;
 msg_name_to_fqbin('OpRequest') -> <<"OpRequest">>;
 msg_name_to_fqbin('OpReturn') -> <<"OpReturn">>;
-msg_name_to_fqbin('OpRequestNode') -> <<"OpRequestNode">>;
-msg_name_to_fqbin('OpReturnNode') -> <<"OpReturnNode">>;
+msg_name_to_fqbin('OpRequestPartition') -> <<"OpRequestPartition">>;
+msg_name_to_fqbin('OpReturnPartition') -> <<"OpReturnPartition">>;
 msg_name_to_fqbin('PrepareBlueNode') -> <<"PrepareBlueNode">>;
 msg_name_to_fqbin('BlueVoteBatch.BlueVote') -> <<"BlueVoteBatch.BlueVote">>;
 msg_name_to_fqbin('BlueVoteBatch') -> <<"BlueVoteBatch">>;
@@ -3033,9 +3098,9 @@ get_msg_containment("grb_msgs") ->
      'ConnectResponse',
      'DecideBlueNode',
      'OpRequest',
-     'OpRequestNode',
+     'OpRequestPartition',
      'OpReturn',
-     'OpReturnNode',
+     'OpReturnPartition',
      'PrepareBlueNode',
      'PutConflictRelations',
      'PutConflictRelationsAck',
@@ -3073,8 +3138,6 @@ get_proto_by_msg_name_as_fqbin(<<"OpRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRed">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PrepareBlueNode">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"OpReturnNode">>) -> "grb_msgs";
-get_proto_by_msg_name_as_fqbin(<<"OpRequestNode">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"DecideBlueNode">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectResponse">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch.BlueVote">>) -> "grb_msgs";
@@ -3082,7 +3145,9 @@ get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutDirectAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutConflictRelationsAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"OpReturnPartition">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpReturn">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"OpRequestPartition">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRedReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 

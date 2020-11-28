@@ -11,8 +11,8 @@
          start_tx/2,
          read_request/6,
          update_request/6,
-         read_request_node/3,
-         update_request_node/3,
+         read_request_partition/5,
+         update_request_partition/5,
          prepare_blue_node/3,
          decide_blue_node/3,
          commit_red/5]).
@@ -66,19 +66,23 @@ update_request(Partition, TxId, SVC, ReadAgain, Key, Update) ->
                                read_again => ReadAgain,
                                payload => {operation, term_to_binary(Update)}}).
 
--spec read_request_node(term(), term(), #{ non_neg_integer() := {boolean(), [{binary(), term()}]} }) -> msg().
-read_request_node(TxId, SVC, Contents) ->
-    ?encode_msg('OpRequestNode', #{transaction_id => term_to_binary(TxId),
-                                   snapshot_vc => term_to_binary(SVC),
-                                   is_read => true,
-                                   ops => term_to_binary(Contents)}).
+-spec read_request_partition(non_neg_integer(), term(), term(), boolean(), [{binary(), term()}]) -> msg().
+read_request_partition(Partition, TxId, SVC, ReadAgain, KeyTypes) ->
+    ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
+                                        transaction_id => term_to_binary(TxId),
+                                        snapshot_vc => term_to_binary(SVC),
+                                        is_read => true,
+                                        read_again => ReadAgain,
+                                        ops => term_to_binary(KeyTypes)}).
 
--spec update_request_node(term(), term(), #{ non_neg_integer() := {boolean(), [{binary(), term()}]} }) -> msg().
-update_request_node(TxId, SVC, Contents) ->
-    ?encode_msg('OpRequestNode', #{transaction_id => term_to_binary(TxId),
-                                   snapshot_vc => term_to_binary(SVC),
-                                   is_read => false,
-                                   ops => term_to_binary(Contents)}).
+-spec update_request_partition(non_neg_integer(), term(), term(), boolean(), [{binary(), term()}]) -> msg().
+update_request_partition(Partition, TxId, SVC, ReadAgain, KeyOps) ->
+    ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
+                                        transaction_id => term_to_binary(TxId),
+                                        snapshot_vc => term_to_binary(SVC),
+                                        is_read => false,
+                                        read_again => ReadAgain,
+                                        ops => term_to_binary(KeyOps)}).
 
 -spec prepare_blue_node(term(), term(), [non_neg_integer()]) -> msg().
 prepare_blue_node(TxId, SVC, Partitions) ->
@@ -136,14 +140,16 @@ decode_from_client('OpRequest', Msg) ->
             M1#{operation => binary_to_term(Op)}
     end;
 
-decode_from_client('OpRequestNode', Msg) ->
+decode_from_client('OpRequestPartition', Msg) ->
     M0 = #{
+        partition := BPartition,
         transaction_id := PTxId,
         snapshot_vc := PSVC,
         is_read := IsRead,
         ops := Ops
-    } = ?proto_msgs:decode_msg(Msg, 'OpRequestNode'),
-    M1 = M0#{snapshot_vc := binary_to_term(PSVC),
+    } = ?proto_msgs:decode_msg(Msg, 'OpRequestPartition'),
+    M1 = M0#{partition := binary:decode_unsigned(BPartition),
+             snapshot_vc := binary_to_term(PSVC),
              transaction_id := binary_to_term(PTxId)},
     M2 = maps:remove(is_read, M1),
     M3 = maps:remove(ops, M2),
@@ -215,8 +221,8 @@ to_client_enc('OpRequest', {ok, Val}) when is_binary(Val) ->
 to_client_enc('OpRequest', {ok, Val}) ->
     ?encode_msg('OpReturn', #{value => term_to_binary(Val), transform => true});
 
-to_client_enc('OpRequestNode', Responses) ->
-    ?encode_msg('OpReturnNode', #{payload => term_to_binary(Responses)});
+to_client_enc('OpRequestPartition', Responses) ->
+    ?encode_msg('OpReturnPartition', #{payload => term_to_binary(Responses)});
 
 to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]});
@@ -320,8 +326,8 @@ encode_msg_type('PutConflictRelations') -> 14;
 encode_msg_type('PutConflictRelationsAck') -> 15;
 encode_msg_type('PutDirect') -> 16;
 encode_msg_type('PutDirectAck') -> 17;
-encode_msg_type('OpRequestNode') -> 18;
-encode_msg_type('OpReturnNode') -> 19.
+encode_msg_type('OpRequestPartition') -> 18;
+encode_msg_type('OpReturnPartition') -> 19.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -342,5 +348,5 @@ decode_type_num(14) -> 'PutConflictRelations';
 decode_type_num(15) -> 'PutConflictRelationsAck';
 decode_type_num(16) -> 'PutDirect';
 decode_type_num(17) -> 'PutDirectAck';
-decode_type_num(18) -> 'OpRequestNode';
-decode_type_num(19) -> 'OpReturnNode'.
+decode_type_num(18) -> 'OpRequestPartition';
+decode_type_num(19) -> 'OpReturnPartition'.

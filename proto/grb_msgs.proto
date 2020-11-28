@@ -67,14 +67,16 @@ message OpReturn {
     bool transform = 2;
 }
 
-message OpRequestNode {
-    bytes transaction_id = 1;
-    bytes snapshot_vc = 2;
-    bool is_read = 3;
-    bytes ops = 4;
+message OpRequestPartition {
+    bytes partition = 1;
+    bytes transaction_id = 2;
+    bytes snapshot_vc = 3;
+    bool is_read = 4;
+    bool read_again = 5;
+    bytes ops = 6;
 }
 
-message OpReturnNode {
+message OpReturnPartition {
     bytes payload = 1;
 }
 
