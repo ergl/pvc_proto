@@ -51,9 +51,7 @@
 
 %% message types
 -type 'Preload'() ::
-      #{users_per_region        => non_neg_integer(), % = 1, 32 bits
-        open_items              => non_neg_integer(), % = 2, 32 bits
-        closed_items            => non_neg_integer() % = 3, 32 bits
+      #{payload                 => iodata()         % = 1
        }.
 
 -type 'PreloadAck'() ::
@@ -82,35 +80,16 @@ encode_msg_Preload(Msg, TrUserData) -> encode_msg_Preload(Msg, <<>>, TrUserData)
 
 
 encode_msg_Preload(#{} = M, Bin, TrUserData) ->
-    B1 = case M of
-             #{users_per_region := F1} ->
-                 begin
-                     TrF1 = id(F1, TrUserData),
-                     if TrF1 =:= 0 -> Bin;
-                        true -> e_varint(TrF1, <<Bin/binary, 8>>, TrUserData)
-                     end
-                 end;
-             _ -> Bin
-         end,
-    B2 = case M of
-             #{open_items := F2} ->
-                 begin
-                     TrF2 = id(F2, TrUserData),
-                     if TrF2 =:= 0 -> B1;
-                        true -> e_varint(TrF2, <<B1/binary, 16>>, TrUserData)
-                     end
-                 end;
-             _ -> B1
-         end,
     case M of
-        #{closed_items := F3} ->
+        #{payload := F1} ->
             begin
-                TrF3 = id(F3, TrUserData),
-                if TrF3 =:= 0 -> B2;
-                   true -> e_varint(TrF3, <<B2/binary, 24>>, TrUserData)
+                TrF1 = id(F1, TrUserData),
+                case iolist_size(TrF1) of
+                    0 -> Bin;
+                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
                 end
             end;
-        _ -> B2
+        _ -> Bin
     end.
 
 encode_msg_PreloadAck(_Msg, _TrUserData) -> <<>>.
@@ -211,63 +190,49 @@ decode_msg_2_doit('PreloadAck', Bin, TrUserData) -> id(decode_msg_PreloadAck(Bin
 
 
 
-decode_msg_Preload(Bin, TrUserData) -> dfp_read_field_def_Preload(Bin, 0, 0, id(0, TrUserData), id(0, TrUserData), id(0, TrUserData), TrUserData).
+decode_msg_Preload(Bin, TrUserData) -> dfp_read_field_def_Preload(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_Preload(<<8, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_Preload_users_per_region(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_Preload(<<16, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_Preload_open_items(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_Preload(<<24, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> d_field_Preload_closed_items(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-dfp_read_field_def_Preload(<<>>, 0, 0, F@_1, F@_2, F@_3, _) -> #{users_per_region => F@_1, open_items => F@_2, closed_items => F@_3};
-dfp_read_field_def_Preload(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dg_read_field_def_Preload(Other, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+dfp_read_field_def_Preload(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_Preload_payload(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_Preload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
+dfp_read_field_def_Preload(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_Preload(Other, Z1, Z2, F@_1, TrUserData).
 
-dg_read_field_def_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 32 - 7 -> dg_read_field_def_Preload(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-dg_read_field_def_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+dg_read_field_def_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_Preload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        8 -> d_field_Preload_users_per_region(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        16 -> d_field_Preload_open_items(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-        24 -> d_field_Preload_closed_items(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
+        10 -> d_field_Preload_payload(Rest, 0, 0, F@_1, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_Preload(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                1 -> skip_64_Preload(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                2 -> skip_length_delimited_Preload(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData);
-                3 -> skip_group_Preload(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, TrUserData);
-                5 -> skip_32_Preload(Rest, 0, 0, F@_1, F@_2, F@_3, TrUserData)
+                0 -> skip_varint_Preload(Rest, 0, 0, F@_1, TrUserData);
+                1 -> skip_64_Preload(Rest, 0, 0, F@_1, TrUserData);
+                2 -> skip_length_delimited_Preload(Rest, 0, 0, F@_1, TrUserData);
+                3 -> skip_group_Preload(Rest, Key bsr 3, 0, F@_1, TrUserData);
+                5 -> skip_32_Preload(Rest, 0, 0, F@_1, TrUserData)
             end
     end;
-dg_read_field_def_Preload(<<>>, 0, 0, F@_1, F@_2, F@_3, _) -> #{users_per_region => F@_1, open_items => F@_2, closed_items => F@_3}.
+dg_read_field_def_Preload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
 
-d_field_Preload_users_per_region(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_Preload_users_per_region(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_Preload_users_per_region(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, TrUserData) ->
-    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
-    dfp_read_field_def_Preload(RestF, 0, 0, NewFValue, F@_2, F@_3, TrUserData).
+d_field_Preload_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_Preload_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_Preload_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_Preload(RestF, 0, 0, NewFValue, TrUserData).
 
-d_field_Preload_open_items(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_Preload_open_items(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_Preload_open_items(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, TrUserData) ->
-    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
-    dfp_read_field_def_Preload(RestF, 0, 0, F@_1, NewFValue, F@_3, TrUserData).
+skip_varint_Preload(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_Preload(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_Preload(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
 
-d_field_Preload_closed_items(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> d_field_Preload_closed_items(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-d_field_Preload_closed_items(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, TrUserData) ->
-    {NewFValue, RestF} = {id(X bsl N + Acc, TrUserData), Rest},
-    dfp_read_field_def_Preload(RestF, 0, 0, F@_1, F@_2, NewFValue, TrUserData).
-
-skip_varint_Preload(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> skip_varint_Preload(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData);
-skip_varint_Preload(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
-
-skip_length_delimited_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) when N < 57 -> skip_length_delimited_Preload(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, TrUserData);
-skip_length_delimited_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, TrUserData) ->
+skip_length_delimited_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_Preload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_Preload(Rest2, 0, 0, F@_1, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_Preload(Rest2, 0, 0, F@_1, TrUserData).
 
-skip_group_Preload(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
+skip_group_Preload(Bin, FNum, Z2, F@_1, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_Preload(Rest, 0, Z2, F@_1, F@_2, F@_3, TrUserData).
+    dfp_read_field_def_Preload(Rest, 0, Z2, F@_1, TrUserData).
 
-skip_32_Preload(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+skip_32_Preload(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_64_Preload(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+skip_64_Preload(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
 
 decode_msg_PreloadAck(Bin, TrUserData) -> dfp_read_field_def_PreloadAck(Bin, 0, 0, TrUserData).
 
@@ -373,20 +338,10 @@ merge_msgs(Prev, New, MsgName, Opts) ->
 -compile({nowarn_unused_function,merge_msg_Preload/3}).
 merge_msg_Preload(PMsg, NMsg, _) ->
     S1 = #{},
-    S2 = case {PMsg, NMsg} of
-             {_, #{users_per_region := NFusers_per_region}} -> S1#{users_per_region => NFusers_per_region};
-             {#{users_per_region := PFusers_per_region}, _} -> S1#{users_per_region => PFusers_per_region};
-             _ -> S1
-         end,
-    S3 = case {PMsg, NMsg} of
-             {_, #{open_items := NFopen_items}} -> S2#{open_items => NFopen_items};
-             {#{open_items := PFopen_items}, _} -> S2#{open_items => PFopen_items};
-             _ -> S2
-         end,
     case {PMsg, NMsg} of
-        {_, #{closed_items := NFclosed_items}} -> S3#{closed_items => NFclosed_items};
-        {#{closed_items := PFclosed_items}, _} -> S3#{closed_items => PFclosed_items};
-        _ -> S3
+        {_, #{payload := NFpayload}} -> S1#{payload => NFpayload};
+        {#{payload := PFpayload}, _} -> S1#{payload => PFpayload};
+        _ -> S1
     end.
 
 -compile({nowarn_unused_function,merge_msg_PreloadAck/3}).
@@ -408,20 +363,10 @@ verify_msg(Msg, MsgName, Opts) ->
 -dialyzer({nowarn_function,v_msg_Preload/3}).
 v_msg_Preload(#{} = M, Path, TrUserData) ->
     case M of
-        #{users_per_region := F1} -> v_type_uint32(F1, [users_per_region | Path], TrUserData);
+        #{payload := F1} -> v_type_bytes(F1, [payload | Path], TrUserData);
         _ -> ok
     end,
-    case M of
-        #{open_items := F2} -> v_type_uint32(F2, [open_items | Path], TrUserData);
-        _ -> ok
-    end,
-    case M of
-        #{closed_items := F3} -> v_type_uint32(F3, [closed_items | Path], TrUserData);
-        _ -> ok
-    end,
-    lists:foreach(fun (users_per_region) -> ok;
-                      (open_items) -> ok;
-                      (closed_items) -> ok;
+    lists:foreach(fun (payload) -> ok;
                       (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
                   end,
                   maps:keys(M)),
@@ -437,11 +382,11 @@ v_msg_PreloadAck(#{} = M, Path, _) ->
 v_msg_PreloadAck(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PreloadAck'}, M, Path);
 v_msg_PreloadAck(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PreloadAck'}, X, Path).
 
--compile({nowarn_unused_function,v_type_uint32/3}).
--dialyzer({nowarn_function,v_type_uint32/3}).
-v_type_uint32(N, _Path, _TrUserData) when 0 =< N, N =< 4294967295 -> ok;
-v_type_uint32(N, Path, _TrUserData) when is_integer(N) -> mk_type_error({value_out_of_range, uint32, unsigned, 32}, N, Path);
-v_type_uint32(X, Path, _TrUserData) -> mk_type_error({bad_integer, uint32, unsigned, 32}, X, Path).
+-compile({nowarn_unused_function,v_type_bytes/3}).
+-dialyzer({nowarn_function,v_type_bytes/3}).
+v_type_bytes(B, _Path, _TrUserData) when is_binary(B) -> ok;
+v_type_bytes(B, _Path, _TrUserData) when is_list(B) -> ok;
+v_type_bytes(X, Path, _TrUserData) -> mk_type_error(bad_binary_value, X, Path).
 
 -compile({nowarn_unused_function,mk_type_error/3}).
 -spec mk_type_error(_, _, list()) -> no_return().
@@ -480,12 +425,7 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 'erlang_++'(A, B, _TrUserData) -> A ++ B.
 
 
-get_msg_defs() ->
-    [{{msg, 'Preload'},
-      [#{name => users_per_region, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
-       #{name => open_items, fnum => 2, rnum => 3, type => uint32, occurrence => optional, opts => []},
-       #{name => closed_items, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []}]},
-     {{msg, 'PreloadAck'}, []}].
+get_msg_defs() -> [{{msg, 'Preload'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]}, {{msg, 'PreloadAck'}, []}].
 
 
 get_msg_names() -> ['Preload', 'PreloadAck'].
@@ -511,10 +451,7 @@ fetch_msg_def(MsgName) ->
 fetch_enum_def(EnumName) -> erlang:error({no_such_enum, EnumName}).
 
 
-find_msg_def('Preload') ->
-    [#{name => users_per_region, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
-     #{name => open_items, fnum => 2, rnum => 3, type => uint32, occurrence => optional, opts => []},
-     #{name => closed_items, fnum => 3, rnum => 4, type => uint32, occurrence => optional, opts => []}];
+find_msg_def('Preload') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('PreloadAck') -> [];
 find_msg_def(_) -> error.
 

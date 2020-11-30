@@ -5,7 +5,7 @@
          from_server_dec/1]).
 
 %% Init
--export([preload/3]).
+-export([preload/1]).
 
 -define(proto_msgs, rubis_msgs).
 -define(encode_msg(Type, Body), encode_raw_bits(Type, ?proto_msgs:encode_msg(Body, Type))).
@@ -16,10 +16,8 @@
 %% API functions
 %%====================================================================
 
-preload(UsersPerRegion, OpenItems, ClosedItems) ->
-    ?encode_msg('Preload', #{users_per_region => UsersPerRegion,
-                             open_items => OpenItems,
-                             closed_items => ClosedItems}).
+preload(Properties) ->
+    ?encode_msg('Preload', #{payload => term_to_binary(Properties)}).
 
 %%====================================================================
 %% Module API functions
@@ -35,8 +33,9 @@ from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, decode_from_client(Type, BinMsg)}.
 
-decode_from_client(Type, BinMsg) ->
-    ?proto_msgs:decode_msg(BinMsg, Type).
+decode_from_client('Preload', BinMsg) ->
+    #{payload := BPayload} = ?proto_msgs:decode_msg(BinMsg, 'Preload'),
+    #{payload => binary_to_term(BPayload) }.
 
 %% @doc Generic server-side encoding
 %%

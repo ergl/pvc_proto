@@ -1,6 +1,6 @@
 {application, pvc_proto,
     [{description, "PVC protobuf message library"},
-    {vsn, "0.24.2"},
+    {vsn, "0.24.3"},
     {registered, []},
     {applications, [kernel, stdlib]},
     {modules, []},

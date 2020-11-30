@@ -1,10 +1,7 @@
 syntax = "proto3";
 
 message Preload {
-    uint32 users_per_region = 1;
-    uint32 open_items = 2;
-    uint32 closed_items = 3;
-    // todo(borja): bids, etc?
+    bytes payload = 1;
 }
 
 message PreloadAck {}
