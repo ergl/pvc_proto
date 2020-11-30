@@ -67,6 +67,15 @@ message OpReturn {
     bool transform = 2;
 }
 
+message OpSend {
+    bytes partition = 1;
+    bytes transaction_id = 2;
+    bytes key = 3;
+    bytes operation = 4;
+}
+
+message OpSendAck {}
+
 message OpRequestPartition {
     bytes partition = 1;
     bytes transaction_id = 2;

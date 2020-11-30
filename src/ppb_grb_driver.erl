@@ -8,12 +8,19 @@
          put_conflicts/1,
          put_direct/2,
          uniform_barrier/2,
-         start_tx/2,
-         read_request/6,
-         update_request/6,
+         start_tx/2]).
+
+%% Read / Write+Read API
+-export([read_request/6,
          read_request_partition/5,
-         update_request_partition/5,
-         prepare_blue_node/3,
+         update_request/6,
+         update_request_partition/5]).
+
+%% Simple write API
+-export([op_send/4]).
+
+%% Commit API
+-export([prepare_blue_node/3,
          decide_blue_node/3,
          commit_red/5]).
 
@@ -83,6 +90,13 @@ update_request_partition(Partition, TxId, SVC, ReadAgain, KeyOps) ->
                                         is_read => false,
                                         read_again => ReadAgain,
                                         ops => term_to_binary(KeyOps)}).
+
+-spec op_send(non_neg_integer(), term(), term(), term()) -> msg().
+op_send(Partition, TxId, Key, Op) ->
+    ?encode_msg('OpSend', #{partition => binary:encode_unsigned(Partition),
+                            transaction_id => term_to_binary(TxId),
+                            key => Key,
+                            operation => term_to_binary(Op)}).
 
 -spec prepare_blue_node(term(), term(), [non_neg_integer()]) -> msg().
 prepare_blue_node(TxId, SVC, Partitions) ->
@@ -160,6 +174,16 @@ decode_from_client('OpRequestPartition', Msg) ->
             M3#{operations => binary_to_term(Ops)}
     end;
 
+decode_from_client('OpSend', Msg) ->
+    M0 = #{
+        partition := BPartition,
+        transaction_id := PTxId,
+        operation := BOp
+    } = ?proto_msgs:decode_msg(Msg, 'OpSend'),
+    M0#{partition := binary:decode_unsigned(BPartition),
+        transaction_id := binary_to_term(PTxId),
+        operation := binary_to_term(BOp)};
+
 decode_from_client('PrepareBlueNode', Msg) ->
     Map = ?proto_msgs:decode_msg(Msg, 'PrepareBlueNode'),
     maps:map(fun(partitions, V) -> [binary:decode_unsigned(P) || P <- V];
@@ -224,6 +248,9 @@ to_client_enc('OpRequest', {ok, Val}) ->
 to_client_enc('OpRequestPartition', Responses) ->
     ?encode_msg('OpReturnPartition', #{payload => term_to_binary(Responses)});
 
+to_client_enc('OpSend', ok) ->
+    ?encode_msg('OpSendAck', #{});
+
 to_client_enc('PrepareBlueNode', Votes) ->
     ?encode_msg('BlueVoteBatch', #{votes => [encode_blue_prepare(V) || V <- Votes]});
 
@@ -269,6 +296,9 @@ decode_from_server('OpReturn', BinMsg) ->
 decode_from_server('OpReturnPartition', BinMsg) ->
     #{payload := Payload} = ?proto_msgs:decode_msg(BinMsg, 'OpReturnPartition'),
     {ok, binary_to_term(Payload)};
+
+decode_from_server('OpSendAck', _) ->
+    ok;
 
 decode_from_server('BlueVoteBatch', BinMsg) ->
     #{votes := Votes} = ?proto_msgs:decode_msg(BinMsg, 'BlueVoteBatch'),
@@ -327,7 +357,9 @@ encode_msg_type('PutConflictRelationsAck') -> 15;
 encode_msg_type('PutDirect') -> 16;
 encode_msg_type('PutDirectAck') -> 17;
 encode_msg_type('OpRequestPartition') -> 18;
-encode_msg_type('OpReturnPartition') -> 19.
+encode_msg_type('OpReturnPartition') -> 19;
+encode_msg_type('OpSend') -> 20;
+encode_msg_type('OpSendAck') -> 21.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -349,4 +381,6 @@ decode_type_num(15) -> 'PutConflictRelationsAck';
 decode_type_num(16) -> 'PutDirect';
 decode_type_num(17) -> 'PutDirectAck';
 decode_type_num(18) -> 'OpRequestPartition';
-decode_type_num(19) -> 'OpReturnPartition'.
+decode_type_num(19) -> 'OpReturnPartition';
+decode_type_num(20) -> 'OpSend';
+decode_type_num(21) -> 'OpSendAck'.

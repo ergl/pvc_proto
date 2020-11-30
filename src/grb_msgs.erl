@@ -109,6 +109,17 @@
         transform               => boolean() | 0 | 1 % = 2
        }.
 
+-type 'OpSend'() ::
+      #{partition               => iodata(),        % = 1
+        transaction_id          => iodata(),        % = 2
+        key                     => iodata(),        % = 3
+        operation               => iodata()         % = 4
+       }.
+
+-type 'OpSendAck'() ::
+      #{
+       }.
+
 -type 'OpRequestPartition'() ::
       #{partition               => iodata(),        % = 1
         transaction_id          => iodata(),        % = 2
@@ -155,12 +166,12 @@
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'PutDirect'/0, 'PutDirectAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'OpRequestPartition'/0, 'OpReturnPartition'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'PutDirect'/0, 'PutDirectAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'OpSend'/0, 'OpSendAck'/0, 'OpRequestPartition'/0, 'OpReturnPartition'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpSend'() | 'OpSendAck'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpSend'() | 'OpSendAck'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -180,6 +191,8 @@ encode_msg(Msg, MsgName, Opts) ->
         'StartReturn' -> encode_msg_StartReturn(id(Msg, TrUserData), TrUserData);
         'OpRequest' -> encode_msg_OpRequest(id(Msg, TrUserData), TrUserData);
         'OpReturn' -> encode_msg_OpReturn(id(Msg, TrUserData), TrUserData);
+        'OpSend' -> encode_msg_OpSend(id(Msg, TrUserData), TrUserData);
+        'OpSendAck' -> encode_msg_OpSendAck(id(Msg, TrUserData), TrUserData);
         'OpRequestPartition' -> encode_msg_OpRequestPartition(id(Msg, TrUserData), TrUserData);
         'OpReturnPartition' -> encode_msg_OpReturnPartition(id(Msg, TrUserData), TrUserData);
         'PrepareBlueNode' -> encode_msg_PrepareBlueNode(id(Msg, TrUserData), TrUserData);
@@ -441,6 +454,57 @@ encode_msg_OpReturn(#{} = M, Bin, TrUserData) ->
             end;
         _ -> B1
     end.
+
+encode_msg_OpSend(Msg, TrUserData) -> encode_msg_OpSend(Msg, <<>>, TrUserData).
+
+
+encode_msg_OpSend(#{} = M, Bin, TrUserData) ->
+    B1 = case M of
+             #{partition := F1} ->
+                 begin
+                     TrF1 = id(F1, TrUserData),
+                     case iolist_size(TrF1) of
+                         0 -> Bin;
+                         _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                     end
+                 end;
+             _ -> Bin
+         end,
+    B2 = case M of
+             #{transaction_id := F2} ->
+                 begin
+                     TrF2 = id(F2, TrUserData),
+                     case iolist_size(TrF2) of
+                         0 -> B1;
+                         _ -> e_type_bytes(TrF2, <<B1/binary, 18>>, TrUserData)
+                     end
+                 end;
+             _ -> B1
+         end,
+    B3 = case M of
+             #{key := F3} ->
+                 begin
+                     TrF3 = id(F3, TrUserData),
+                     case iolist_size(TrF3) of
+                         0 -> B2;
+                         _ -> e_type_bytes(TrF3, <<B2/binary, 26>>, TrUserData)
+                     end
+                 end;
+             _ -> B2
+         end,
+    case M of
+        #{operation := F4} ->
+            begin
+                TrF4 = id(F4, TrUserData),
+                case iolist_size(TrF4) of
+                    0 -> B3;
+                    _ -> e_type_bytes(TrF4, <<B3/binary, 34>>, TrUserData)
+                end
+            end;
+        _ -> B3
+    end.
+
+encode_msg_OpSendAck(_Msg, _TrUserData) -> <<>>.
 
 encode_msg_OpRequestPartition(Msg, TrUserData) -> encode_msg_OpRequestPartition(Msg, <<>>, TrUserData).
 
@@ -838,6 +902,8 @@ decode_msg_2_doit('StartReq', Bin, TrUserData) -> id(decode_msg_StartReq(Bin, Tr
 decode_msg_2_doit('StartReturn', Bin, TrUserData) -> id(decode_msg_StartReturn(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('OpRequest', Bin, TrUserData) -> id(decode_msg_OpRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('OpReturn', Bin, TrUserData) -> id(decode_msg_OpReturn(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('OpSend', Bin, TrUserData) -> id(decode_msg_OpSend(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('OpSendAck', Bin, TrUserData) -> id(decode_msg_OpSendAck(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('OpRequestPartition', Bin, TrUserData) -> id(decode_msg_OpRequestPartition(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('OpReturnPartition', Bin, TrUserData) -> id(decode_msg_OpReturnPartition(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PrepareBlueNode', Bin, TrUserData) -> id(decode_msg_PrepareBlueNode(Bin, TrUserData), TrUserData);
@@ -1429,6 +1495,105 @@ skip_32_OpReturn(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_r
 
 skip_64_OpReturn(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, TrUserData) -> dfp_read_field_def_OpReturn(Rest, Z1, Z2, F@_1, F@_2, TrUserData).
 
+decode_msg_OpSend(Bin, TrUserData) -> dfp_read_field_def_OpSend(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_OpSend(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpSend_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_OpSend(<<18, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpSend_transaction_id(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_OpSend(<<26, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpSend_key(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_OpSend(<<34, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> d_field_OpSend_operation(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dfp_read_field_def_OpSend(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{partition => F@_1, transaction_id => F@_2, key => F@_3, operation => F@_4};
+dfp_read_field_def_OpSend(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dg_read_field_def_OpSend(Other, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+dg_read_field_def_OpSend(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpSend(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+dg_read_field_def_OpSend(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_OpSend_partition(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        18 -> d_field_OpSend_transaction_id(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        26 -> d_field_OpSend_key(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        34 -> d_field_OpSend_operation(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_OpSend(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                1 -> skip_64_OpSend(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                2 -> skip_length_delimited_OpSend(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                3 -> skip_group_OpSend(Rest, Key bsr 3, 0, F@_1, F@_2, F@_3, F@_4, TrUserData);
+                5 -> skip_32_OpSend(Rest, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData)
+            end
+    end;
+dg_read_field_def_OpSend(<<>>, 0, 0, F@_1, F@_2, F@_3, F@_4, _) -> #{partition => F@_1, transaction_id => F@_2, key => F@_3, operation => F@_4}.
+
+d_field_OpSend_partition(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpSend_partition(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_OpSend_partition(<<0:1, X:7, Rest/binary>>, N, Acc, _, F@_2, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_OpSend(RestF, 0, 0, NewFValue, F@_2, F@_3, F@_4, TrUserData).
+
+d_field_OpSend_transaction_id(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpSend_transaction_id(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_OpSend_transaction_id(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, _, F@_3, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_OpSend(RestF, 0, 0, F@_1, NewFValue, F@_3, F@_4, TrUserData).
+
+d_field_OpSend_key(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpSend_key(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_OpSend_key(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, _, F@_4, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_OpSend(RestF, 0, 0, F@_1, F@_2, NewFValue, F@_4, TrUserData).
+
+d_field_OpSend_operation(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> d_field_OpSend_operation(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+d_field_OpSend_operation(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_OpSend(RestF, 0, 0, F@_1, F@_2, F@_3, NewFValue, TrUserData).
+
+skip_varint_OpSend(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> skip_varint_OpSend(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_varint_OpSend(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpSend(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_length_delimited_OpSend(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) when N < 57 -> skip_length_delimited_OpSend(Rest, N + 7, X bsl N + Acc, F@_1, F@_2, F@_3, F@_4, TrUserData);
+skip_length_delimited_OpSend(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_OpSend(Rest2, 0, 0, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_group_OpSend(Bin, FNum, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_OpSend(Rest, 0, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_32_OpSend(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpSend(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+skip_64_OpSend(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData) -> dfp_read_field_def_OpSend(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, TrUserData).
+
+decode_msg_OpSendAck(Bin, TrUserData) -> dfp_read_field_def_OpSendAck(Bin, 0, 0, TrUserData).
+
+dfp_read_field_def_OpSendAck(<<>>, 0, 0, _) -> #{};
+dfp_read_field_def_OpSendAck(Other, Z1, Z2, TrUserData) -> dg_read_field_def_OpSendAck(Other, Z1, Z2, TrUserData).
+
+dg_read_field_def_OpSendAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 32 - 7 -> dg_read_field_def_OpSendAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+dg_read_field_def_OpSendAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+        0 -> skip_varint_OpSendAck(Rest, 0, 0, TrUserData);
+        1 -> skip_64_OpSendAck(Rest, 0, 0, TrUserData);
+        2 -> skip_length_delimited_OpSendAck(Rest, 0, 0, TrUserData);
+        3 -> skip_group_OpSendAck(Rest, Key bsr 3, 0, TrUserData);
+        5 -> skip_32_OpSendAck(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_OpSendAck(<<>>, 0, 0, _) -> #{}.
+
+skip_varint_OpSendAck(<<1:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> skip_varint_OpSendAck(Rest, Z1, Z2, TrUserData);
+skip_varint_OpSendAck(<<0:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_OpSendAck(Rest, Z1, Z2, TrUserData).
+
+skip_length_delimited_OpSendAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 57 -> skip_length_delimited_OpSendAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+skip_length_delimited_OpSendAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_OpSendAck(Rest2, 0, 0, TrUserData).
+
+skip_group_OpSendAck(Bin, FNum, Z2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_OpSendAck(Rest, 0, Z2, TrUserData).
+
+skip_32_OpSendAck(<<_:32, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_OpSendAck(Rest, Z1, Z2, TrUserData).
+
+skip_64_OpSendAck(<<_:64, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_OpSendAck(Rest, Z1, Z2, TrUserData).
+
 decode_msg_OpRequestPartition(Bin, TrUserData) -> dfp_read_field_def_OpRequestPartition(Bin, 0, 0, id(<<>>, TrUserData), id(<<>>, TrUserData), id(<<>>, TrUserData), id(false, TrUserData), id(false, TrUserData), id(<<>>, TrUserData), TrUserData).
 
 dfp_read_field_def_OpRequestPartition(<<10, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData) -> d_field_OpRequestPartition_partition(Rest, Z1, Z2, F@_1, F@_2, F@_3, F@_4, F@_5, F@_6, TrUserData);
@@ -1981,6 +2146,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
         'StartReturn' -> merge_msg_StartReturn(Prev, New, TrUserData);
         'OpRequest' -> merge_msg_OpRequest(Prev, New, TrUserData);
         'OpReturn' -> merge_msg_OpReturn(Prev, New, TrUserData);
+        'OpSend' -> merge_msg_OpSend(Prev, New, TrUserData);
+        'OpSendAck' -> merge_msg_OpSendAck(Prev, New, TrUserData);
         'OpRequestPartition' -> merge_msg_OpRequestPartition(Prev, New, TrUserData);
         'OpReturnPartition' -> merge_msg_OpReturnPartition(Prev, New, TrUserData);
         'PrepareBlueNode' -> merge_msg_PrepareBlueNode(Prev, New, TrUserData);
@@ -2129,6 +2296,33 @@ merge_msg_OpReturn(PMsg, NMsg, _) ->
         {#{transform := PFtransform}, _} -> S2#{transform => PFtransform};
         _ -> S2
     end.
+
+-compile({nowarn_unused_function,merge_msg_OpSend/3}).
+merge_msg_OpSend(PMsg, NMsg, _) ->
+    S1 = #{},
+    S2 = case {PMsg, NMsg} of
+             {_, #{partition := NFpartition}} -> S1#{partition => NFpartition};
+             {#{partition := PFpartition}, _} -> S1#{partition => PFpartition};
+             _ -> S1
+         end,
+    S3 = case {PMsg, NMsg} of
+             {_, #{transaction_id := NFtransaction_id}} -> S2#{transaction_id => NFtransaction_id};
+             {#{transaction_id := PFtransaction_id}, _} -> S2#{transaction_id => PFtransaction_id};
+             _ -> S2
+         end,
+    S4 = case {PMsg, NMsg} of
+             {_, #{key := NFkey}} -> S3#{key => NFkey};
+             {#{key := PFkey}, _} -> S3#{key => PFkey};
+             _ -> S3
+         end,
+    case {PMsg, NMsg} of
+        {_, #{operation := NFoperation}} -> S4#{operation => NFoperation};
+        {#{operation := PFoperation}, _} -> S4#{operation => PFoperation};
+        _ -> S4
+    end.
+
+-compile({nowarn_unused_function,merge_msg_OpSendAck/3}).
+merge_msg_OpSendAck(_Prev, New, _TrUserData) -> New.
 
 -compile({nowarn_unused_function,merge_msg_OpRequestPartition/3}).
 merge_msg_OpRequestPartition(PMsg, NMsg, _) ->
@@ -2294,6 +2488,8 @@ verify_msg(Msg, MsgName, Opts) ->
         'StartReturn' -> v_msg_StartReturn(Msg, [MsgName], TrUserData);
         'OpRequest' -> v_msg_OpRequest(Msg, [MsgName], TrUserData);
         'OpReturn' -> v_msg_OpReturn(Msg, [MsgName], TrUserData);
+        'OpSend' -> v_msg_OpSend(Msg, [MsgName], TrUserData);
+        'OpSendAck' -> v_msg_OpSendAck(Msg, [MsgName], TrUserData);
         'OpRequestPartition' -> v_msg_OpRequestPartition(Msg, [MsgName], TrUserData);
         'OpReturnPartition' -> v_msg_OpReturnPartition(Msg, [MsgName], TrUserData);
         'PrepareBlueNode' -> v_msg_PrepareBlueNode(Msg, [MsgName], TrUserData);
@@ -2514,6 +2710,44 @@ v_msg_OpReturn(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_OpReturn(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpReturn'}, M, Path);
 v_msg_OpReturn(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpReturn'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_OpSend/3}).
+-dialyzer({nowarn_function,v_msg_OpSend/3}).
+v_msg_OpSend(#{} = M, Path, TrUserData) ->
+    case M of
+        #{partition := F1} -> v_type_bytes(F1, [partition | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{transaction_id := F2} -> v_type_bytes(F2, [transaction_id | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{key := F3} -> v_type_bytes(F3, [key | Path], TrUserData);
+        _ -> ok
+    end,
+    case M of
+        #{operation := F4} -> v_type_bytes(F4, [operation | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (partition) -> ok;
+                      (transaction_id) -> ok;
+                      (key) -> ok;
+                      (operation) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_OpSend(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpSend'}, M, Path);
+v_msg_OpSend(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpSend'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_OpSendAck/3}).
+-dialyzer({nowarn_function,v_msg_OpSendAck/3}).
+v_msg_OpSendAck(#{} = M, Path, _) ->
+    lists:foreach(fun (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path) end, maps:keys(M)),
+    ok;
+v_msg_OpSendAck(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'OpSendAck'}, M, Path);
+v_msg_OpSendAck(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'OpSendAck'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_OpRequestPartition/3}).
 -dialyzer({nowarn_function,v_msg_OpRequestPartition/3}).
@@ -2812,6 +3046,12 @@ get_msg_defs() ->
        #{name => read_again, fnum => 5, rnum => 6, type => bool, occurrence => optional, opts => []},
        #{name => payload, rnum => 7, fields => [#{name => type, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []}, #{name => operation, fnum => 7, rnum => 7, type => bytes, occurrence => optional, opts => []}]}]},
      {{msg, 'OpReturn'}, [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => transform, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}]},
+     {{msg, 'OpSend'},
+      [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
+       #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+       #{name => key, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+       #{name => operation, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'OpSendAck'}, []},
      {{msg, 'OpRequestPartition'},
       [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
        #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
@@ -2853,6 +3093,8 @@ get_msg_names() ->
      'StartReturn',
      'OpRequest',
      'OpReturn',
+     'OpSend',
+     'OpSendAck',
      'OpRequestPartition',
      'OpReturnPartition',
      'PrepareBlueNode',
@@ -2879,6 +3121,8 @@ get_msg_or_group_names() ->
      'StartReturn',
      'OpRequest',
      'OpReturn',
+     'OpSend',
+     'OpSendAck',
      'OpRequestPartition',
      'OpReturnPartition',
      'PrepareBlueNode',
@@ -2924,6 +3168,12 @@ find_msg_def('OpRequest') ->
      #{name => read_again, fnum => 5, rnum => 6, type => bool, occurrence => optional, opts => []},
      #{name => payload, rnum => 7, fields => [#{name => type, fnum => 6, rnum => 7, type => bytes, occurrence => optional, opts => []}, #{name => operation, fnum => 7, rnum => 7, type => bytes, occurrence => optional, opts => []}]}];
 find_msg_def('OpReturn') -> [#{name => value, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => transform, fnum => 2, rnum => 3, type => bool, occurrence => optional, opts => []}];
+find_msg_def('OpSend') ->
+    [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
+     #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
+     #{name => key, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []},
+     #{name => operation, fnum => 4, rnum => 5, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('OpSendAck') -> [];
 find_msg_def('OpRequestPartition') ->
     [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []},
      #{name => transaction_id, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
@@ -3020,6 +3270,8 @@ fqbin_to_msg_name(<<"StartReq">>) -> 'StartReq';
 fqbin_to_msg_name(<<"StartReturn">>) -> 'StartReturn';
 fqbin_to_msg_name(<<"OpRequest">>) -> 'OpRequest';
 fqbin_to_msg_name(<<"OpReturn">>) -> 'OpReturn';
+fqbin_to_msg_name(<<"OpSend">>) -> 'OpSend';
+fqbin_to_msg_name(<<"OpSendAck">>) -> 'OpSendAck';
 fqbin_to_msg_name(<<"OpRequestPartition">>) -> 'OpRequestPartition';
 fqbin_to_msg_name(<<"OpReturnPartition">>) -> 'OpReturnPartition';
 fqbin_to_msg_name(<<"PrepareBlueNode">>) -> 'PrepareBlueNode';
@@ -3043,6 +3295,8 @@ msg_name_to_fqbin('StartReq') -> <<"StartReq">>;
 msg_name_to_fqbin('StartReturn') -> <<"StartReturn">>;
 msg_name_to_fqbin('OpRequest') -> <<"OpRequest">>;
 msg_name_to_fqbin('OpReturn') -> <<"OpReturn">>;
+msg_name_to_fqbin('OpSend') -> <<"OpSend">>;
+msg_name_to_fqbin('OpSendAck') -> <<"OpSendAck">>;
 msg_name_to_fqbin('OpRequestPartition') -> <<"OpRequestPartition">>;
 msg_name_to_fqbin('OpReturnPartition') -> <<"OpReturnPartition">>;
 msg_name_to_fqbin('PrepareBlueNode') -> <<"PrepareBlueNode">>;
@@ -3101,6 +3355,8 @@ get_msg_containment("grb_msgs") ->
      'OpRequestPartition',
      'OpReturn',
      'OpReturnPartition',
+     'OpSend',
+     'OpSendAck',
      'PrepareBlueNode',
      'PutConflictRelations',
      'PutConflictRelationsAck',
@@ -3134,6 +3390,7 @@ get_proto_by_msg_name_as_fqbin(<<"StartReq">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"UniformBarrier">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutConflictRelations">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutDirect">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"OpSend">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"CommitRed">>) -> "grb_msgs";
@@ -3144,6 +3401,7 @@ get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch.BlueVote">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutDirectAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutConflictRelationsAck">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"OpSendAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpReturnPartition">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpReturn">>) -> "grb_msgs";
