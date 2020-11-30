@@ -1,4 +1,4 @@
--module(ppb_protocol_driver).
+-module(ppb_fastpsi_driver).
 
 %% Server-side API
 -export([from_client_dec/1,
@@ -13,7 +13,7 @@
          decide_node_abort/2,
          decide_node_commit/3]).
 
--define(proto_msgs, protocol_msgs).
+-define(proto_msgs, fastpsi_msgs).
 -type msg() :: binary().
 -export_type([msg/0]).
 
