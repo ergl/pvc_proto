@@ -324,7 +324,7 @@ decode_from_server('PutDirectAck', _) ->
 %%====================================================================
 
 %% @doc Encode Protobuf msg along with msg info
-        -spec encode_raw_bits(atom(), binary()) -> binary().
+-spec encode_raw_bits(atom(), binary()) -> binary().
 encode_raw_bits(Type, Msg) ->
     HandlerNum = common:encode_driver_module(?MODULE),
     TypeNum = encode_msg_type(Type),
