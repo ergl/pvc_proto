@@ -41,8 +41,7 @@ message StartReturn {
     bytes snapshot_vc = 1;
 }
 
-// Keys are opaque byte blobs
-// The vector clock is a serialized erlang term
+// Keys and vectors are serialized erlang terms
 message OpRequest {
     // Partition number is too long for PB
     // (128 bit number)
@@ -90,7 +89,6 @@ message OpReturnPartition {
 }
 
 message PrepareBlueNode {
-    // todo(borja): No need to encode from erlang term if we use opaque blob
     bytes transaction_id = 1;
     bytes snapshot_vc = 2;
     repeated bytes partitions = 3;

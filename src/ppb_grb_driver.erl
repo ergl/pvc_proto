@@ -55,25 +55,25 @@ start_tx(Partition, CVC) ->
     ?encode_msg('StartReq', #{client_vc => term_to_binary(CVC),
                               partition => binary:encode_unsigned(Partition)}).
 
--spec read_request(non_neg_integer(), term(), term(), boolean(), binary(), term()) -> msg().
+-spec read_request(non_neg_integer(), term(), term(), boolean(), term(), term()) -> msg().
 read_request(Partition, TxId, SVC, ReadAgain, Key, Type) ->
    ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
                               transaction_id => term_to_binary(TxId),
                               snapshot_vc => term_to_binary(SVC),
-                              key => Key,
+                              key => term_to_binary(Key),
                               read_again => ReadAgain,
                               payload => {type, term_to_binary(Type)}}).
 
--spec update_request(non_neg_integer(), term(), term(), boolean(), binary(), term()) -> msg().
+-spec update_request(non_neg_integer(), term(), term(), boolean(), term(), term()) -> msg().
 update_request(Partition, TxId, SVC, ReadAgain, Key, Update) ->
     ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
                                transaction_id => term_to_binary(TxId),
                                snapshot_vc => term_to_binary(SVC),
-                               key => Key,
+                               key => term_to_binary(Key),
                                read_again => ReadAgain,
                                payload => {operation, term_to_binary(Update)}}).
 
--spec read_request_partition(non_neg_integer(), term(), term(), boolean(), [{binary(), term()}]) -> msg().
+-spec read_request_partition(non_neg_integer(), term(), term(), boolean(), [{term(), term()}]) -> msg().
 read_request_partition(Partition, TxId, SVC, ReadAgain, KeyTypes) ->
     ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
                                         transaction_id => term_to_binary(TxId),
@@ -82,7 +82,7 @@ read_request_partition(Partition, TxId, SVC, ReadAgain, KeyTypes) ->
                                         read_again => ReadAgain,
                                         ops => term_to_binary(KeyTypes)}).
 
--spec update_request_partition(non_neg_integer(), term(), term(), boolean(), [{binary(), term()}]) -> msg().
+-spec update_request_partition(non_neg_integer(), term(), term(), boolean(), [{term(), term()}]) -> msg().
 update_request_partition(Partition, TxId, SVC, ReadAgain, KeyOps) ->
     ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
                                         transaction_id => term_to_binary(TxId),
@@ -95,7 +95,7 @@ update_request_partition(Partition, TxId, SVC, ReadAgain, KeyOps) ->
 op_send(Partition, TxId, Key, Op) ->
     ?encode_msg('OpSend', #{partition => binary:encode_unsigned(Partition),
                             transaction_id => term_to_binary(TxId),
-                            key => Key,
+                            key => term_to_binary(Key),
                             operation => term_to_binary(Op)}).
 
 -spec prepare_blue_node(term(), term(), [non_neg_integer()]) -> msg().
@@ -139,12 +139,14 @@ decode_from_client('OpRequest', Msg) ->
         partition := PB,
         transaction_id := PTxId,
         snapshot_vc := PSVC,
+        key := BKey,
         payload := Payload
     } = ?proto_msgs:decode_msg(Msg, 'OpRequest'),
     M1 = maps:remove(
         payload,
         M0#{partition := binary:decode_unsigned(PB),
             transaction_id := binary_to_term(PTxId),
+            key := binary_to_term(BKey),
             snapshot_vc := binary_to_term(PSVC)}
     ),
     case Payload of
@@ -178,10 +180,12 @@ decode_from_client('OpSend', Msg) ->
     M0 = #{
         partition := BPartition,
         transaction_id := PTxId,
+        key := BKey,
         operation := BOp
     } = ?proto_msgs:decode_msg(Msg, 'OpSend'),
     M0#{partition := binary:decode_unsigned(BPartition),
         transaction_id := binary_to_term(PTxId),
+        key := binary_to_term(BKey),
         operation := binary_to_term(BOp)};
 
 decode_from_client('PrepareBlueNode', Msg) ->
