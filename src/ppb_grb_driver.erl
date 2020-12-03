@@ -13,8 +13,10 @@
 %% Read / Write+Read API
 -export([read_request/6,
          read_request_partition/5,
+         read_operation_request/6,
          update_request/6,
-         update_request_partition/5]).
+         update_request_partition/5,
+         read_operation_partition/5]).
 
 %% Simple write API
 -export([op_send/4]).
@@ -64,6 +66,15 @@ read_request(Partition, TxId, SVC, ReadAgain, Key, Type) ->
                               read_again => ReadAgain,
                               payload => {type, term_to_binary(Type)}}).
 
+-spec read_operation_request(non_neg_integer(), term(), term(), boolean(), term(), term()) -> msg().
+read_operation_request(Partition, TxId, SVC, ReadAgain, Key, ReadOp) ->
+    ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
+                               transaction_id => term_to_binary(TxId),
+                               snapshot_vc => term_to_binary(SVC),
+                               key => term_to_binary(Key),
+                               read_again => ReadAgain,
+                               payload => {read_operation, term_to_binary(ReadOp)}}).
+
 -spec update_request(non_neg_integer(), term(), term(), boolean(), term(), term()) -> msg().
 update_request(Partition, TxId, SVC, ReadAgain, Key, Update) ->
     ?encode_msg('OpRequest', #{partition => binary:encode_unsigned(Partition),
@@ -78,18 +89,24 @@ read_request_partition(Partition, TxId, SVC, ReadAgain, KeyTypes) ->
     ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
                                         transaction_id => term_to_binary(TxId),
                                         snapshot_vc => term_to_binary(SVC),
-                                        is_read => true,
                                         read_again => ReadAgain,
-                                        ops => term_to_binary(KeyTypes)}).
+                                        payload => {keytypes, term_to_binary(KeyTypes)}}).
+
+-spec read_operation_partition(non_neg_integer(), term(), term(), boolean(), [{term(), term()}]) -> msg().
+read_operation_partition(Partition, TxId, SVC, ReadAgain, KeyRops) ->
+    ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
+                                        transaction_id => term_to_binary(TxId),
+                                        snapshot_vc => term_to_binary(SVC),
+                                        read_again => ReadAgain,
+                                        payload => {keyreadops, term_to_binary(KeyRops)}}).
 
 -spec update_request_partition(non_neg_integer(), term(), term(), boolean(), [{term(), term()}]) -> msg().
 update_request_partition(Partition, TxId, SVC, ReadAgain, KeyOps) ->
     ?encode_msg('OpRequestPartition', #{partition => binary:encode_unsigned(Partition),
                                         transaction_id => term_to_binary(TxId),
                                         snapshot_vc => term_to_binary(SVC),
-                                        is_read => false,
                                         read_again => ReadAgain,
-                                        ops => term_to_binary(KeyOps)}).
+                                        payload => {keyops, term_to_binary(KeyOps)}}).
 
 -spec op_send(non_neg_integer(), term(), term(), term()) -> msg().
 op_send(Partition, TxId, Key, Op) ->
@@ -153,7 +170,9 @@ decode_from_client('OpRequest', Msg) ->
         {type, Typ} ->
             M1#{type => binary_to_term(Typ)};
         {operation, Op} ->
-            M1#{operation => binary_to_term(Op)}
+            M1#{operation => binary_to_term(Op)};
+        {read_operation, ROp} ->
+            M1#{read_operation => binary_to_term(ROp)}
     end;
 
 decode_from_client('OpRequestPartition', Msg) ->
@@ -161,19 +180,19 @@ decode_from_client('OpRequestPartition', Msg) ->
         partition := BPartition,
         transaction_id := PTxId,
         snapshot_vc := PSVC,
-        is_read := IsRead,
-        ops := Ops
+        payload := Payload
     } = ?proto_msgs:decode_msg(Msg, 'OpRequestPartition'),
     M1 = M0#{partition := binary:decode_unsigned(BPartition),
              snapshot_vc := binary_to_term(PSVC),
              transaction_id := binary_to_term(PTxId)},
-    M2 = maps:remove(is_read, M1),
-    M3 = maps:remove(ops, M2),
-    if
-        IsRead ->
-            M3#{reads => binary_to_term(Ops)};
-        true ->
-            M3#{operations => binary_to_term(Ops)}
+    M3 = maps:remove(payload, M1),
+    case Payload of
+        {keytypes, BKeyTypes} ->
+            M3#{reads => binary_to_term(BKeyTypes)};
+        {keyreadops, BKeyRops} ->
+            M3#{read_ops => binary_to_term(BKeyRops)};
+        {keyops, BKeyOps} ->
+            M3#{operations => binary_to_term(BKeyOps)}
     end;
 
 decode_from_client('OpSend', Msg) ->

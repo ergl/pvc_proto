@@ -57,6 +57,7 @@ message OpRequest {
     oneof payload {
         bytes type = 6;
         bytes operation = 7;
+        bytes read_operation = 8;
     }
 }
 
@@ -79,9 +80,12 @@ message OpRequestPartition {
     bytes partition = 1;
     bytes transaction_id = 2;
     bytes snapshot_vc = 3;
-    bool is_read = 4;
-    bool read_again = 5;
-    bytes ops = 6;
+    bool read_again = 4;
+    oneof payload {
+        bytes keytypes = 5;
+        bytes keyops = 6;
+        bytes keyreadops = 7;
+    }
 }
 
 message OpReturnPartition {
