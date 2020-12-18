@@ -17,7 +17,7 @@
 %%====================================================================
 
 preload(Properties) ->
-    ?encode_msg('Preload', #{payload => term_to_binary(Properties)}).
+    ?encode_msg('RubisPreload', #{payload => term_to_binary(Properties)}).
 
 %%====================================================================
 %% Module API functions
@@ -33,9 +33,9 @@ from_client_dec(Bin) ->
     {Type, BinMsg} = decode_raw_bits(Bin),
     {Type, decode_from_client(Type, BinMsg)}.
 
-decode_from_client('Preload', BinMsg) ->
-    #{payload := BPayload} = ?proto_msgs:decode_msg(BinMsg, 'Preload'),
-    #{payload => binary_to_term(BPayload) }.
+decode_from_client('RubisPreload', BinMsg) ->
+    #{payload := BPayload} = ?proto_msgs:decode_msg(BinMsg, 'RubisPreload'),
+    #{payload => binary_to_term(BPayload)}.
 
 %% @doc Generic server-side encoding
 %%
@@ -44,15 +44,15 @@ decode_from_client('Preload', BinMsg) ->
 %%      the reply.
 %%
 
-to_client_enc('Preload', ok) ->
-    ?encode_msg('PreloadAck', #{}).
+to_client_enc('RubisPreload', ok) ->
+    ?encode_msg('RubisPreloadAck', #{}).
 
 %% @doc Generic client side decode
 from_server_dec(Bin) ->
     {Type, Msg} = decode_raw_bits(Bin),
     decode_from_server(Type, Msg).
 
-decode_from_server('PreloadAck', _) ->
+decode_from_server('RubisPreloadAck', _) ->
     ok.
 
 %%====================================================================
@@ -74,10 +74,10 @@ decode_raw_bits(Bin) ->
 
 %% @doc Encode msg type as ints
 -spec encode_msg_type(atom()) -> non_neg_integer().
-encode_msg_type('Preload') -> 1;
-encode_msg_type('PreloadAck') -> 2.
+encode_msg_type('RubisPreload') -> 1;
+encode_msg_type('RubisPreloadAck') -> 2.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
-decode_type_num(1) -> 'Preload';
-decode_type_num(2) -> 'PreloadAck'.
+decode_type_num(1) -> 'RubisPreload';
+decode_type_num(2) -> 'RubisPreloadAck'.

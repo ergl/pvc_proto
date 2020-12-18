@@ -12,6 +12,13 @@ message ConnectResponse {
     bytes replica_id = 3;
 }
 
+message Preload {
+    bytes payload = 1;
+}
+
+message PreloadAck {}
+
+
 message PutConflictRelations {
     bytes payload = 1;
 }

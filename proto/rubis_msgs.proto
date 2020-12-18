@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-message Preload {
+message RubisPreload {
     bytes payload = 1;
 }
 
-message PreloadAck {}
+message RubisPreloadAck {}

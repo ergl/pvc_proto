@@ -50,20 +50,20 @@
 -export_type([]).
 
 %% message types
--type 'Preload'() ::
+-type 'RubisPreload'() ::
       #{payload                 => iodata()         % = 1
        }.
 
--type 'PreloadAck'() ::
+-type 'RubisPreloadAck'() ::
       #{
        }.
 
--export_type(['Preload'/0, 'PreloadAck'/0]).
+-export_type(['RubisPreload'/0, 'RubisPreloadAck'/0]).
 
--spec encode_msg('Preload'() | 'PreloadAck'(), atom()) -> binary().
+-spec encode_msg('RubisPreload'() | 'RubisPreloadAck'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('Preload'() | 'PreloadAck'(), atom(), list()) -> binary().
+-spec encode_msg('RubisPreload'() | 'RubisPreloadAck'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -71,15 +71,15 @@ encode_msg(Msg, MsgName, Opts) ->
     end,
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-        'Preload' -> encode_msg_Preload(id(Msg, TrUserData), TrUserData);
-        'PreloadAck' -> encode_msg_PreloadAck(id(Msg, TrUserData), TrUserData)
+        'RubisPreload' -> encode_msg_RubisPreload(id(Msg, TrUserData), TrUserData);
+        'RubisPreloadAck' -> encode_msg_RubisPreloadAck(id(Msg, TrUserData), TrUserData)
     end.
 
 
-encode_msg_Preload(Msg, TrUserData) -> encode_msg_Preload(Msg, <<>>, TrUserData).
+encode_msg_RubisPreload(Msg, TrUserData) -> encode_msg_RubisPreload(Msg, <<>>, TrUserData).
 
 
-encode_msg_Preload(#{} = M, Bin, TrUserData) ->
+encode_msg_RubisPreload(#{} = M, Bin, TrUserData) ->
     case M of
         #{payload := F1} ->
             begin
@@ -92,7 +92,7 @@ encode_msg_Preload(#{} = M, Bin, TrUserData) ->
         _ -> Bin
     end.
 
-encode_msg_PreloadAck(_Msg, _TrUserData) -> <<>>.
+encode_msg_RubisPreloadAck(_Msg, _TrUserData) -> <<>>.
 
 -compile({nowarn_unused_function,e_type_sint/3}).
 e_type_sint(Value, Bin, _TrUserData) when Value >= 0 -> e_varint(Value * 2, Bin);
@@ -185,88 +185,88 @@ decode_msg_1_catch(Bin, MsgName, TrUserData) ->
     end.
 -endif.
 
-decode_msg_2_doit('Preload', Bin, TrUserData) -> id(decode_msg_Preload(Bin, TrUserData), TrUserData);
-decode_msg_2_doit('PreloadAck', Bin, TrUserData) -> id(decode_msg_PreloadAck(Bin, TrUserData), TrUserData).
+decode_msg_2_doit('RubisPreload', Bin, TrUserData) -> id(decode_msg_RubisPreload(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('RubisPreloadAck', Bin, TrUserData) -> id(decode_msg_RubisPreloadAck(Bin, TrUserData), TrUserData).
 
 
 
-decode_msg_Preload(Bin, TrUserData) -> dfp_read_field_def_Preload(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+decode_msg_RubisPreload(Bin, TrUserData) -> dfp_read_field_def_RubisPreload(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
-dfp_read_field_def_Preload(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_Preload_payload(Rest, Z1, Z2, F@_1, TrUserData);
-dfp_read_field_def_Preload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
-dfp_read_field_def_Preload(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_Preload(Other, Z1, Z2, F@_1, TrUserData).
+dfp_read_field_def_RubisPreload(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_RubisPreload_payload(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_RubisPreload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
+dfp_read_field_def_RubisPreload(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_RubisPreload(Other, Z1, Z2, F@_1, TrUserData).
 
-dg_read_field_def_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_Preload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-dg_read_field_def_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+dg_read_field_def_RubisPreload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_RubisPreload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_RubisPreload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Key = X bsl N + Acc,
     case Key of
-        10 -> d_field_Preload_payload(Rest, 0, 0, F@_1, TrUserData);
+        10 -> d_field_RubisPreload_payload(Rest, 0, 0, F@_1, TrUserData);
         _ ->
             case Key band 7 of
-                0 -> skip_varint_Preload(Rest, 0, 0, F@_1, TrUserData);
-                1 -> skip_64_Preload(Rest, 0, 0, F@_1, TrUserData);
-                2 -> skip_length_delimited_Preload(Rest, 0, 0, F@_1, TrUserData);
-                3 -> skip_group_Preload(Rest, Key bsr 3, 0, F@_1, TrUserData);
-                5 -> skip_32_Preload(Rest, 0, 0, F@_1, TrUserData)
+                0 -> skip_varint_RubisPreload(Rest, 0, 0, F@_1, TrUserData);
+                1 -> skip_64_RubisPreload(Rest, 0, 0, F@_1, TrUserData);
+                2 -> skip_length_delimited_RubisPreload(Rest, 0, 0, F@_1, TrUserData);
+                3 -> skip_group_RubisPreload(Rest, Key bsr 3, 0, F@_1, TrUserData);
+                5 -> skip_32_RubisPreload(Rest, 0, 0, F@_1, TrUserData)
             end
     end;
-dg_read_field_def_Preload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
+dg_read_field_def_RubisPreload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
 
-d_field_Preload_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_Preload_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-d_field_Preload_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+d_field_RubisPreload_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_RubisPreload_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_RubisPreload_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
     {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
-    dfp_read_field_def_Preload(RestF, 0, 0, NewFValue, TrUserData).
+    dfp_read_field_def_RubisPreload(RestF, 0, 0, NewFValue, TrUserData).
 
-skip_varint_Preload(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_Preload(Rest, Z1, Z2, F@_1, TrUserData);
-skip_varint_Preload(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
+skip_varint_RubisPreload(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_RubisPreload(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_RubisPreload(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_RubisPreload(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_length_delimited_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_Preload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
-skip_length_delimited_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+skip_length_delimited_RubisPreload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_RubisPreload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_RubisPreload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_Preload(Rest2, 0, 0, F@_1, TrUserData).
+    dfp_read_field_def_RubisPreload(Rest2, 0, 0, F@_1, TrUserData).
 
-skip_group_Preload(Bin, FNum, Z2, F@_1, TrUserData) ->
+skip_group_RubisPreload(Bin, FNum, Z2, F@_1, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_Preload(Rest, 0, Z2, F@_1, TrUserData).
+    dfp_read_field_def_RubisPreload(Rest, 0, Z2, F@_1, TrUserData).
 
-skip_32_Preload(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
+skip_32_RubisPreload(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_RubisPreload(Rest, Z1, Z2, F@_1, TrUserData).
 
-skip_64_Preload(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
+skip_64_RubisPreload(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_RubisPreload(Rest, Z1, Z2, F@_1, TrUserData).
 
-decode_msg_PreloadAck(Bin, TrUserData) -> dfp_read_field_def_PreloadAck(Bin, 0, 0, TrUserData).
+decode_msg_RubisPreloadAck(Bin, TrUserData) -> dfp_read_field_def_RubisPreloadAck(Bin, 0, 0, TrUserData).
 
-dfp_read_field_def_PreloadAck(<<>>, 0, 0, _) -> #{};
-dfp_read_field_def_PreloadAck(Other, Z1, Z2, TrUserData) -> dg_read_field_def_PreloadAck(Other, Z1, Z2, TrUserData).
+dfp_read_field_def_RubisPreloadAck(<<>>, 0, 0, _) -> #{};
+dfp_read_field_def_RubisPreloadAck(Other, Z1, Z2, TrUserData) -> dg_read_field_def_RubisPreloadAck(Other, Z1, Z2, TrUserData).
 
-dg_read_field_def_PreloadAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 32 - 7 -> dg_read_field_def_PreloadAck(Rest, N + 7, X bsl N + Acc, TrUserData);
-dg_read_field_def_PreloadAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+dg_read_field_def_RubisPreloadAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 32 - 7 -> dg_read_field_def_RubisPreloadAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+dg_read_field_def_RubisPreloadAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
     Key = X bsl N + Acc,
     case Key band 7 of
-        0 -> skip_varint_PreloadAck(Rest, 0, 0, TrUserData);
-        1 -> skip_64_PreloadAck(Rest, 0, 0, TrUserData);
-        2 -> skip_length_delimited_PreloadAck(Rest, 0, 0, TrUserData);
-        3 -> skip_group_PreloadAck(Rest, Key bsr 3, 0, TrUserData);
-        5 -> skip_32_PreloadAck(Rest, 0, 0, TrUserData)
+        0 -> skip_varint_RubisPreloadAck(Rest, 0, 0, TrUserData);
+        1 -> skip_64_RubisPreloadAck(Rest, 0, 0, TrUserData);
+        2 -> skip_length_delimited_RubisPreloadAck(Rest, 0, 0, TrUserData);
+        3 -> skip_group_RubisPreloadAck(Rest, Key bsr 3, 0, TrUserData);
+        5 -> skip_32_RubisPreloadAck(Rest, 0, 0, TrUserData)
     end;
-dg_read_field_def_PreloadAck(<<>>, 0, 0, _) -> #{}.
+dg_read_field_def_RubisPreloadAck(<<>>, 0, 0, _) -> #{}.
 
-skip_varint_PreloadAck(<<1:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> skip_varint_PreloadAck(Rest, Z1, Z2, TrUserData);
-skip_varint_PreloadAck(<<0:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PreloadAck(Rest, Z1, Z2, TrUserData).
+skip_varint_RubisPreloadAck(<<1:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> skip_varint_RubisPreloadAck(Rest, Z1, Z2, TrUserData);
+skip_varint_RubisPreloadAck(<<0:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_RubisPreloadAck(Rest, Z1, Z2, TrUserData).
 
-skip_length_delimited_PreloadAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 57 -> skip_length_delimited_PreloadAck(Rest, N + 7, X bsl N + Acc, TrUserData);
-skip_length_delimited_PreloadAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+skip_length_delimited_RubisPreloadAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 57 -> skip_length_delimited_RubisPreloadAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+skip_length_delimited_RubisPreloadAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
     Length = X bsl N + Acc,
     <<_:Length/binary, Rest2/binary>> = Rest,
-    dfp_read_field_def_PreloadAck(Rest2, 0, 0, TrUserData).
+    dfp_read_field_def_RubisPreloadAck(Rest2, 0, 0, TrUserData).
 
-skip_group_PreloadAck(Bin, FNum, Z2, TrUserData) ->
+skip_group_RubisPreloadAck(Bin, FNum, Z2, TrUserData) ->
     {_, Rest} = read_group(Bin, FNum),
-    dfp_read_field_def_PreloadAck(Rest, 0, Z2, TrUserData).
+    dfp_read_field_def_RubisPreloadAck(Rest, 0, Z2, TrUserData).
 
-skip_32_PreloadAck(<<_:32, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PreloadAck(Rest, Z1, Z2, TrUserData).
+skip_32_RubisPreloadAck(<<_:32, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_RubisPreloadAck(Rest, Z1, Z2, TrUserData).
 
-skip_64_PreloadAck(<<_:64, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PreloadAck(Rest, Z1, Z2, TrUserData).
+skip_64_RubisPreloadAck(<<_:64, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_RubisPreloadAck(Rest, Z1, Z2, TrUserData).
 
 read_group(Bin, FieldNum) ->
     {NumBytes, EndTagLen} = read_gr_b(Bin, 0, 0, 0, 0, FieldNum),
@@ -331,12 +331,12 @@ merge_msgs(Prev, New, MsgName) when is_atom(MsgName) -> merge_msgs(Prev, New, Ms
 merge_msgs(Prev, New, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-        'Preload' -> merge_msg_Preload(Prev, New, TrUserData);
-        'PreloadAck' -> merge_msg_PreloadAck(Prev, New, TrUserData)
+        'RubisPreload' -> merge_msg_RubisPreload(Prev, New, TrUserData);
+        'RubisPreloadAck' -> merge_msg_RubisPreloadAck(Prev, New, TrUserData)
     end.
 
--compile({nowarn_unused_function,merge_msg_Preload/3}).
-merge_msg_Preload(PMsg, NMsg, _) ->
+-compile({nowarn_unused_function,merge_msg_RubisPreload/3}).
+merge_msg_RubisPreload(PMsg, NMsg, _) ->
     S1 = #{},
     case {PMsg, NMsg} of
         {_, #{payload := NFpayload}} -> S1#{payload => NFpayload};
@@ -344,8 +344,8 @@ merge_msg_Preload(PMsg, NMsg, _) ->
         _ -> S1
     end.
 
--compile({nowarn_unused_function,merge_msg_PreloadAck/3}).
-merge_msg_PreloadAck(_Prev, New, _TrUserData) -> New.
+-compile({nowarn_unused_function,merge_msg_RubisPreloadAck/3}).
+merge_msg_RubisPreloadAck(_Prev, New, _TrUserData) -> New.
 
 
 verify_msg(Msg, MsgName) when is_atom(MsgName) -> verify_msg(Msg, MsgName, []).
@@ -353,15 +353,15 @@ verify_msg(Msg, MsgName) when is_atom(MsgName) -> verify_msg(Msg, MsgName, []).
 verify_msg(Msg, MsgName, Opts) ->
     TrUserData = proplists:get_value(user_data, Opts),
     case MsgName of
-        'Preload' -> v_msg_Preload(Msg, [MsgName], TrUserData);
-        'PreloadAck' -> v_msg_PreloadAck(Msg, [MsgName], TrUserData);
+        'RubisPreload' -> v_msg_RubisPreload(Msg, [MsgName], TrUserData);
+        'RubisPreloadAck' -> v_msg_RubisPreloadAck(Msg, [MsgName], TrUserData);
         _ -> mk_type_error(not_a_known_message, Msg, [])
     end.
 
 
--compile({nowarn_unused_function,v_msg_Preload/3}).
--dialyzer({nowarn_function,v_msg_Preload/3}).
-v_msg_Preload(#{} = M, Path, TrUserData) ->
+-compile({nowarn_unused_function,v_msg_RubisPreload/3}).
+-dialyzer({nowarn_function,v_msg_RubisPreload/3}).
+v_msg_RubisPreload(#{} = M, Path, TrUserData) ->
     case M of
         #{payload := F1} -> v_type_bytes(F1, [payload | Path], TrUserData);
         _ -> ok
@@ -371,16 +371,16 @@ v_msg_Preload(#{} = M, Path, TrUserData) ->
                   end,
                   maps:keys(M)),
     ok;
-v_msg_Preload(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'Preload'}, M, Path);
-v_msg_Preload(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'Preload'}, X, Path).
+v_msg_RubisPreload(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'RubisPreload'}, M, Path);
+v_msg_RubisPreload(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'RubisPreload'}, X, Path).
 
--compile({nowarn_unused_function,v_msg_PreloadAck/3}).
--dialyzer({nowarn_function,v_msg_PreloadAck/3}).
-v_msg_PreloadAck(#{} = M, Path, _) ->
+-compile({nowarn_unused_function,v_msg_RubisPreloadAck/3}).
+-dialyzer({nowarn_function,v_msg_RubisPreloadAck/3}).
+v_msg_RubisPreloadAck(#{} = M, Path, _) ->
     lists:foreach(fun (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path) end, maps:keys(M)),
     ok;
-v_msg_PreloadAck(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PreloadAck'}, M, Path);
-v_msg_PreloadAck(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PreloadAck'}, X, Path).
+v_msg_RubisPreloadAck(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'RubisPreloadAck'}, M, Path);
+v_msg_RubisPreloadAck(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'RubisPreloadAck'}, X, Path).
 
 -compile({nowarn_unused_function,v_type_bytes/3}).
 -dialyzer({nowarn_function,v_type_bytes/3}).
@@ -425,16 +425,16 @@ cons(Elem, Acc, _TrUserData) -> [Elem | Acc].
 'erlang_++'(A, B, _TrUserData) -> A ++ B.
 
 
-get_msg_defs() -> [{{msg, 'Preload'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]}, {{msg, 'PreloadAck'}, []}].
+get_msg_defs() -> [{{msg, 'RubisPreload'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]}, {{msg, 'RubisPreloadAck'}, []}].
 
 
-get_msg_names() -> ['Preload', 'PreloadAck'].
+get_msg_names() -> ['RubisPreload', 'RubisPreloadAck'].
 
 
 get_group_names() -> [].
 
 
-get_msg_or_group_names() -> ['Preload', 'PreloadAck'].
+get_msg_or_group_names() -> ['RubisPreload', 'RubisPreloadAck'].
 
 
 get_enum_names() -> [].
@@ -451,8 +451,8 @@ fetch_msg_def(MsgName) ->
 fetch_enum_def(EnumName) -> erlang:error({no_such_enum, EnumName}).
 
 
-find_msg_def('Preload') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
-find_msg_def('PreloadAck') -> [];
+find_msg_def('RubisPreload') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('RubisPreloadAck') -> [];
 find_msg_def(_) -> error.
 
 
@@ -511,13 +511,13 @@ fqbins_to_service_and_rpc_name(S, R) -> error({gpb_error, {badservice_or_rpc, {S
 service_and_rpc_name_to_fqbins(S, R) -> error({gpb_error, {badservice_or_rpc, {S, R}}}).
 
 
-fqbin_to_msg_name(<<"Preload">>) -> 'Preload';
-fqbin_to_msg_name(<<"PreloadAck">>) -> 'PreloadAck';
+fqbin_to_msg_name(<<"RubisPreload">>) -> 'RubisPreload';
+fqbin_to_msg_name(<<"RubisPreloadAck">>) -> 'RubisPreloadAck';
 fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
 
-msg_name_to_fqbin('Preload') -> <<"Preload">>;
-msg_name_to_fqbin('PreloadAck') -> <<"PreloadAck">>;
+msg_name_to_fqbin('RubisPreload') -> <<"RubisPreload">>;
+msg_name_to_fqbin('RubisPreloadAck') -> <<"RubisPreloadAck">>;
 msg_name_to_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 
@@ -556,7 +556,7 @@ get_all_source_basenames() -> ["rubis_msgs.proto"].
 get_all_proto_names() -> ["rubis_msgs"].
 
 
-get_msg_containment("rubis_msgs") -> ['Preload', 'PreloadAck'];
+get_msg_containment("rubis_msgs") -> ['RubisPreload', 'RubisPreloadAck'];
 get_msg_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
@@ -576,8 +576,8 @@ get_enum_containment("rubis_msgs") -> [];
 get_enum_containment(P) -> error({gpb_error, {badproto, P}}).
 
 
-get_proto_by_msg_name_as_fqbin(<<"Preload">>) -> "rubis_msgs";
-get_proto_by_msg_name_as_fqbin(<<"PreloadAck">>) -> "rubis_msgs";
+get_proto_by_msg_name_as_fqbin(<<"RubisPreload">>) -> "rubis_msgs";
+get_proto_by_msg_name_as_fqbin(<<"RubisPreloadAck">>) -> "rubis_msgs";
 get_proto_by_msg_name_as_fqbin(E) -> error({gpb_error, {badmsg, E}}).
 
 

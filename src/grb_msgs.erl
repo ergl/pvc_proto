@@ -60,6 +60,14 @@
         replica_id              => iodata()         % = 3
        }.
 
+-type 'Preload'() ::
+      #{payload                 => iodata()         % = 1
+       }.
+
+-type 'PreloadAck'() ::
+      #{
+       }.
+
 -type 'PutConflictRelations'() ::
       #{payload                 => iodata()         % = 1
        }.
@@ -165,12 +173,12 @@
       #{resp                    => {commit_vc, iodata()} | {abort_reason, non_neg_integer()} % oneof
        }.
 
--export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'PutDirect'/0, 'PutDirectAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'OpSend'/0, 'OpSendAck'/0, 'OpRequestPartition'/0, 'OpReturnPartition'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
+-export_type(['ConnectRequest'/0, 'ConnectResponse'/0, 'Preload'/0, 'PreloadAck'/0, 'PutConflictRelations'/0, 'PutConflictRelationsAck'/0, 'PutDirect'/0, 'PutDirectAck'/0, 'UniformBarrier'/0, 'UniformResp'/0, 'StartReq'/0, 'StartReturn'/0, 'OpRequest'/0, 'OpReturn'/0, 'OpSend'/0, 'OpSendAck'/0, 'OpRequestPartition'/0, 'OpReturnPartition'/0, 'PrepareBlueNode'/0, 'BlueVoteBatch.BlueVote'/0, 'BlueVoteBatch'/0, 'DecideBlueNode'/0, 'CommitRed'/0, 'CommitRedReturn'/0]).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpSend'() | 'OpSendAck'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'Preload'() | 'PreloadAck'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpSend'() | 'OpSendAck'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom()) -> binary().
 encode_msg(Msg, MsgName) when is_atom(MsgName) -> encode_msg(Msg, MsgName, []).
 
--spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpSend'() | 'OpSendAck'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
+-spec encode_msg('ConnectRequest'() | 'ConnectResponse'() | 'Preload'() | 'PreloadAck'() | 'PutConflictRelations'() | 'PutConflictRelationsAck'() | 'PutDirect'() | 'PutDirectAck'() | 'UniformBarrier'() | 'UniformResp'() | 'StartReq'() | 'StartReturn'() | 'OpRequest'() | 'OpReturn'() | 'OpSend'() | 'OpSendAck'() | 'OpRequestPartition'() | 'OpReturnPartition'() | 'PrepareBlueNode'() | 'BlueVoteBatch.BlueVote'() | 'BlueVoteBatch'() | 'DecideBlueNode'() | 'CommitRed'() | 'CommitRedReturn'(), atom(), list()) -> binary().
 encode_msg(Msg, MsgName, Opts) ->
     case proplists:get_bool(verify, Opts) of
         true -> verify_msg(Msg, MsgName, Opts);
@@ -180,6 +188,8 @@ encode_msg(Msg, MsgName, Opts) ->
     case MsgName of
         'ConnectRequest' -> encode_msg_ConnectRequest(id(Msg, TrUserData), TrUserData);
         'ConnectResponse' -> encode_msg_ConnectResponse(id(Msg, TrUserData), TrUserData);
+        'Preload' -> encode_msg_Preload(id(Msg, TrUserData), TrUserData);
+        'PreloadAck' -> encode_msg_PreloadAck(id(Msg, TrUserData), TrUserData);
         'PutConflictRelations' -> encode_msg_PutConflictRelations(id(Msg, TrUserData), TrUserData);
         'PutConflictRelationsAck' -> encode_msg_PutConflictRelationsAck(id(Msg, TrUserData), TrUserData);
         'PutDirect' -> encode_msg_PutDirect(id(Msg, TrUserData), TrUserData);
@@ -241,6 +251,24 @@ encode_msg_ConnectResponse(#{} = M, Bin, TrUserData) ->
             end;
         _ -> B2
     end.
+
+encode_msg_Preload(Msg, TrUserData) -> encode_msg_Preload(Msg, <<>>, TrUserData).
+
+
+encode_msg_Preload(#{} = M, Bin, TrUserData) ->
+    case M of
+        #{payload := F1} ->
+            begin
+                TrF1 = id(F1, TrUserData),
+                case iolist_size(TrF1) of
+                    0 -> Bin;
+                    _ -> e_type_bytes(TrF1, <<Bin/binary, 10>>, TrUserData)
+                end
+            end;
+        _ -> Bin
+    end.
+
+encode_msg_PreloadAck(_Msg, _TrUserData) -> <<>>.
 
 encode_msg_PutConflictRelations(Msg, TrUserData) -> encode_msg_PutConflictRelations(Msg, <<>>, TrUserData).
 
@@ -880,6 +908,8 @@ decode_msg_1_catch(Bin, MsgName, TrUserData) ->
 
 decode_msg_2_doit('ConnectRequest', Bin, TrUserData) -> id(decode_msg_ConnectRequest(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('ConnectResponse', Bin, TrUserData) -> id(decode_msg_ConnectResponse(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('Preload', Bin, TrUserData) -> id(decode_msg_Preload(Bin, TrUserData), TrUserData);
+decode_msg_2_doit('PreloadAck', Bin, TrUserData) -> id(decode_msg_PreloadAck(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PutConflictRelations', Bin, TrUserData) -> id(decode_msg_PutConflictRelations(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PutConflictRelationsAck', Bin, TrUserData) -> id(decode_msg_PutConflictRelationsAck(Bin, TrUserData), TrUserData);
 decode_msg_2_doit('PutDirect', Bin, TrUserData) -> id(decode_msg_PutDirect(Bin, TrUserData), TrUserData);
@@ -994,6 +1024,84 @@ skip_group_ConnectResponse(Bin, FNum, Z2, F@_1, F@_2, F@_3, TrUserData) ->
 skip_32_ConnectResponse(<<_:32, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
 
 skip_64_ConnectResponse(<<_:64, Rest/binary>>, Z1, Z2, F@_1, F@_2, F@_3, TrUserData) -> dfp_read_field_def_ConnectResponse(Rest, Z1, Z2, F@_1, F@_2, F@_3, TrUserData).
+
+decode_msg_Preload(Bin, TrUserData) -> dfp_read_field_def_Preload(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
+
+dfp_read_field_def_Preload(<<10, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> d_field_Preload_payload(Rest, Z1, Z2, F@_1, TrUserData);
+dfp_read_field_def_Preload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1};
+dfp_read_field_def_Preload(Other, Z1, Z2, F@_1, TrUserData) -> dg_read_field_def_Preload(Other, Z1, Z2, F@_1, TrUserData).
+
+dg_read_field_def_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 32 - 7 -> dg_read_field_def_Preload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+dg_read_field_def_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key of
+        10 -> d_field_Preload_payload(Rest, 0, 0, F@_1, TrUserData);
+        _ ->
+            case Key band 7 of
+                0 -> skip_varint_Preload(Rest, 0, 0, F@_1, TrUserData);
+                1 -> skip_64_Preload(Rest, 0, 0, F@_1, TrUserData);
+                2 -> skip_length_delimited_Preload(Rest, 0, 0, F@_1, TrUserData);
+                3 -> skip_group_Preload(Rest, Key bsr 3, 0, F@_1, TrUserData);
+                5 -> skip_32_Preload(Rest, 0, 0, F@_1, TrUserData)
+            end
+    end;
+dg_read_field_def_Preload(<<>>, 0, 0, F@_1, _) -> #{payload => F@_1}.
+
+d_field_Preload_payload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> d_field_Preload_payload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+d_field_Preload_payload(<<0:1, X:7, Rest/binary>>, N, Acc, _, TrUserData) ->
+    {NewFValue, RestF} = begin Len = X bsl N + Acc, <<Bytes:Len/binary, Rest2/binary>> = Rest, {id(binary:copy(Bytes), TrUserData), Rest2} end,
+    dfp_read_field_def_Preload(RestF, 0, 0, NewFValue, TrUserData).
+
+skip_varint_Preload(<<1:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> skip_varint_Preload(Rest, Z1, Z2, F@_1, TrUserData);
+skip_varint_Preload(<<0:1, _:7, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
+
+skip_length_delimited_Preload(<<1:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) when N < 57 -> skip_length_delimited_Preload(Rest, N + 7, X bsl N + Acc, F@_1, TrUserData);
+skip_length_delimited_Preload(<<0:1, X:7, Rest/binary>>, N, Acc, F@_1, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_Preload(Rest2, 0, 0, F@_1, TrUserData).
+
+skip_group_Preload(Bin, FNum, Z2, F@_1, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_Preload(Rest, 0, Z2, F@_1, TrUserData).
+
+skip_32_Preload(<<_:32, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
+
+skip_64_Preload(<<_:64, Rest/binary>>, Z1, Z2, F@_1, TrUserData) -> dfp_read_field_def_Preload(Rest, Z1, Z2, F@_1, TrUserData).
+
+decode_msg_PreloadAck(Bin, TrUserData) -> dfp_read_field_def_PreloadAck(Bin, 0, 0, TrUserData).
+
+dfp_read_field_def_PreloadAck(<<>>, 0, 0, _) -> #{};
+dfp_read_field_def_PreloadAck(Other, Z1, Z2, TrUserData) -> dg_read_field_def_PreloadAck(Other, Z1, Z2, TrUserData).
+
+dg_read_field_def_PreloadAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 32 - 7 -> dg_read_field_def_PreloadAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+dg_read_field_def_PreloadAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+    Key = X bsl N + Acc,
+    case Key band 7 of
+        0 -> skip_varint_PreloadAck(Rest, 0, 0, TrUserData);
+        1 -> skip_64_PreloadAck(Rest, 0, 0, TrUserData);
+        2 -> skip_length_delimited_PreloadAck(Rest, 0, 0, TrUserData);
+        3 -> skip_group_PreloadAck(Rest, Key bsr 3, 0, TrUserData);
+        5 -> skip_32_PreloadAck(Rest, 0, 0, TrUserData)
+    end;
+dg_read_field_def_PreloadAck(<<>>, 0, 0, _) -> #{}.
+
+skip_varint_PreloadAck(<<1:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> skip_varint_PreloadAck(Rest, Z1, Z2, TrUserData);
+skip_varint_PreloadAck(<<0:1, _:7, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PreloadAck(Rest, Z1, Z2, TrUserData).
+
+skip_length_delimited_PreloadAck(<<1:1, X:7, Rest/binary>>, N, Acc, TrUserData) when N < 57 -> skip_length_delimited_PreloadAck(Rest, N + 7, X bsl N + Acc, TrUserData);
+skip_length_delimited_PreloadAck(<<0:1, X:7, Rest/binary>>, N, Acc, TrUserData) ->
+    Length = X bsl N + Acc,
+    <<_:Length/binary, Rest2/binary>> = Rest,
+    dfp_read_field_def_PreloadAck(Rest2, 0, 0, TrUserData).
+
+skip_group_PreloadAck(Bin, FNum, Z2, TrUserData) ->
+    {_, Rest} = read_group(Bin, FNum),
+    dfp_read_field_def_PreloadAck(Rest, 0, Z2, TrUserData).
+
+skip_32_PreloadAck(<<_:32, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PreloadAck(Rest, Z1, Z2, TrUserData).
+
+skip_64_PreloadAck(<<_:64, Rest/binary>>, Z1, Z2, TrUserData) -> dfp_read_field_def_PreloadAck(Rest, Z1, Z2, TrUserData).
 
 decode_msg_PutConflictRelations(Bin, TrUserData) -> dfp_read_field_def_PutConflictRelations(Bin, 0, 0, id(<<>>, TrUserData), TrUserData).
 
@@ -2142,6 +2250,8 @@ merge_msgs(Prev, New, MsgName, Opts) ->
     case MsgName of
         'ConnectRequest' -> merge_msg_ConnectRequest(Prev, New, TrUserData);
         'ConnectResponse' -> merge_msg_ConnectResponse(Prev, New, TrUserData);
+        'Preload' -> merge_msg_Preload(Prev, New, TrUserData);
+        'PreloadAck' -> merge_msg_PreloadAck(Prev, New, TrUserData);
         'PutConflictRelations' -> merge_msg_PutConflictRelations(Prev, New, TrUserData);
         'PutConflictRelationsAck' -> merge_msg_PutConflictRelationsAck(Prev, New, TrUserData);
         'PutDirect' -> merge_msg_PutDirect(Prev, New, TrUserData);
@@ -2185,6 +2295,18 @@ merge_msg_ConnectResponse(PMsg, NMsg, _) ->
         {#{replica_id := PFreplica_id}, _} -> S3#{replica_id => PFreplica_id};
         _ -> S3
     end.
+
+-compile({nowarn_unused_function,merge_msg_Preload/3}).
+merge_msg_Preload(PMsg, NMsg, _) ->
+    S1 = #{},
+    case {PMsg, NMsg} of
+        {_, #{payload := NFpayload}} -> S1#{payload => NFpayload};
+        {#{payload := PFpayload}, _} -> S1#{payload => PFpayload};
+        _ -> S1
+    end.
+
+-compile({nowarn_unused_function,merge_msg_PreloadAck/3}).
+merge_msg_PreloadAck(_Prev, New, _TrUserData) -> New.
 
 -compile({nowarn_unused_function,merge_msg_PutConflictRelations/3}).
 merge_msg_PutConflictRelations(PMsg, NMsg, _) ->
@@ -2479,6 +2601,8 @@ verify_msg(Msg, MsgName, Opts) ->
     case MsgName of
         'ConnectRequest' -> v_msg_ConnectRequest(Msg, [MsgName], TrUserData);
         'ConnectResponse' -> v_msg_ConnectResponse(Msg, [MsgName], TrUserData);
+        'Preload' -> v_msg_Preload(Msg, [MsgName], TrUserData);
+        'PreloadAck' -> v_msg_PreloadAck(Msg, [MsgName], TrUserData);
         'PutConflictRelations' -> v_msg_PutConflictRelations(Msg, [MsgName], TrUserData);
         'PutConflictRelationsAck' -> v_msg_PutConflictRelationsAck(Msg, [MsgName], TrUserData);
         'PutDirect' -> v_msg_PutDirect(Msg, [MsgName], TrUserData);
@@ -2535,6 +2659,29 @@ v_msg_ConnectResponse(#{} = M, Path, TrUserData) ->
     ok;
 v_msg_ConnectResponse(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'ConnectResponse'}, M, Path);
 v_msg_ConnectResponse(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'ConnectResponse'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_Preload/3}).
+-dialyzer({nowarn_function,v_msg_Preload/3}).
+v_msg_Preload(#{} = M, Path, TrUserData) ->
+    case M of
+        #{payload := F1} -> v_type_bytes(F1, [payload | Path], TrUserData);
+        _ -> ok
+    end,
+    lists:foreach(fun (payload) -> ok;
+                      (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path)
+                  end,
+                  maps:keys(M)),
+    ok;
+v_msg_Preload(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'Preload'}, M, Path);
+v_msg_Preload(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'Preload'}, X, Path).
+
+-compile({nowarn_unused_function,v_msg_PreloadAck/3}).
+-dialyzer({nowarn_function,v_msg_PreloadAck/3}).
+v_msg_PreloadAck(#{} = M, Path, _) ->
+    lists:foreach(fun (OtherKey) -> mk_type_error({extraneous_key, OtherKey}, M, Path) end, maps:keys(M)),
+    ok;
+v_msg_PreloadAck(M, Path, _TrUserData) when is_map(M) -> mk_type_error({missing_fields, [] -- maps:keys(M), 'PreloadAck'}, M, Path);
+v_msg_PreloadAck(X, Path, _TrUserData) -> mk_type_error({expected_msg, 'PreloadAck'}, X, Path).
 
 -compile({nowarn_unused_function,v_msg_PutConflictRelations/3}).
 -dialyzer({nowarn_function,v_msg_PutConflictRelations/3}).
@@ -3030,6 +3177,8 @@ get_msg_defs() ->
       [#{name => num_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
        #{name => ring_payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
        #{name => replica_id, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'Preload'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
+     {{msg, 'PreloadAck'}, []},
      {{msg, 'PutConflictRelations'}, [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}]},
      {{msg, 'PutConflictRelationsAck'}, []},
      {{msg, 'PutDirect'}, [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}]},
@@ -3090,6 +3239,8 @@ get_msg_defs() ->
 get_msg_names() ->
     ['ConnectRequest',
      'ConnectResponse',
+     'Preload',
+     'PreloadAck',
      'PutConflictRelations',
      'PutConflictRelationsAck',
      'PutDirect',
@@ -3118,6 +3269,8 @@ get_group_names() -> [].
 get_msg_or_group_names() ->
     ['ConnectRequest',
      'ConnectResponse',
+     'Preload',
+     'PreloadAck',
      'PutConflictRelations',
      'PutConflictRelationsAck',
      'PutDirect',
@@ -3159,6 +3312,8 @@ find_msg_def('ConnectResponse') ->
     [#{name => num_partitions, fnum => 1, rnum => 2, type => uint32, occurrence => optional, opts => []},
      #{name => ring_payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []},
      #{name => replica_id, fnum => 3, rnum => 4, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('Preload') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
+find_msg_def('PreloadAck') -> [];
 find_msg_def('PutConflictRelations') -> [#{name => payload, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}];
 find_msg_def('PutConflictRelationsAck') -> [];
 find_msg_def('PutDirect') -> [#{name => partition, fnum => 1, rnum => 2, type => bytes, occurrence => optional, opts => []}, #{name => payload, fnum => 2, rnum => 3, type => bytes, occurrence => optional, opts => []}];
@@ -3274,6 +3429,8 @@ service_and_rpc_name_to_fqbins(S, R) -> error({gpb_error, {badservice_or_rpc, {S
 
 fqbin_to_msg_name(<<"ConnectRequest">>) -> 'ConnectRequest';
 fqbin_to_msg_name(<<"ConnectResponse">>) -> 'ConnectResponse';
+fqbin_to_msg_name(<<"Preload">>) -> 'Preload';
+fqbin_to_msg_name(<<"PreloadAck">>) -> 'PreloadAck';
 fqbin_to_msg_name(<<"PutConflictRelations">>) -> 'PutConflictRelations';
 fqbin_to_msg_name(<<"PutConflictRelationsAck">>) -> 'PutConflictRelationsAck';
 fqbin_to_msg_name(<<"PutDirect">>) -> 'PutDirect';
@@ -3299,6 +3456,8 @@ fqbin_to_msg_name(E) -> error({gpb_error, {badmsg, E}}).
 
 msg_name_to_fqbin('ConnectRequest') -> <<"ConnectRequest">>;
 msg_name_to_fqbin('ConnectResponse') -> <<"ConnectResponse">>;
+msg_name_to_fqbin('Preload') -> <<"Preload">>;
+msg_name_to_fqbin('PreloadAck') -> <<"PreloadAck">>;
 msg_name_to_fqbin('PutConflictRelations') -> <<"PutConflictRelations">>;
 msg_name_to_fqbin('PutConflictRelationsAck') -> <<"PutConflictRelationsAck">>;
 msg_name_to_fqbin('PutDirect') -> <<"PutDirect">>;
@@ -3371,6 +3530,8 @@ get_msg_containment("grb_msgs") ->
      'OpReturnPartition',
      'OpSend',
      'OpSendAck',
+     'Preload',
+     'PreloadAck',
      'PrepareBlueNode',
      'PutConflictRelations',
      'PutConflictRelationsAck',
@@ -3404,6 +3565,7 @@ get_proto_by_msg_name_as_fqbin(<<"StartReq">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"UniformBarrier">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutConflictRelations">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutDirect">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"Preload">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpSend">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpRequest">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"ConnectRequest">>) -> "grb_msgs";
@@ -3415,6 +3577,7 @@ get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch.BlueVote">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"BlueVoteBatch">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutDirectAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"PutConflictRelationsAck">>) -> "grb_msgs";
+get_proto_by_msg_name_as_fqbin(<<"PreloadAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpSendAck">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"StartReturn">>) -> "grb_msgs";
 get_proto_by_msg_name_as_fqbin(<<"OpReturnPartition">>) -> "grb_msgs";

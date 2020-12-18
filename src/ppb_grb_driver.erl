@@ -4,6 +4,8 @@
          to_client_enc/2,
          from_server_dec/1]).
 
+-export([preload/1]).
+
 -export([connect/0,
          put_conflicts/1,
          put_direct/2,
@@ -37,6 +39,9 @@
 
 -spec connect() -> msg().
 connect() -> ?encode_msg('ConnectRequest', #{}).
+
+preload(Properties) ->
+    ?encode_msg('Preload', #{payload => term_to_binary(Properties)}).
 
 -spec put_conflicts(#{binary() := binary()}) -> msg().
 put_conflicts(ConflictMap) ->
@@ -232,6 +237,10 @@ decode_from_client('PutDirect', Msg) ->
     #{partition := PB, payload := PLB} = ?proto_msgs:decode_msg(Msg, 'PutDirect'),
     #{partition => binary:decode_unsigned(PB), payload => term_to_binary(PLB)};
 
+decode_from_client('Preload', BinMsg) ->
+    #{payload := BPayload} = ?proto_msgs:decode_msg(BinMsg, 'Preload'),
+    #{payload => binary_to_term(BPayload)};
+
 decode_from_client(Type, Msg) when Type =:= 'UniformBarrier' orelse Type =:= 'StartReq' ->
     Map = ?proto_msgs:decode_msg(Msg, Type),
     maps:map(fun(client_vc, V) -> binary_to_term(V);
@@ -252,6 +261,9 @@ to_client_enc('ConnectRequest', {ok, ReplicaID, NumPartitions, Ring}) ->
                 #{num_partitions => NumPartitions,
                   ring_payload => term_to_binary(Ring),
                   replica_id => term_to_binary(ReplicaID)});
+
+to_client_enc('Preload', ok) ->
+    ?encode_msg('PreloadAck', #{});
 
 to_client_enc('PutDirect', ok) ->
     ?encode_msg('PutDirectAck', #{});
@@ -299,6 +311,9 @@ decode_from_server('ConnectResponse', BinMsg) ->
       ring_payload := Bytes,
       replica_id := BinId} = ?proto_msgs:decode_msg(BinMsg, 'ConnectResponse'),
     {ok, binary_to_term(BinId), N, binary_to_term(Bytes)};
+
+decode_from_server('PreloadAck', _) ->
+    ok;
 
 decode_from_server('UniformResp', _) ->
     ok;
@@ -382,7 +397,9 @@ encode_msg_type('PutDirectAck') -> 17;
 encode_msg_type('OpRequestPartition') -> 18;
 encode_msg_type('OpReturnPartition') -> 19;
 encode_msg_type('OpSend') -> 20;
-encode_msg_type('OpSendAck') -> 21.
+encode_msg_type('OpSendAck') -> 21;
+encode_msg_type('Preload') -> 22;
+encode_msg_type('PreloadAck') -> 23.
 
 %% @doc Get original message type
 -spec decode_type_num(non_neg_integer()) -> atom().
@@ -406,4 +423,6 @@ decode_type_num(17) -> 'PutDirectAck';
 decode_type_num(18) -> 'OpRequestPartition';
 decode_type_num(19) -> 'OpReturnPartition';
 decode_type_num(20) -> 'OpSend';
-decode_type_num(21) -> 'OpSendAck'.
+decode_type_num(21) -> 'OpSendAck';
+decode_type_num(22) -> 'Preload';
+decode_type_num(23) -> 'PreloadAck'.
